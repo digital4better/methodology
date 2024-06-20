@@ -35,7 +35,7 @@ export default {
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/digital4better/methodology',
           remarkPlugins: [remarkMath],
-          rehypePlugins: [rehypeKatex],
+          rehypePlugins: [() => rehypeKatex({trust: true})],
           routeBasePath: '/'
         },
         blog: false,
