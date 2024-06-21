@@ -29,19 +29,19 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
-.katex .katex-html {
+.katex-display .katex-html {
   text-align: left;
 }
 
-.katex .base, .katex .mtable > .col-align-l > .vlist-t {
+.katex-display .base, .katex-display .mtable > .col-align-l > .vlist-t {
   width: 100%;
 }
 
-.katex .mtable {
+.katex-display .mtable {
   display: inline-flex;
 }
 
-.katex .unit {
+.katex-display .unit {
   position: absolute;
   right: 0;
 }

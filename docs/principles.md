@@ -22,7 +22,9 @@ L’impact d’une activité numérique est évalué à partir de 2 composantes 
 L’impact global est alors :
 
 $$
-Impact_{global} = Impact_{operational} + Impact_{embodied}  
+\begin{align*}
+&I_{global} = I_{operational} + I_{embodied}  
+\end{align*}
 $$
 
 ### Approche multi-composants
@@ -76,7 +78,7 @@ Toutefois, des bases communes existent dans toutes ces mises en application. C�
 | Division                 | Chapitres concernés                                                                                               | Description                                                                                                                                        |
 |--------------------------|-------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
 | Informations transverses | [Principes méthodologiques](principles.md)<br/>[Notions transverses](concepts.md)                                 | Cette division reprend les bases méthodologiques de notre approche ainsi que les concepts communs à toutes les déclinaisons suivantes.             |
-| Méthodologies générales  | [Méthodologies d’évaluation des impacts environnementaux](assessment.md)                                          | Cette division présente les formules de calcul générales pour chaque tiers composant un service numérique : équipement, réseau, centre de données. |
+| Méthodologies générales  | [Méthodologies d’évaluation des impacts environnementaux](methodology.md)                                         | Cette division présente les formules de calcul générales pour chaque tiers composant un service numérique : équipement, réseau, centre de données. |
 | Méthodologies appliquées | [Méthodologie appliquée aux services web](web.md)<br/>[Méthodologie appliquée aux parcs informatiques](assets.md) | Cette division illustre des déclinaisons des méthodologies générales sur des périmètres spécifiques.                                               |
 
 Pour chaque chapitre présentant une méthodologie, celle-ci est présentée autant que possible selon le plan suivant :

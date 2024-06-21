@@ -27,6 +27,9 @@ export default {
     defaultLocale: 'fr',
     locales: ['en', 'fr'],
   },
+  markdown: {
+    mermaid: true,
+  },
   presets: [
     [
       'classic',
@@ -35,7 +38,7 @@ export default {
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/digital4better/methodology/tree/main',
           remarkPlugins: [remarkMath],
-          rehypePlugins: [() => rehypeKatex({trust: true})],
+          rehypePlugins: [() => rehypeKatex({trust: true, strict: "ignore"})],
           routeBasePath: '/'
         },
         blog: false,
@@ -78,6 +81,7 @@ export default {
       darkTheme: prismThemes.dracula,
     },
   } satisfies Preset.ThemeConfig,
+  themes: ['@docusaurus/theme-mermaid'],
   stylesheets: [
     {
       href: 'https://cdn.jsdelivr.net/npm/katex@0.13.24/dist/katex.min.css',
