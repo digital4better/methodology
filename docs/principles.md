@@ -10,7 +10,7 @@ sidebar_label: Principes
 L'analyse du cycle de vie (ACV) est une méthodologie permettant l’évaluation des impacts environnementaux de produits, de services ou d'organisations . L’ ACV a été choisie pour cadrer les bases de l’évaluation des impacts environnementaux du numérique , on parle alors d’ « ACV numérique ». Les méthodologies proposées par Digital4Better reprennent les mêmes principes que l’ACV numérique :
 
 - L’évaluation porte sur l’ensemble du cycle de vie, de la fabrication à la fin de vie en passant par l’étape d’utilisation.
-- La méthodologie intègre une analyse multicritère : un ensemble d’indicateurs environnementaux sont étudiés systématiquement et correspondent aux indicateurs environnementaux préconisés pour les ACV numériques. (cf. 1.B Indicateurs environnementaux)
+- La méthodologie intègre une analyse multicritère : un ensemble d’indicateurs environnementaux sont étudiés systématiquement et correspondent aux indicateurs environnementaux préconisés pour les ACV numériques. (cf. [Indicateurs environnementaux](#indicateurs-pris-en-compte-dans-lévaluation))
 - L’évaluation porte sur l'ensemble des équipements qui composent les trois tiers (équipements utilisateurs, transferts réseaux, datacenters).
 
 ### Impact intrinsèque et impact opérationnel
@@ -38,11 +38,14 @@ Notre approche intègre l’ensemble des équipements et infrastructures caract�
 Quel que soit l’objet d’étude, notre méthodologie aboutit à l’évaluation de l’impact sous la forme d’indicateurs environnementaux.
 Ces indicateurs ont été choisis conformément aux préconisations du §7 du RCP mère sur les services numériques.
 Sont pris en compte à la fois les indicateurs obligatoires et les indicateurs facultatifs.
+
 Les 9 indicateurs environnementaux mid-point sont caractérisés en 4 catégories d’impact : dommage climatique, dommage écologique, dommage sur la santé humaine et dommage sur la diminution des ressources.
 
 Le tableau ci-dessous décrit chacun des indicateurs d’impact environnementaux retenus.
+
 L’ensemble de ces indicateurs d’impact environnementaux sont compatibles avec les calculs d’impacts environnementaux présentés ci-dessous.
 Toutes les formules de calcul vues ensuite sont applicables avec l’ensemble des indicateurs environnementaux identifiés ici.
+
 Un indicateur de flux supplémentaire vient aider à l’interprétation des résultats : la consommation d’électricité.
 
 | Impacts<br/>"mid-point"              | Abréviation | Unité             | Dommages<br/>"end-point"                 | Définition                                                                                                                                                                                                                                                                                                                                                                                               |

@@ -12,7 +12,7 @@ Quel que soit le sujet d’étude, la composante opérationnelle de l’impact s
 
 $$
 \begin{align*}
-&I_{operational_{i,p}} = E_{elec_p} * IF_{i,p}\htmlClass{unit}{[U_i]}\\
+&I_{operational_{i,p}} = E_{elec_p} \times IF_{i,p}\htmlClass{unit}{[U_i]}\\
 Avec\\
 &I_{operational_{i,p}} = \text{Impact opérationnel pour l’indicateur environnemental}\textit{ i }\text{dans le pays}\textit{ p }\htmlClass{unit}{[U_i]}\\
 &E_{elec_p} = \text{Energie électrique consommée dans le pays}\textit{ p }\htmlClass{unit}{[kWh]}\\

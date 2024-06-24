@@ -324,4 +324,90 @@ Certains fournisseurs cloud incluent dans ce REF la part d’énergie renouvelab
 
 Dans le cas où la consommation électrique est évaluée à partir des équipements, un calcul complémentaire est nécessaire pour prendre en compte l’énergie consommée pour les activités annexes du centre de données et matérialisée au travers du PUE. On obtient ainsi la consommation électrique totale du centre de données :
 
+$$
+\begin{align*}
+&E_{elec} = E_{usage} \times PUE\htmlClass{unit}{[kWh]}\\
+Avec \\
+&E_{elec} = \text{Énergie totale consommée par le centre de données}\htmlClass{unit}{[kWh]}\\
+&E_{usage} = \text{Énergie consommée par les équipements}\htmlClass{unit}{[kWh]}\\
+&PUE = \text{Efficacité énergétique}\\
+\end{align*}
+$$
 
+La conversion de la consommation électrique en impact opérationnel se fait sur la base de la formule fournie au paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel) mais avec un ajustement au niveau du facteur utilisé afin de prendre en compte la part d’énergie renouvelable consommée par le centre de données et matérialisée par le REF. 
+
+$$
+\begin{align*}
+&I_{operational_{i,p}} = E_{elec_p} \times (REF \times IF_{i,p} + (1 - REF) \times RIF_{i,p})\htmlClass{unit}{[U_i]}\\
+Avec\\
+&I_{operational_{i,p}} = \text{Impact opérationnel pour l’indicateur environnemental}\textit{ i }\text{dans le pays}\textit{ p }\htmlClass{unit}{[U_i]}\\
+&E_{elec_p} = \text{Energie électrique consommée dans le pays}\textit{ p }\htmlClass{unit}{[kWh]}\\
+&IF_{i,p} = \text{Facteur d'impact de l'indicateur}\textit{ i }\text{dans le pays}\textit{ p }\htmlClass{unit}{[U_i/kWh]}\\
+&RIF_{i,p} = \text{Facteur d'impact "énergie renouvelable" de l'indicateur}\textit{ i }\text{dans le pays}\textit{ p }\htmlClass{unit}{[U_i/kWh]}\\
+\end{align*}
+$$
+
+### Approche « Equipement » d’un centre de données
+
+L’approche « équipement » est mise en œuvre lorsque le matériel qui compose le centre de données est connu, suivi et maîtrisé.
+
+#### Impact intrinsèque centre de données (approche équipement)
+
+L’organisation effectue l’inventaire et la caractérisation des matériels qui composent le centre de données. L’impact de chaque équipement est évalué conformément au § 3.1 - Impacts environnementaux d’un équipement. L’impact total du centre de données est égal à la somme des impacts intrinsèques de chaque matériel composant le centre de données.
+
+#### Impact opérationnel centre de données (approche équipement)
+
+La consommation électrique est évaluée conformément au paragraphe [Impacts environnementaux d’un équipement](#impacts-environnementaux-dun-équipement).
+
+La conversion de la consommation électrique en impact opérationnel se fait sur la base de la formule fournie au paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
+
+### Approche « Système » d’un centre de données
+
+L’approche « système » est mise en œuvre lorsqu’on ne connaît pas les équipements qui composent le centre de données. Le centre de données est alors assimilé à un système fermé au niveau duquel on dispose de facteurs d’impacts.
+
+Dans le cas d’un centre de données, les facteurs disponibles sont ceux de la Base Empreinte : 
+
+| Nom de la donnée                                                              |     Quantité de référence    |     Unité    |     Localisation    |     Description technologique                                                                                                                     |
+|-------------------------------------------------------------------------------|------------------------------|--------------|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| Stocker 1Go de   données dans le cloud via une connexion fixe pendant 1 an    |     1                        |     Go       |     France          |     "Stockage dans   le cloud ; 1 Go de données, pendant 1 an, via une connexion fixe, équipement   de l'utilisateur final non inclus ; FR        |
+| Stocker 1Go de   données dans le cloud via une connexion mobile pendant 1 an  |     1                        |     Go       |     France          |     Les impacts tiennent   compte des réseaux et des centres de données des utilisateurs finaux. Ils   sont une configuration moyenne.            |
+| Stocker 1Go de   données dans le cloud via une connexion fixe pendant 10 an   |     1                        |     Go       |     France          |     Bloc data center +   stockage émetteur : Performance technique Netflix ; PUE = 1,3                                                            |
+| Stocker 1Go de   données dans le cloud via une connexion mobile pendant 10 an |     1                        |     Go       |     France          |     Durée de vie : firewall   5 ans, Switch 5 ans, Routeur 5 ans, Serveur 5 ans, Stockage 5 ans,   Equipements supports et architecture 25 ans    |
+
+Ces facteurs présentent plusieurs limites :
+- Ils ne concernent que le territoire français 
+- Ils ne concernent que le stockage de données et pas le traitement 
+- Ils sont disponibles pour des durées de stockage fixes
+
+Compte-tenu de ces éléments, nous préconisons une approche complémentaire, orientée sur les composants des équipements, sur lesquels les organisations disposent plus facilement d’informations.  
+
+### Approche « Composant » d’un centre de données
+
+Si l’inventaire des équipements physiques utilisés dans un centre de données n’est pas connu, mais que la quantité de composants « unitaires » (CPU, RAM, stockage et réseau) utilisée est connue , alors l’évaluation est faite de la façon suivante.
+
+#### Impact intrinsèque centre de données
+
+Notre approche de l’impact intrinsèque prend en compte uniquement l’impact lié aux infrastructures IT du centre de données.
+
+La meilleure approche pour évaluer les impacts liés aux infrastructures IT d’un centre de données équivaut à appliquer l’approche « équipements » mais au niveau des composants (RAM, CPU…) et pas des modèles d’équipements (serveurs). Toutefois, nous ne disposons pas aujourd’hui de facteurs accessibles facilement et gratuitement nous permettant de réaliser cette approche.
+
+Pour réaliser l’évaluation des impacts des équipements informatiques, il est donc nécessaire de repasser au niveau des équipements. Il existe 2 possibilités pour cette étape :
+- Rapprocher les configurations constituées par les composants à des modèle de serveurs. Cloud Carbon Footprint fournit à ce sujet une base de données en accès libre [Cloud Carbon Coefficients](https://github.com/cloud-carbon-footprint/ccf-coefficients). Les principales limites de cette solution résident dans l’absence de facteurs multicritères (seul l’impact GES est fourni) et la focalisation sur les serveurs « cloud » 
+- Recourir aux facteurs génériques de la Base Empreinte sur les machines virtuelles dont la principale limite réside dans le fait que seules 3 configurations sont disponibles : 
+
+| Catégorie                        |     Nom de la donnée (français)                                                                                                             |     Quantité de référence    |     Unité     |     Localisation                                                                                                                                  |     Durée de vie de l'équipement   (en année)    |     Description technologique                                                                                                                                                                                                                                                                       |
+|----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|------------------------------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Machine virtuelle - Petite       |     Impact moyen d'une petite   machine virtuelle, incluant la fabrication, le transport et la fin de vie   ramené à un an d'utilisation    |     1                        |     an        |     Asie                                                                                                                                          |     5                                            |     Configuration : virtual machine; use mix; average   configuration: 1 vCPU, 4 GB dedicated RAM, 5 years lifespan; RAS    Les impacts tiennent compte de toutes les étapes du cycle de vie (Inventaire   du berceau à la tombe).    Technical configuration based on APL datacenter numbers       |
+| Machine virtuelle - Moyenne      |     Impact moyen d'une machine   virtuelle, incluant la fabrication, le transport et la fin de vie ramené à un   an d'utilisation           |     1                        |     an        |     Asie                                                                                                                                          |     5                                            |     Configuration : virtual machine; use mix; average   configuration: 8 vCPU, 32 GB dedicated RAM, 5 years lifespan; RAS    Les impacts tiennent compte de toutes les étapes du cycle de vie (Inventaire   du berceau à la tombe).    Technical configuration based on APL datacenter numbers      |
+| Machine virtuelle - Grande       |     Impact moyen d'une grande   machine virtuelle, incluant la fabrication, le transport et la fin de vie   ramené à un an d'utilisation    |     1                        |     an        |     Asie                                                                                                                                          |     5                                            |     Configuration : virtual machine; use mix; average   configuration: 48 vCPU, 192 GB dedicated RAM, 5 years lifespan; RAS    Les impacts tiennent compte de toutes les étapes du cycle de vie (Inventaire   du berceau à la tombe).    Technical configuration based on APL datacenter numbers    |
+
+Une fois le facteur d’impact déterminé, on applique les formules présentées au § 3.1 - Impacts environnementaux d’un équipement. L’impact intrinsèque total sera égal à la somme des impacts intrinsèques de chaque serveur identifié pour couvrir l’intégralité des composants constituant le centre de données et idéalement du réseau Lan interne (limite aujourd’hui car non pris en compte dans notre modèle).
+
+#### Impact opérationnel centre de données
+
+L’impact opérationnel se base sur les formules de calcul et les coefficients de Cloud Jewels .
+
+
+:::note
+On considère un vCPU comme un thread d’un CPU physique. Par exemple 8 vCPUs correspond à un processeur 4 cœurs hyperthreadés.
+:::
