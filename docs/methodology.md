@@ -403,11 +403,50 @@ Pour réaliser l’évaluation des impacts des équipements informatiques, il es
 
 Une fois le facteur d’impact déterminé, on applique les formules présentées au § 3.1 - Impacts environnementaux d’un équipement. L’impact intrinsèque total sera égal à la somme des impacts intrinsèques de chaque serveur identifié pour couvrir l’intégralité des composants constituant le centre de données et idéalement du réseau Lan interne (limite aujourd’hui car non pris en compte dans notre modèle).
 
+:::note
+On considère un vCPU comme un thread d’un CPU physique. Par exemple 8 vCPUs correspond à un processeur 4 cœurs hyperthreadés.
+:::
+
 #### Impact opérationnel centre de données
 
 L’impact opérationnel se base sur les formules de calcul et les coefficients de Cloud Jewels .
 
+$$
+\begin{align*}
+&E_{datacenter} = E_{components} + E_{network}\htmlClass{unit}{[kWh]}\\
+Avec\\
+&E_{datacenter} = \text{Consommation d’électricité des équipements informatiques}\htmlClass{unit}{[kWh]}\\
+&E_{components} = \text{Consommation d’électricité des équipements de stockage et de traitement}\htmlClass{unit}{[kWh]}\\
+&E_{network} = \text{Consommation d’électricité des équipements réseaux}\htmlClass{unit}{[kWh]}\\
+\end{align*}
+$$
 
-:::note
-On considère un vCPU comme un thread d’un CPU physique. Par exemple 8 vCPUs correspond à un processeur 4 cœurs hyperthreadés.
-:::
+La consommation électrique associée aux équipements de stockage et traitement est calculée en dissociant les équipements en plusieurs types de composants :
+
+
+$$
+\begin{align*}
+&E_{components} = D_{usage} \times (P_{cpu} + P_{gpu} + P_{ram} + P_{storage})\htmlClass{unit}{[kWh]}\\
+Avec\\
+&E_{components} = \text{Consommation d’électricité des équipements de stockage et de traitement}\htmlClass{unit}{[kWh]}\\
+&D_{usage} = \text{Durée d’utilisation des équipements}\htmlClass{unit}{[h]}\\
+&P_{cpu} = N_{vcpu} \times (P_{cpu_{min}} + \frac{1}{2} \times (P_{cpu_{max}} - P_{cpu_{min}}))\htmlClass{unit}{[kW]}\\
+&P_{gpu} = N_{gpu} \times (P_{gpu_{min}} + \frac{1}{2} \times (P_{gpu_{max}} - P_{gpu_{min}}))\htmlClass{unit}{[kW]}\\
+&P_{ram} = N_{ram} \times 0,000392\htmlClass{unit}{[kW]}\\
+&P_{storage} = \begin{cases}
+1,2\cdot10^{-3} \times V_{storage} &\text{si }Stockage SSD \\
+0,65\cdot10^{-3} \times V_{storage} &\text{si }Stockage HDD 
+\end{cases}
+\htmlClass{unit}{[kW]}\\
+&N_{vcpu} = \text{Nombre de vCPU de l'équipement} \\
+&P_{cpu_{min}} = \text{Puissance minimale du vCPU}\htmlClass{unit}{[kW]}\\
+&P_{cpu_{max}} = \text{Puissance maximale du vCPU}\htmlClass{unit}{[kW]}\\
+&N_{gpu} = \text{Nombre de GPU de l'équipement} \\
+&P_{gpu_{min}} = \text{Puissance minimale du GPU}\htmlClass{unit}{[kW]}\\
+&P_{gpu_{max}} = \text{Puissance maximale du GPU}\htmlClass{unit}{[kW]}\\
+&N_{ram} = \text{Quantité de RAM de l'équipement}\htmlClass{unit}{[Go]}\\
+&V_{storage} = \text{Volume de stockage de l'équipement}\htmlClass{unit}{[To]}\\
+\end{align*}
+$$
+
+L’estimation de la consommation d’électricité globale du centre de donnée se fait sur la base de la formule fournie au paragraphe [Prise en compte dans l’évaluation de l’impact opérationnel](#prise-en-compte-dans-lévaluation-de-limpact-opérationnel) et la conversion de la consommation électrique en impact opérationnel se fait sur la base de la formule fournie dans le paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
