@@ -1,6 +1,7 @@
 ---
-sidebar_label: Méthodologie services web
+sidebar_label: Services web
 sidebar_position: 5
+slug: /web
 ---
 
 # Méthodologie appliquée aux services web
@@ -82,9 +83,9 @@ Pour chaque page, en multipliant le résultat final par le nombre de vues totale
 | RatioMobileUser      | Proportion d’utilisateurs sur mobile par rapport aux utilisateurs totaux                                                                      | 0,59[^3]                                                                                   |
 | RatioDesktopUser     | Proportion d’utilisateur sur desktop par rapport aux utilisateurs totaux                                                                      | 1 - RatioMobileUser                                                                        |
 
-[^1]: Source : https://explore.contentsquare.com/digital-experience-benchmark-2023/2023-benchmark-fr
-[^2]: Source : https://explore.contentsquare.com/digital-experience-benchmark-2023/2023-benchmark-fr
-[^3]: Source : https://www.statista.com/statistics/277125/share-of-website-traffic-coming-from-mobile-devices/#:~:text=Mobile%20accounts%20for%20approximately%20half,permanently%20surpassing%20it%20in%202020
+[^1]: https://explore.contentsquare.com/digital-experience-benchmark-2023/2023-benchmark-fr
+[^2]: https://explore.contentsquare.com/digital-experience-benchmark-2023/2023-benchmark-fr
+[^3]: https://www.statista.com/statistics/277125/share-of-website-traffic-coming-from-mobile-devices/#:~:text=Mobile%20accounts%20for%20approximately%20half,permanently%20surpassing%20it%20in%202020
 
 ### Facteurs d’impacts
 
@@ -730,3 +731,166 @@ Le tableau ci-dessous présente les données utilisées pour cette adaptation ai
 ### Impact intrinsèque du terminal
 
 L’impact intrinsèque du terminal s’évalue avec des facteurs propres à la nature du terminal. On a donc : 
+
+TODO
+
+On calcule EmbodiedImpactXEquipment(mobile) à partir de la formule d’impact intrinsèque d’un équipement, vue au §3.1.B /, avec :
+- Le facteur d’impact intrinsèque à récupérer dans la colonne « Mobile » du tableau de la page précédente en fonction de l’indicateur environnemental étudié 
+- Une durée d’utilisation évaluée à partir des paramètres mobiles  et selon la formule suivante : 
+
+TODO UsageDuration_mobile (s) = Views_mobile (-) *  UsageDurationPerView_mobile (s) * RatioMobileUser (-)
+
+On calcule EmbodiedImpactXEquipment(desktop) à partir de la formule d’impact intrinsèque d’un équipement, vue au §3.1.B /, avec :
+- Le facteur d’impact intrinsèque à récupérer dans la colonne « Desktop » du tableau de la page précédente en fonction de l’indicateur environnemental étudié 
+- Une durée d’utilisation évaluée à partir des paramètres desktop  et selon la formule suivante :
+     
+TODO UsageDuration_desktop (s) = Views_desktop (-) *  UsageDurationPerView_desktop (s) * RatioDesktopUser (-)
+
+### Impact opérationnel du terminal
+
+La consommation d’électricité du terminal s’évalue avec des facteurs propres à la nature du terminal. On a donc : 
+
+TODO ImpactEnergyTerminal_web =
+ImpactEnergyEquipment(mobile) + ImpactEnergyEquipment(desktop)
+
+On calcule ImpactEnergyEquipment(mobile) à partir de la formule de consommation d’électricité d’un équipement vue au § 3.1.C /, avec :
+- Le facteur d’impact opérationnel à récupérer sur la ligne « Impact énergie en kWh/sec» et dans la colonne « Mobile » du tableau de la page précédente 
+- La même durée d’utilisation que pour l’impact intrinsèque : UsageDuration_mobile 
+
+On calcule ImpactEnergyEquipment(desktop) à partir de la formule de consommation d’électricité d’un équipement vue au § 3.1.C /, avec :
+-	Le facteur d’impact opérationnel à récupérer sur la ligne « Impact énergie en kWh/sec» et dans la colonne « Desktop » du tableau de la page précédente
+-	La même durée d’utilisation que pour l’impact intrinsèque : UsageDuration_desktop
+
+La conversion de la consommation électrique en impact opérationnel se fait sur la base de la formule fournie dans le paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
+
+## Evaluation des impacts environnementaux d’une page web – réseau
+
+### Paramètres
+
+| Nom                   | Définition                                                                                                                                                      | Valeur    par défaut                                                                       |
+|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
+| Views                 | Nombre de vues de la page, déclinable en en fonction du type de terminal en Views_mobile et Views_desktop                                                       | Répartition par page à partir des vues totales (cf. Simulation du nombre de vues par page) |
+| RatioNewVisitor       | Proportion de visiteurs qui effectuent une première visite par rapport aux utilisateurs totaux, déclinable en RatioNewVisitor_Desktop et RatioNewVisitor_Mobile | RatioNewVisitor_Desktop: 0.418[^38]<br/>RatioNewVisitor_Mobile: 0.54839[^39]               |
+| RatioReturningVisitor | Proportion de visiteurs récurrents par rapport aux visiteurs totaux                                                                                             | 1 – RatioNewVisitor                                                                        |
+| CacheEfficiency       | Ratio des données transférées non rechargées lors d’une deuxième visite                                                                                         |                                                                                            |
+| CacheHitRatioCDN      | Présence ou non d’un CDN et hit ratio de celui-ci                                                                                                               | Si pas de CDN CacheHitRatio = 0<br/>Sinon CacheHitRatio = 0.95                             |
+
+[^38]: https://explore.contentsquare.com/digital-experience-benchmark-2023/2023-benchmark-fr
+[^39]: https://explore.contentsquare.com/digital-experience-benchmark-2023/2023-benchmark-fr
+
+### Impact intrinsèque du réseau
+
+L’impact intrinsèque du réseau se calcule en prenant en compte l’effet de cache et les paramètres du réseau étudié :
+
+TODO formule
+TODO carte
+
+Cette agrégation prend en compte le hit ratio du CDN s’il en existe un :
+
+TODO formule
+
+### Impact opérationnel du réseau
+
+La consommation électrique du réseau se calcule en prenant en compte l’effet de cache et les paramètres du réseau étudié :
+
+TODO formule
+TODO carte
+
+Cette agrégation prend en compte le hit ratio du CDN s’il en existe un :
+
+TODO formule
+
+## Evaluation des impacts environnementaux d’une page web – serveur
+
+### Répartition de l’impact par page
+
+L’impact du centre de donnée est évalué de manière globale, pour l’ensemble du site web (Idatacenterglobale). Cet impact est ensuite réparti avec le ratio de vues pour chacune des pages (Viewspage/Viewstotal) pour obtenir l’impact de chaque page (Idatacenterpage) :
+
+TODO formule
+
+### Simulation des paramètres serveur
+
+L’utilisation des données et caractéristiques réelles des serveurs est toujours à privilégier par rapport aux méthodes de simulation que nous allons exposer ici.
+
+Dans le cas où les caractéristiques des serveurs ne sont pas connues, mais qu’on dispose d’une volumétrie d’usage par les utilisateurs du site web (temps d’utilisation du service, nombre d’utilisateurs), nous proposons un modèle de corrélation entre l’audience et la quantité de VM nécessaires à la délivrance du service. Les VM ainsi modélisées portent les mêmes caractéristiques que le modèle de machine virtuelle « moyenne » définit par la Base Empreinte.[^42] 
+
+Nous cherchons à obtenir 2 valeurs :
+
+- Le nombre de VM de type "machine virtuelle moyenne" nécessaires pour faire fonctionner le service
+- La durée d'utilisation de l'ensemble des VM
+
+Dans la suite de la section, nous prenons l’hypothèse d’une durée d’évaluation d’1 an, c’est-à-dire d’un cas où on cherche à connaître l’impact serveur sur 1 an d’utilisation du site web.
+
+Si nous ne disposons d'aucune information sur la durée et la configuration serveur.
+
+Dans un premier temps, nous estimons la durée d’utilisation totale du service (totalUsageDuration) qui correspond à la durée cumulée de toutes les vues.
+
+L’approche se base sur le principe simple qu’un utilisateur consomme un thread (un vCPU) lorsqu’il utilise le service. Par conséquent, la durée d’utilisation totale du service (totalUsageDuration) permet d’obtenir la consommation de vCPU nécessaire pour délivrer le service.
+
+Exemple : une durée d’utilisation totale de 200 s correspond à une consommation de 200 vCPU.s pour assurer le service. Cette consommation de 200 vCPU.s peut être émise par 1 vCPU pendant 200s ou par 100 vCPU simultanées durant 2s.
+
+À partir de la consommation de vCPU, on en déduit la quantité de VM nécessaires au fonctionnement du service (defaultVMUsage) sur toute la durée d’évaluation, ramenée ici à 1 an :  
+
+TODO formule
+
+La quantité de VM obtenue n’est pas un nombre entier. Or dans notre modélisation, on cherche à ramener le fonctionnement à une configuration matérielle équivalente. L’équation suivante nous permet d’obtenir le nombre de VM nécessaires pour couvrir le besoin exprimé par la variable defaultVMUsage :
+
+TODO formule
+
+On calcule enfin le temps de fonctionnement moyen de chaque VM sur l’année (serverUptime) en prenant en compte le ratio quantité de VM sur nombre de VM afin de retranscrire le fait que les VM modélisées ne fonctionnent pas en permanence pour le service.  
+
+TODO formule
+
+Si on connait la durée d’utilisation du serveur
+
+La valeur de la durée d'utilisation serveur (totalServerDuration) est déterminée depuis les analytics ou les données serveurs. Nous déterminons le nombre de VM nécessaires au fonctionnement (DefaultVMCount) à partir de celle-ci et de l'audience du service (totalUsageDuration).
+
+TODO formule
+
+[^42]: Configuration : 8 vCPU, 32 GB dedicated RAM, 5 years lifespan
+
+### Impact intrinsèque du centre de données
+
+Les impacts intrinsèques des serveurs reposent sur une approche équipement. Le fait que seuls les impacts des équipements informatiques sont considérés (et pas ceux du centre de donnée dans son ensemble) constitue une limite actuelle de la méthodologie.
+
+On évalue dans un premier temps la somme des impacts des n VM identifiées comme nécessaires au fonctionnement du site web (DefaultVMCount), en distinguant la présence ou non d’un CDN :  
+
+Avec CDN
+
+TODO formule
+
+Sans CDN
+
+TODO formule
+
+### Impact opérationnel du centre de données
+
+Les impacts opérationnels des serveurs reposent sur une estimation de type système. On fait la somme des impacts des n VM (defaultVMCount) et du LAN pour estimer la consommation d’énergie puis on transforme pour connaitre la consommation d’énergie du centre de données. 
+
+Avec CDN
+
+TODO formule
+
+Sans CDN
+
+TODO formule
+
+Dans le calcul des variables OperationalImpactXDatacenter, la valeur du REF est basée sur la détection par the greenwebfoundation[^47] d’un hébergement « vert » (REF = 1) ou non (REF = 0).  
+
+[^47]: https://www.thegreenwebfoundation.org/
+
+## Restitutions chiffrées des impacts environnementaux des services web
+
+Les formules présentées précédemment permettent d’obtenir des impacts environnementaux. Elles sont déclinables pour l’évaluation des empreintes environnementales48 mais aussi l’estimation de scores.
+
+Les empreintes correspondent à l’impact réel lié à l’utilisation sur 1 an. On les évalue à l’aide de la méthodologie d’évaluation des impacts environnementaux et avec les données d’usage réelle d’un service, par exemple à l’aide des données récupéré des analytics. Elles sont exprimées dans les unités de mesure propres à l’impact qu’elles caractérisent : gCO2e pour le carbone, L ou m<sup>3</sup> pour l’eau… L’empreinte totale d’un service web correspond à la somme des empreintes de chacune de pages.
+
+Les scores s’affichent sous la forme d’un entier entre 0 et 100. Ils sont mis en forme à partir des impacts estimés sur les services web. Leur calcul prend en compte les variables du service, mais aussi certaines hypothèses d’utilisation fixes. L’application de ces critères communs permet d’obtenir un score comparable aux scores d’autres services, et cela quelle que soit la taille ou la fréquentation du site web. On prend comme référence pour tous les services et toutes les pages analysées le cas d’1 nouvelle visite (pas de cache), avec 58% d’utilisateurs à partir de terminaux mobiles et une durée moyenne d’utilisation de 20s. 
+
+![impact-scores.png](impact-scores.png)
+
+Les scores environnementaux du site sont déterminés par une moyenne pondérée des scores par page. La pondération (coefficient de trafic) a pour objectif de prendre en compte l’impact final du site en donnant plus de poids aux pages vues le plus souvent. On applique cette formule :
+
+TODO formule
+
+

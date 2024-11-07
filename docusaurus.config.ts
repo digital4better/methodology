@@ -53,7 +53,7 @@ export default {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
     navbar: {
-      title: 'Digital4Better Open Methodology',
+      title: 'Open Methodology',
       logo: {
         alt: 'My Site Logo',
         src: 'img/logo.svg',
@@ -61,9 +61,14 @@ export default {
       items: [
         {
           type: 'docSidebar',
-          sidebarId: 'tutorialSidebar',
+          sidebarId: 'sidebar',
           position: 'left',
           label: 'Docs',
+        },
+        {
+          href: 'https://digital4better.github.io/data',
+          label: 'Open Data',
+          position: 'right',
         },
         {
           href: 'https://github.com/digital4better/methodology',
