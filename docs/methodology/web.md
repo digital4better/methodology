@@ -79,12 +79,11 @@ Pour chaque page, en multipliant le résultat final par le nombre de vues totale
 | Nom                  | Définition                                                                                                                                    | Valeur    par défaut                                                                       |
 |----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
 | Views                | Nombre de vues de la page, déclinable en en fonction du type de terminal en Views_mobile et Views_desktop                                     | Répartition par page à partir des vues totales (cf. Simulation du nombre de vues par page) |
-| UsageDurationPerView | Durée moyenne d’une vue de la page, déclinable en fonction du type de terminal en UsageDurationPerView_mobile et UsageDurationPerView_desktop | Desktop : 69 secondes[^1]<br/>Mobile : 34 secondes[^2]                                     |
+| UsageDurationPerView | Durée moyenne d’une vue de la page, déclinable en fonction du type de terminal en UsageDurationPerView_mobile et UsageDurationPerView_desktop | Desktop : 69 secondes[^1]<br/>Mobile : 34 secondes[^1]                                     |
 | RatioMobileUser      | Proportion d’utilisateurs sur mobile par rapport aux utilisateurs totaux                                                                      | 0,59[^3]                                                                                   |
 | RatioDesktopUser     | Proportion d’utilisateur sur desktop par rapport aux utilisateurs totaux                                                                      | 1 - RatioMobileUser                                                                        |
 
 [^1]: https://explore.contentsquare.com/digital-experience-benchmark-2023/2023-benchmark-fr
-[^2]: https://explore.contentsquare.com/digital-experience-benchmark-2023/2023-benchmark-fr
 [^3]: https://www.statista.com/statistics/277125/share-of-website-traffic-coming-from-mobile-devices/#:~:text=Mobile%20accounts%20for%20approximately%20half,permanently%20surpassing%20it%20in%202020
 
 ### Facteurs d’impacts
@@ -734,13 +733,13 @@ L’impact intrinsèque du terminal s’évalue avec des facteurs propres à la 
 
 TODO
 
-On calcule EmbodiedImpactXEquipment(mobile) à partir de la formule d’impact intrinsèque d’un équipement, vue au §3.1.B /, avec :
+On calcule EmbodiedImpactXEquipment(mobile) à partir de la formule d’impact intrinsèque d’un équipement, vue au paragraphe [Impact intrinsèque d'un équipement](general.md#impact-intrinsèque-dun-équipement), avec :
 - Le facteur d’impact intrinsèque à récupérer dans la colonne « Mobile » du tableau de la page précédente en fonction de l’indicateur environnemental étudié 
 - Une durée d’utilisation évaluée à partir des paramètres mobiles  et selon la formule suivante : 
 
 TODO UsageDuration_mobile (s) = Views_mobile (-) *  UsageDurationPerView_mobile (s) * RatioMobileUser (-)
 
-On calcule EmbodiedImpactXEquipment(desktop) à partir de la formule d’impact intrinsèque d’un équipement, vue au §3.1.B /, avec :
+On calcule EmbodiedImpactXEquipment(desktop) à partir de la formule d’impact intrinsèque d’un équipement, vue au paragraphe [Impact intrinsèque d'un équipement](general.md#impact-intrinsèque-dun-équipement), avec :
 - Le facteur d’impact intrinsèque à récupérer dans la colonne « Desktop » du tableau de la page précédente en fonction de l’indicateur environnemental étudié 
 - Une durée d’utilisation évaluée à partir des paramètres desktop  et selon la formule suivante :
      
@@ -753,11 +752,11 @@ La consommation d’électricité du terminal s’évalue avec des facteurs prop
 TODO ImpactEnergyTerminal_web =
 ImpactEnergyEquipment(mobile) + ImpactEnergyEquipment(desktop)
 
-On calcule ImpactEnergyEquipment(mobile) à partir de la formule de consommation d’électricité d’un équipement vue au § 3.1.C /, avec :
+On calcule ImpactEnergyEquipment(mobile) à partir de la formule de consommation d’électricité d’un équipement vue au paragraphe [Impact opérationnel d'un équipement](general.md#impact-operationnel-dun-équipement), avec :
 - Le facteur d’impact opérationnel à récupérer sur la ligne « Impact énergie en kWh/sec» et dans la colonne « Mobile » du tableau de la page précédente 
 - La même durée d’utilisation que pour l’impact intrinsèque : UsageDuration_mobile 
 
-On calcule ImpactEnergyEquipment(desktop) à partir de la formule de consommation d’électricité d’un équipement vue au § 3.1.C /, avec :
+On calcule ImpactEnergyEquipment(desktop) à partir de la formule de consommation d’électricité d’un équipement vue au paragraphe [Impact opérationnel d'un équipement](general.md#impact-operationel-dun-équipement), avec :
 -	Le facteur d’impact opérationnel à récupérer sur la ligne « Impact énergie en kWh/sec» et dans la colonne « Desktop » du tableau de la page précédente
 -	La même durée d’utilisation que pour l’impact intrinsèque : UsageDuration_desktop
 
@@ -770,13 +769,10 @@ La conversion de la consommation électrique en impact opérationnel se fait sur
 | Nom                   | Définition                                                                                                                                                      | Valeur    par défaut                                                                       |
 |-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
 | Views                 | Nombre de vues de la page, déclinable en en fonction du type de terminal en Views_mobile et Views_desktop                                                       | Répartition par page à partir des vues totales (cf. Simulation du nombre de vues par page) |
-| RatioNewVisitor       | Proportion de visiteurs qui effectuent une première visite par rapport aux utilisateurs totaux, déclinable en RatioNewVisitor_Desktop et RatioNewVisitor_Mobile | RatioNewVisitor_Desktop: 0.418[^38]<br/>RatioNewVisitor_Mobile: 0.54839[^39]               |
+| RatioNewVisitor       | Proportion de visiteurs qui effectuent une première visite par rapport aux utilisateurs totaux, déclinable en RatioNewVisitor_Desktop et RatioNewVisitor_Mobile | RatioNewVisitor_Desktop: 0.418[^1]<br/>RatioNewVisitor_Mobile: 0.54839[^1]                 |
 | RatioReturningVisitor | Proportion de visiteurs récurrents par rapport aux visiteurs totaux                                                                                             | 1 – RatioNewVisitor                                                                        |
 | CacheEfficiency       | Ratio des données transférées non rechargées lors d’une deuxième visite                                                                                         |                                                                                            |
 | CacheHitRatioCDN      | Présence ou non d’un CDN et hit ratio de celui-ci                                                                                                               | Si pas de CDN CacheHitRatio = 0<br/>Sinon CacheHitRatio = 0.95                             |
-
-[^38]: https://explore.contentsquare.com/digital-experience-benchmark-2023/2023-benchmark-fr
-[^39]: https://explore.contentsquare.com/digital-experience-benchmark-2023/2023-benchmark-fr
 
 ### Impact intrinsèque du réseau
 

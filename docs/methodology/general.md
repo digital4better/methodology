@@ -83,7 +83,7 @@ Conformément aux principes posés par le RCP mère sur les services numériques
 
 L’approche « équipement » est mise en œuvre lorsque le matériel qui compose le réseau est connu, suivi et maîtrisé. Cette approche est généralement mise en œuvre pour couvrir des périmètres réseau interne à un site et géré par l’organisation à l’origine de l’évaluation.
 
-Dans ce cas, l’organisation effectue l’inventaire et la caractérisation des matériels qui composent son réseau. L’impact de chaque matériel est évalué conformément au paragraphe [Impacts environnementaux d’un équipement](#impacts-environnementaux-dun-équipement).
+Dans ce cas, l’organisation effectue l’inventaire et la caractérisation des matériels qui composent son réseau. L’impact de chaque matériel est évalué conformément au paragraphe [Impacts environnementaux d’un équipement](general.md#impacts-environnementaux-dun-équipement).
 
 L’impact total du réseau est égal à la somme des impacts de chaque matériel composant le réseau. 
 
@@ -354,11 +354,11 @@ L’approche « équipement » est mise en œuvre lorsque le matériel qui compo
 
 #### Impact intrinsèque centre de données (approche équipement)
 
-L’organisation effectue l’inventaire et la caractérisation des matériels qui composent le centre de données. L’impact de chaque équipement est évalué conformément au § 3.1 - Impacts environnementaux d’un équipement. L’impact total du centre de données est égal à la somme des impacts intrinsèques de chaque matériel composant le centre de données.
+L’organisation effectue l’inventaire et la caractérisation des matériels qui composent le centre de données. L’impact de chaque équipement est évalué conformément au paragraphe [Impacts environnementaux d'un équipement](general.md#impacts-environnementaux-dun-équipement). L’impact total du centre de données est égal à la somme des impacts intrinsèques de chaque matériel composant le centre de données.
 
 #### Impact opérationnel centre de données (approche équipement)
 
-La consommation électrique est évaluée conformément au paragraphe [Impacts environnementaux d’un équipement](#impacts-environnementaux-dun-équipement).
+La consommation électrique est évaluée conformément au paragraphe [Impacts environnementaux d’un équipement](general.md#impacts-environnementaux-dun-équipement).
 
 La conversion de la consommation électrique en impact opérationnel se fait sur la base de la formule fournie au paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
 
@@ -402,7 +402,7 @@ Pour réaliser l’évaluation des impacts des équipements informatiques, il es
 | Machine virtuelle - Moyenne      |     Impact moyen d'une machine   virtuelle, incluant la fabrication, le transport et la fin de vie ramené à un   an d'utilisation           |     1                        |     an        |     Asie                                                                                                                                          |     5                                            |     Configuration : virtual machine; use mix; average   configuration: 8 vCPU, 32 GB dedicated RAM, 5 years lifespan; RAS    Les impacts tiennent compte de toutes les étapes du cycle de vie (Inventaire   du berceau à la tombe).    Technical configuration based on APL datacenter numbers      |
 | Machine virtuelle - Grande       |     Impact moyen d'une grande   machine virtuelle, incluant la fabrication, le transport et la fin de vie   ramené à un an d'utilisation    |     1                        |     an        |     Asie                                                                                                                                          |     5                                            |     Configuration : virtual machine; use mix; average   configuration: 48 vCPU, 192 GB dedicated RAM, 5 years lifespan; RAS    Les impacts tiennent compte de toutes les étapes du cycle de vie (Inventaire   du berceau à la tombe).    Technical configuration based on APL datacenter numbers    |
 
-Une fois le facteur d’impact déterminé, on applique les formules présentées au § 3.1 - Impacts environnementaux d’un équipement. L’impact intrinsèque total sera égal à la somme des impacts intrinsèques de chaque serveur identifié pour couvrir l’intégralité des composants constituant le centre de données et idéalement du réseau Lan interne (limite aujourd’hui car non pris en compte dans notre modèle).
+Une fois le facteur d’impact déterminé, on applique les formules présentées au paragraphe [Impacts environnementaux d'un équipement](general.md#impacts-environnementaux-dun-équipement). L’impact intrinsèque total sera égal à la somme des impacts intrinsèques de chaque serveur identifié pour couvrir l’intégralité des composants constituant le centre de données et idéalement du réseau Lan interne (limite aujourd’hui car non pris en compte dans notre modèle).
 
 :::note
 On considère un vCPU comme un thread d’un CPU physique. Par exemple 8 vCPUs correspond à un processeur 4 cœurs hyperthreadés.
