@@ -38,7 +38,14 @@ Le parc informatique étant constitué d’équipements :
 - l’évaluation se basera uniquement sur les formules présentées dans le paragraphe [Impacts environnementaux d’un équipement](general.md#impacts-environnementaux-dun-équipement)
 - l’impact du parc sera égal à la somme des impacts par équipement
 
-TODO formule
+$$
+\begin{align*}
+&I_{i} = \sum_{k=1}^n EI_{k,i}\htmlClass{unit}{[U_i]}\\
+Avec \\
+&I_{i} = \text{Impact du parc informatique composé de}\textit{ n }\text{équipements pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&EI_{k,i} = \text{Impact}\textit{ t }\text{de l'équipement}\textit{ k }\text{pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[U_i]}\\
+\end{align*}
+$$
 
 ### Impact intrinsèque d’un équipement de parc informatique
 
@@ -46,8 +53,7 @@ TODO formule
 
 Dans le cas d’un équipement de parc informatique, la formule de calcul vue au paragraphe [Impact intrinsèque d'un équipement](general.md#impact-intrinsèque-dun-équipement) est appliquée avec les modalités suivantes :
 - L’équation est ramenée dans une unité de temps « années » plutôt que « secondes »
-- La variable Usage Duration est déterminée par l’allocation de l’équipement. Dans le cas où le procédé étudié est le parc informatique, cette allocation est égale à 1, considérant que l’équipement est alloué au parc informatique dès lors qu’il est utilisé [^1]
-- La variable EmbodiedFactorXEquipment est déterminée conformément au paragraphe [Impact intrinsèque d'un équipement](general.md#impact-intrinsèque-dun-équipement)
+- La variable Durée d'évaluation $$EP$$ est déterminée par l’allocation de l’équipement. Dans le cas où le procédé étudié est le parc informatique, cette allocation est égale à 1, considérant que l’équipement est alloué au parc informatique dès lors qu’il est utilisé [^1]
 
 #### Impact intrinsèque corrigé
 
@@ -55,16 +61,24 @@ L’étape précédente permet d’obtenir un impact intrinsèque sur la durée 
 
 Une correction est donc nécessaire pour ramener l’impact à la durée d’évaluation du parc informatique : 
 
-TODO formule
+$$
+\begin{align*}
+&E_{elec} = E_{elec_{ref}} \times \frac{EP}{RP}\htmlClass{unit}{[kWh]}\\
+Avec \\
+&E_{elec} = \text{Consommation électrique d'un équipement du parc}\htmlClass{unit}{[kWh]}\\
+&E_{elec_{ref}} = \text{Consommation électrique de référence d'un équipement du parc}\htmlClass{unit}{[kWh]}\\
+&EP = \text{Durée d’évaluation}\htmlClass{unit}{[années]}\\
+&RP = \text{Durée de référence}\htmlClass{unit}{[années]}\\
+\end{align*}
+$$
 
 ### Impact opérationnel d’un équipement de parc informatique
 
 #### Consommation électrique de référence
 
-Dans le cas d’un équipement de parc informatique, la formule de calcul vue au paragraphe [Impact intrinsèque d'un équipement](general.md#impact-intrinsèque-dun-équipement) est appliquée avec les modalités suivantes :
+Dans le cas d’un équipement de parc informatique, la formule de calcul vue au paragraphe [Impact opérationnel d'un équipement](general.md#impact-opérationnel-dun-équipement) est appliquée avec les modalités suivantes :
 -	L’équation est ramenée dans une unité de temps « années » plutôt que « secondes »
--	La variable Usage Duration est déterminée par l’allocation de l’équipement. Dans le cas où le procédé étudié est le parc informatique, cette allocation est égale à 1, considérant que l’équipement est alloué au parc informatique dès lors qu’il est utilisé[^1]
--	La variable EnergyFactorEquipment est déterminée conformément au paragraphe [Impact intrinsèque d'un équipement](general.md#impact-intrinsèque-dun-équipement)
+-	La variable Durée d'évaluation $$EP$$ est déterminée par l’allocation de l’équipement. Dans le cas où le procédé étudié est le parc informatique, cette allocation est égale à 1, considérant que l’équipement est alloué au parc informatique dès lors qu’il est utilisé[^1]
 
 #### Consommation électrique corrigée
 
@@ -72,9 +86,18 @@ L’étape précédente permet d’obtenir un impact sur la durée de référenc
 
 Une correction est donc nécessaire pour ramener l’impact à la durée d’évaluation du parc informatique : 
 
-TODO formule
+$$
+\begin{align*}
+&E_{elec} = E_{elec_{ref}} \times \frac{EP}{RP}\htmlClass{unit}{[kWh]}\\
+Avec \\
+&E_{elec} = \text{Consommation électrique d'un équipement du parc}\htmlClass{unit}{[kWh]}\\
+&E_{elec_{ref}} = \text{Consommation électrique de référence d'un équipement du parc}\htmlClass{unit}{[kWh]}\\
+&EP = \text{Durée d’évaluation}\htmlClass{unit}{[années]}\\
+&RP = \text{Durée de référence}\htmlClass{unit}{[années]}\\
+\end{align*}
+$$
 
-[^1]: Dans le cas d’équipements en stock durant toute ou partie de la durée d’évaluation, une décision sera prise au cas par cas d’ajuster ou non cette allocation en fonction du contexte d’étude (par exemple, un équipement resté en stock 6 mois sur 12 pourrait obtenir une allocation de 0,5).
+[^1]: Dans le cas d’équipements en stock durant tout ou partie de la durée d’évaluation, une décision sera prise au cas par cas d’ajuster ou non cette allocation en fonction du contexte d’étude (par exemple, un équipement resté en stock 6 mois sur 12 pourrait obtenir une allocation de 0,5).
 
 #### Conversion en impact opérationnel
 

@@ -63,11 +63,11 @@ L’impact opérationnel s’évalue à partir de l’impact de consommation él
 
 $$
 \begin{align*}
-&E_{elec} = D_{usage} \times IF_{operational}\htmlClass{unit}{[kWh]}\\
+&E_{elec} = D_{usage} \times P_{elec}\htmlClass{unit}{[kWh]}\\
 Avec\\
 &E_{elec} = \text{Consommation d'électricité de l'équipement}\htmlClass{unit}{[kWh]}\\
 &D_{usage} = \text{Durée d’usage du terminal dédiée à l'utilisation du service}\htmlClass{unit}{[h]}\\
-&P_{elec} = \text{Puissance de l'équipement}\htmlClass{unit}{[kW]}\\
+&P_{elec} = \text{Puissance moyenne de l'équipement sur la durée d'utilisation}\htmlClass{unit}{[kW]}\\
 \end{align*}
 $$
 
@@ -230,10 +230,10 @@ L’impact du réseau est alors égal à la somme des impacts par segment :
 
 $$
 \begin{align*}
-&I_{i} = \sum_{t \in \{operational,embodied\}} \sum_1^k SI_{t_{k,i}}\htmlClass{unit}{[U_i]}\\
+&I_{i} = \sum_{t \in \{operational,embodied\}} \sum_{k=1}^n SI_{t_{k,i}}\htmlClass{unit}{[U_i]}\\
 Avec \\
-&I_{i} = \text{Impact du réseau composé de}\text{ k }{segments pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[U_i]}\\
-&SI_{t_{k,i}} = \text{Impact}\text{ t }\text{du segment}\text{ k }\text{pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&I_{i} = \text{Impact du réseau composé de}\textit{ n }\text{segments pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&SI_{t_{k,i}} = \text{Impact}\textit{ t }\text{du segment}\textit{ k }\text{pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[U_i]}\\
 \end{align*}
 $$
 
