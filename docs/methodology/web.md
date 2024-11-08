@@ -800,9 +800,20 @@ TODO formule
 
 ### Répartition de l’impact par page
 
-L’impact du centre de donnée est évalué de manière globale, pour l’ensemble du site web (Idatacenterglobale). Cet impact est ensuite réparti avec le ratio de vues pour chacune des pages (Viewspage/Viewstotal) pour obtenir l’impact de chaque page (Idatacenterpage) :
+L’impact du centre de donnée est évalué de manière globale, pour l’ensemble du site web $$I_{datacenter}$$. 
+Cet impact est ensuite réparti avec le ratio de vues pour chacune des pages ($$V_{page}/V_{total}$$) pour obtenir l’impact de chaque page $$I_{datacenter,page}$$ :
 
-TODO formule
+$$
+\begin{align*}
+&I_{datacenter,page} = I_{datacenter} \times \frac{V_{page}}{V_{total}}\\
+Avec \\
+&I_{datacenter, page} = \text{Impact du datacenter ramené à la page}\textit{ page }\\
+&I_{datacenter} = \text{Impact global du datacenter}\\
+&V_{page} = \text{Nombre de vues pour la page}\textit{ page }\\
+&V_{total} = \text{Nombre total de vues pour le service}\\
+\end{align*}
+$$
+
 
 ### Simulation des paramètres serveur
 
@@ -823,7 +834,10 @@ Dans un premier temps, nous estimons la durée d’utilisation totale du service
 
 L’approche se base sur le principe simple qu’un utilisateur consomme un thread (un vCPU) lorsqu’il utilise le service. Par conséquent, la durée d’utilisation totale du service (totalUsageDuration) permet d’obtenir la consommation de vCPU nécessaire pour délivrer le service.
 
-Exemple : une durée d’utilisation totale de 200 s correspond à une consommation de 200 vCPU.s pour assurer le service. Cette consommation de 200 vCPU.s peut être émise par 1 vCPU pendant 200s ou par 100 vCPU simultanées durant 2s.
+:::info[Exemple]
+Une durée d’utilisation totale de 200 s correspond à une consommation de 200 vCPU.s pour assurer le service. 
+Cette consommation de 200 vCPU.s peut être émise par 1 vCPU pendant 200s ou par 100 vCPU simultanées durant 2s.
+:::
 
 À partir de la consommation de vCPU, on en déduit la quantité de VM nécessaires au fonctionnement du service (defaultVMUsage) sur toute la durée d’évaluation, ramenée ici à 1 an :  
 
