@@ -828,34 +828,68 @@ Nous cherchons à obtenir 2 valeurs :
 
 Dans la suite de la section, nous prenons l’hypothèse d’une durée d’évaluation d’1 an, c’est-à-dire d’un cas où on cherche à connaître l’impact serveur sur 1 an d’utilisation du site web.
 
-Si nous ne disposons d'aucune information sur la durée et la configuration serveur.
+#### Si nous ne disposons d'aucune information sur la durée et la configuration serveur.
 
-Dans un premier temps, nous estimons la durée d’utilisation totale du service (totalUsageDuration) qui correspond à la durée cumulée de toutes les vues.
+Dans un premier temps, nous estimons la durée d’utilisation totale du service $D_{total}$ qui correspond à la durée cumulée de toutes les vues.
 
-L’approche se base sur le principe simple qu’un utilisateur consomme un thread (un vCPU) lorsqu’il utilise le service. Par conséquent, la durée d’utilisation totale du service (totalUsageDuration) permet d’obtenir la consommation de vCPU nécessaire pour délivrer le service.
+L’approche se base sur le principe simple qu’un utilisateur consomme un thread (un vCPU) lorsqu’il utilise le service. Par conséquent, la durée d’utilisation totale du service $D_{total}$ permet d’obtenir la consommation de vCPU nécessaire pour délivrer le service.
 
 :::info[Exemple]
 Une durée d’utilisation totale de 200 s correspond à une consommation de 200 vCPU.s pour assurer le service. 
 Cette consommation de 200 vCPU.s peut être émise par 1 vCPU pendant 200s ou par 100 vCPU simultanées durant 2s.
 :::
 
-À partir de la consommation de vCPU, on en déduit la quantité de VM nécessaires au fonctionnement du service (defaultVMUsage) sur toute la durée d’évaluation, ramenée ici à 1 an :  
+À partir de la consommation de vCPU, on en déduit la quantité de VM nécessaires au fonctionnement du service $N_{VM,ideal}$ sur toute la durée d’évaluation, ramenée ici à 1 an :  
 
-TODO formule
+$$
+\begin{align*}
+&N_{VM,ideal} = \frac{D_{usage}}{C_{vCPU} \times D_{total}}\\
+Avec \\
+&N_{VM,ideal} = \text{Quantité idéale de VM nécessaire pour délivrer le service}\\
+&C_{vCPU} = \text{Nombre de vCPU par VM, vaut 8 par défaut pour une VM moyenne}\\
+&D_{usage} = \text{Durée d’utilisation annuelle du service}\htmlClass{unit}{[s]}\\
+&D_{total} = \text{Durée totale d'une année = 3600} \times 24 \times 365.25\htmlClass{unit}{[s]}\\
+\end{align*}
+$$
 
-La quantité de VM obtenue n’est pas un nombre entier. Or dans notre modélisation, on cherche à ramener le fonctionnement à une configuration matérielle équivalente. L’équation suivante nous permet d’obtenir le nombre de VM nécessaires pour couvrir le besoin exprimé par la variable defaultVMUsage :
+La quantité de VM idéale obtenue n’est pas un nombre entier. Or dans notre modélisation, on cherche à ramener le fonctionnement à une configuration matérielle équivalente réelle. L’équation suivante nous permet d’obtenir le nombre de VM nécessaires pour couvrir le besoin exprimé par la variable $N_{VM,ideal}$ :
 
-TODO formule
+$$
+\begin{align*}
+&N_{VM} = \lceil N_{VM,ideal} \rceil\\
+Avec \\
+&N_{VM} = \text{Quantité réelle de VM nécessaire pour délivrer le service}\\
+&N_{VM,ideal} = \text{Quantité idéale de VM nécessaire pour délivrer le service}\\
+\end{align*}
+$$
 
 On calcule enfin le temps de fonctionnement moyen de chaque VM sur l’année (serverUptime) en prenant en compte le ratio quantité de VM sur nombre de VM afin de retranscrire le fait que les VM modélisées ne fonctionnent pas en permanence pour le service.  
 
-TODO formule
+$$
+\begin{align*}
+&D_{VM} = D_{total} \times \frac{N_{VM,ideal}}{N_{VM}}\htmlClass{unit}{[s]}\\
+Avec \\
+&D_{VM} = \text{Durée moyenne de fonctionnement d'une VM sur une année}\htmlClass{unit}{[s]}\\
+&D_{total} = \text{Durée totale d'une année = 3600} \times 24 \times 365.25\htmlClass{unit}{[s]}\\
+&N_{VM} = \text{Quantité réelle de VM nécessaire pour délivrer le service}\\
+&N_{VM,ideal} = \text{Quantité idéale de VM nécessaire pour délivrer le service}\\
+\end{align*}
+$$
 
-Si on connait la durée d’utilisation du serveur
+#### Si on connait la durée d’utilisation du serveur
 
-La valeur de la durée d'utilisation serveur (totalServerDuration) est déterminée depuis les analytics ou les données serveurs. Nous déterminons le nombre de VM nécessaires au fonctionnement (DefaultVMCount) à partir de celle-ci et de l'audience du service (totalUsageDuration).
+La valeur de la durée d'utilisation serveur (totalServerDuration) est déterminée depuis les analytics ou les données serveurs. Nous déterminons le nombre de VM nécessaires au fonctionnement $N_{VM,ideal}$ à partir de celle-ci et de l'audience du service $D_{total}$.
 
-TODO formule
+$$
+\begin{align*}
+&N_{VM} = \lceil \frac{D_{usage}}{D_{server} \times C_{vCPU}} \rceil\\
+Avec \\
+&N_{VM} = \text{Quantité réelle de VM nécessaire pour délivrer le service}\\
+&D_{usage} = \text{Durée d’utilisation annuelle du service}\htmlClass{unit}{[s]}\\
+&D_{server} = \text{Durée d’utilisation annuelle des serveurs}\htmlClass{unit}{[s]}\\
+&C_{vCPU} = \text{Nombre de vCPU par VM, vaut 8 par défaut pour une VM moyenne}\\
+\end{align*}
+$$
 
 [^42]: Configuration : 8 vCPU, 32 GB dedicated RAM, 5 years lifespan
 
@@ -863,7 +897,7 @@ TODO formule
 
 Les impacts intrinsèques des serveurs reposent sur une approche équipement. Le fait que seuls les impacts des équipements informatiques sont considérés (et pas ceux du centre de donnée dans son ensemble) constitue une limite actuelle de la méthodologie.
 
-On évalue dans un premier temps la somme des impacts des n VM identifiées comme nécessaires au fonctionnement du site web (DefaultVMCount), en distinguant la présence ou non d’un CDN :  
+On évalue dans un premier temps la somme des impacts des n VM identifiées comme nécessaires au fonctionnement du site web $N_{VM,ideal}$, en distinguant la présence ou non d’un CDN :  
 
 Avec CDN
 
@@ -875,7 +909,7 @@ TODO formule
 
 ### Impact opérationnel du centre de données
 
-Les impacts opérationnels des serveurs reposent sur une estimation de type système. On fait la somme des impacts des n VM (defaultVMCount) et du LAN pour estimer la consommation d’énergie puis on transforme pour connaitre la consommation d’énergie du centre de données. 
+Les impacts opérationnels des serveurs reposent sur une estimation de type système. On fait la somme des impacts des n VM $N_{VM,ideal}$ et du LAN pour estimer la consommation d’énergie puis on transforme pour connaitre la consommation d’énergie du centre de données. 
 
 #### Avec CDN
 
