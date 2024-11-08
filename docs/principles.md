@@ -66,7 +66,7 @@ Le RCP mère distingue 2 approches pour réaliser l’évaluation d’un service
 - Approche équipement : chaque équipement utilisé par le service numérique constitue une donnée primaire ou secondaire. Le service numérique est considéré comme une somme d’usage de chaque équipement, chaque usage étant défini à travers une règle d’allocation par rapport aux impacts totaux de l’équipement. (…)
 - Approche système : un certain nombre d’équipements peuvent être regroupés en un système physique (exemple : datacenter) ou virtuel (exemple : machine virtuelle), au niveau duquel les impacts environnementaux ont été déterminés et qui constitue une donnée primaire ou secondaire. Le service numérique est considéré comme une somme d’usages de chaque système, chaque usage étant défini à travers une règle d’allocation par rapport aux impacts totaux du système. (…)
 
-L’approche équipement sera plus précise mais plus complexe que l’approche système à mettre en œuvre.
+L’approche équipement sera plus précise, mais plus complexe que l’approche système à mettre en œuvre.
 
 Il est recommandé d’utiliser une approche équipement sur le périmètre maîtrisé par l’opérateur de service numérique et une approche système sur le périmètre non maîtrisé. »
 

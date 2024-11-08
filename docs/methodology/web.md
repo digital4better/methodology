@@ -863,11 +863,11 @@ TODO formule
 
 Les impacts opérationnels des serveurs reposent sur une estimation de type système. On fait la somme des impacts des n VM (defaultVMCount) et du LAN pour estimer la consommation d’énergie puis on transforme pour connaitre la consommation d’énergie du centre de données. 
 
-Avec CDN
+#### Avec CDN
 
 TODO formule
 
-Sans CDN
+#### Sans CDN
 
 TODO formule
 
@@ -887,6 +887,15 @@ Les scores s’affichent sous la forme d’un entier entre 0 et 100. Ils sont mi
 
 Les scores environnementaux du site sont déterminés par une moyenne pondérée des scores par page. La pondération (coefficient de trafic) a pour objectif de prendre en compte l’impact final du site en donnant plus de poids aux pages vues le plus souvent. On applique cette formule :
 
-TODO formule
+$$
+\begin{align*}
+&S_{i} = \frac{\sum_{k=1}^n S_{k,i} \times \alpha_k}{\sum_{k=1}^n \alpha_k}\htmlClass{unit}{[0..100]}\\
+Avec \\
+&S_{i} = \text{Score global pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[0..100]}\\
+&S_{k,i} = \text{Score de la page}\textit{ k }\text{pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[0..100]}\\
+&\alpha_k = \text{Nombre ou chance de vue de la page}\textit{ k }\htmlClass{unit}{> 0}\\
+\end{align*}
+$$
 
-
+- **Nombre de vues par page** : Si on dispose du nombre de vues par page, la pondération se base directement sur le nombre de vues par page remonté par un service d'analyse d'audience.
+- **Chance de vues par page** : Si on ne connait pas la répartition du nombre de vues sur chacune des pages, la pondération se fait à l’aide de facteurs de « chance de vue » attribués à chacune des pages (Ces facteurs sont déterminés, pour chacune des pages d’un service, conformément aux dispositions du paragraphe [Simulation du nombre de vues par page](#simulation-du-nombre-de-vues-par-page)).
