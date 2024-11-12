@@ -863,7 +863,7 @@ Avec \\
 \end{align*}
 $$
 
-On calcule enfin le temps de fonctionnement moyen de chaque VM sur l’année (serverUptime) en prenant en compte le ratio quantité de VM sur nombre de VM afin de retranscrire le fait que les VM modélisées ne fonctionnent pas en permanence pour le service.  
+On calcule enfin le temps de fonctionnement moyen de chaque VM sur l’année $D_{VM}$ en prenant en compte le ratio quantité de VM sur nombre de VM afin de retranscrire le fait que les VM modélisées ne fonctionnent pas en permanence pour le service.  
 
 $$
 \begin{align*}
@@ -878,7 +878,7 @@ $$
 
 #### Si on connait la durée d’utilisation du serveur
 
-La valeur de la durée d'utilisation serveur (totalServerDuration) est déterminée depuis les analytics ou les données serveurs. Nous déterminons le nombre de VM nécessaires au fonctionnement $N_{VM,ideal}$ à partir de celle-ci et de l'audience du service $D_{total}$.
+La valeur de la durée d'utilisation serveur $D_{server}$ est déterminée depuis les analytics ou les données serveurs. Nous déterminons le nombre de VM nécessaires au fonctionnement $N_{VM,ideal}$ à partir de celle-ci et de l'audience du service $D_{total}$.
 
 $$
 \begin{align*}
@@ -897,29 +897,37 @@ $$
 
 Les impacts intrinsèques des serveurs reposent sur une approche équipement. Le fait que seuls les impacts des équipements informatiques sont considérés (et pas ceux du centre de donnée dans son ensemble) constitue une limite actuelle de la méthodologie.
 
-On évalue dans un premier temps la somme des impacts des n VM identifiées comme nécessaires au fonctionnement du site web $N_{VM,ideal}$, en distinguant la présence ou non d’un CDN :  
+On évalue dans un premier temps la somme des impacts des n VM identifiées comme nécessaires au fonctionnement du site web $N_{VM}$, en distinguant la présence ou non d’un CDN :  
 
-Avec CDN
-
-TODO formule
-
-Sans CDN
-
-TODO formule
+$$
+\begin{align*}
+&I_{embodied_i} = (1 - HR_{CDN}) \times \left( N_{VM} \times I_{\text{embodied, VM}_{i}} \right) + I_{\text{embodied, CDN}_{i}}\htmlClass{unit}{[U_i]}\\
+Avec \\
+&I_{embodied_i} = \text{Impact intrinsèque du centre de données pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&HR_{cache} = \text{Pourcentage de hits du CDN si présent, 0 sinon}\htmlClass{unit}{[0..1]}\\
+&N_{VM} = \text{Quantité réelle de VM nécessaire pour délivrer le service}\\
+&I_{\text{embodied, VM}_{i}} = \text{Impact intrinsèque d'une VM pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&I_{\text{embodied, CDN}_{i}} = \text{Impact intrinsèque du CDN pour l’indicateur}\textit{ i }\text{si présent, 0 sinon}\htmlClass{unit}{[U_i]}\\
+\end{align*}
+$$
 
 ### Impact opérationnel du centre de données
 
-Les impacts opérationnels des serveurs reposent sur une estimation de type système. On fait la somme des impacts des n VM $N_{VM,ideal}$ et du LAN pour estimer la consommation d’énergie puis on transforme pour connaitre la consommation d’énergie du centre de données. 
+Les impacts opérationnels des serveurs reposent sur une estimation de type système. On fait la somme des impacts des n VM $N_{VM}$ pour estimer la consommation d’énergie puis on transforme pour connaitre la consommation d’énergie du centre de données. 
 
-#### Avec CDN
+$$
+\begin{align*}
+&I_{operational_i} = (1 - HR_{CDN}) \times \left( N_{VM} \times I_{\text{operational, VM}_{i}} \right) + I_{\text{operational, CDN}_{i}}\htmlClass{unit}{[U_i]}\\
+Avec \\
+&I_{operational_i} = \text{Impact opérationnel du centre de données pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&HR_{cache} = \text{Pourcentage de hits du CDN si présent, 0 sinon}\htmlClass{unit}{[0..1]}\\
+&N_{VM} = \text{Quantité réelle de VM nécessaire pour délivrer le service}\\
+&I_{\text{operational, VM}_{i}} = \text{Impact opérationnel d'une VM pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&I_{\text{operational, CDN}_{i}} = \text{Impact opérationnel du CDN pour l’indicateur}\textit{ i }\text{si présent, 0 sinon}\htmlClass{unit}{[U_i]}\\
+\end{align*}
+$$
 
-TODO formule
-
-#### Sans CDN
-
-TODO formule
-
-Dans le calcul des variables OperationalImpactXDatacenter, la valeur du REF est basée sur la détection par the greenwebfoundation[^47] d’un hébergement « vert » (REF = 1) ou non (REF = 0).  
+Dans le calcul des variables $I_{operational_i}$, la valeur du REF est basée sur la détection par the greenwebfoundation[^47] d’un hébergement « vert » (REF = 1) ou non (REF = 0).  
 
 [^47]: https://www.thegreenwebfoundation.org/
 

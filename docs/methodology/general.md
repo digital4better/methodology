@@ -2,7 +2,7 @@
 sidebar_label: Générale
 sidebar_position: 4
 slug: /general
---- 
+---
 
 # Méthodologies d'évaluation des impacts environnementaux 
 
@@ -182,9 +182,9 @@ $$
 Cette formule s’applique également dans le cas de facteurs de consommation d’électricité, pour l’évaluation des impacts opérationnels. Les valeurs de ImpactXMobileNetwork et ImpactXFixedNetwork seront à chercher dans la ligne « Quantité d'électricité nécessaire pour le procédé (kWh/Go) » du tableau des facteurs.
 
 Dans le cas d’un réseau fixe, la même formule s’applique mais se simplifie par l’absence de réseau mobile :
--	$P_{mobile} = 0$
--	$P_{desktop} = 1$
--	$P_{desktop,cellular} = 0$
+- $P_{mobile} = 0$
+- $P_{desktop} = 1$
+- $P_{desktop,cellular} = 0$
      
 Le facteur d’impact environnemental est directement égal au facteur « réseau fixe » fourni dans le tableau ci-dessus. 
 
@@ -245,13 +245,13 @@ Une approche système est réalisée sur des réseaux internes de type LAN lorsq
 
 #### Impact intrinsèque
 
-La formule ci-dessous permet le calcul de l’impact intrinsèque pour le transfert sur un réseau interne : d
+La formule ci-dessous permet le calcul de l’impact intrinsèque pour le transfert sur un réseau interne :
 
 $$
 \begin{align*}
 &I_{embodied_{i}} = V * CF_{embodied_{i}}\htmlClass{unit}{[U_i]}\\
 Avec \\
-&SI_{embodied_{i}} = \text{Impact intrinsèque du réseau pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&I_{embodied_{i}} = \text{Impact intrinsèque du réseau pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
 &V = \text{Volume de données transférées dans le réseau}\htmlClass{unit}{[o]}\\
 &CF_{embodied_{i}} = \text{Facteur de conversion pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i/o]}\\
 \end{align*}
