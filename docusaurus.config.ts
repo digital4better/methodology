@@ -45,6 +45,10 @@ export default {
         theme: {
           customCss: './src/css/custom.css',
         },
+        gtag: {
+          trackingID: 'G-8BWD3G06FF',
+          anonymizeIP: true,
+        },
       } satisfies Preset.Options,
     ],
   ],
