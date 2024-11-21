@@ -101,6 +101,6 @@ $$
 
 #### Conversion en impact opérationnel
 
-L’impact de consommation électrique corrigé est converti en impact opérationnel sur la base de la formule fournie au paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
+L’impact de consommation électrique corrigé est converti en impact opérationnel sur la base de la formule fournie au paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](../concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
 
 

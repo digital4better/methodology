@@ -72,9 +72,11 @@ In fine, nous obtenons une chance de vues par page comprise entre 0 et 1, et la 
 
 Pour chaque page, en multipliant le résultat final par le nombre de vues totales, on a alors les vues prédites par pages.
 
-## Evaluation des impacts environnementaux d’une page web – Terminal
+## Evaluation des impacts environnementaux d’une page web 
 
-### Paramètres 
+### Impact du terminal
+
+#### Paramètres 
 
 | Nom                  | Définition                                                                                                                                    | Valeur    par défaut                                                                       |
 |----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
@@ -86,7 +88,7 @@ Pour chaque page, en multipliant le résultat final par le nombre de vues totale
 [^1]: https://explore.contentsquare.com/digital-experience-benchmark-2023/2023-benchmark-fr
 [^3]: https://www.statista.com/statistics/277125/share-of-website-traffic-coming-from-mobile-devices/#:~:text=Mobile%20accounts%20for%20approximately%20half,permanently%20surpassing%20it%20in%202020
 
-### Facteurs d’impacts
+#### Facteurs d’impacts
 
 Les facteurs fournis par la Base Empreinte font l’objet d’une transformation pour :
 - Passer dans des unités de temps à la seconde pour coller aux ordres de grandeur des temps d’utilisation d’un service web
@@ -727,44 +729,75 @@ Le tableau ci-dessous présente les données utilisées pour cette adaptation ai
 [^6]:https://www.comparitech.com/tv-streaming/screen-time-statistics/ consulté en décembre 2023
 [^7]:8h par jour estimé sur la base d’une journée de travail type
 
-### Impact intrinsèque du terminal
+#### Impact intrinsèque du terminal
 
 L’impact intrinsèque du terminal s’évalue avec des facteurs propres à la nature du terminal. On a donc : 
 
-TODO
+$$
+\begin{align*}
+&I_{embodied_\text{equipment,i}} = I_{embodied_\text{desktop,i}} + I_{embodied_\text{mobile,i}}\htmlClass{unit}{[U_i]}\\
+Avec \\
+&I_{embodied_\text{equipment,i}} = \text{Impact intrinsèque des terminaux pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&I_{embodied_\text{desktop,i}} = \text{Impact intrinsèque des ordinateurs pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&I_{embodied_\text{mobile,i}} = \text{Impact intrinsèque des mobiles pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
+\end{align*}
+$$
 
-On calcule EmbodiedImpactXEquipment(mobile) à partir de la formule d’impact intrinsèque d’un équipement, vue au paragraphe [Impact intrinsèque d'un équipement](general.md#impact-intrinsèque-dun-équipement), avec :
+On calcule $I_{embodied_\text{mobile,i}}$ à partir de la formule d’impact intrinsèque d’un équipement, vue au paragraphe [Impact intrinsèque d'un équipement](../general.md#impact-intrinsèque-dun-équipement), avec :
 - Le facteur d’impact intrinsèque à récupérer dans la colonne « Mobile » du tableau de la page précédente en fonction de l’indicateur environnemental étudié 
-- Une durée d’utilisation évaluée à partir des paramètres mobiles  et selon la formule suivante : 
+- Une durée d’utilisation évaluée à partir des paramètres mobiles et selon la formule suivante : 
 
-TODO UsageDuration_mobile (s) = Views_mobile (-) *  UsageDurationPerView_mobile (s) * RatioMobileUser (-)
+$$
+\begin{align*}
+&D_{usage,mobile} = V_{mobile} \times D_{view,mobile}\htmlClass{unit}{[s]}\\
+Avec \\
+&D_{usage,mobile} = \text{Durée d'usage par des terminaux mobiles}\htmlClass{unit}{[s]}\\
+&V_{mobile} = \text{Nombre de vues effectuées avec un terminal mobile}\\
+&D_{view,mobile} = \text{Durée moyenne d'une vue effectuée avec un terminal mobile}\htmlClass{unit}{[s]}\\
+\end{align*}
+$$
 
-On calcule EmbodiedImpactXEquipment(desktop) à partir de la formule d’impact intrinsèque d’un équipement, vue au paragraphe [Impact intrinsèque d'un équipement](general.md#impact-intrinsèque-dun-équipement), avec :
+On calcule $I_{embodied_\text{desktop,i}}$ à partir de la formule d’impact intrinsèque d’un équipement, vue au paragraphe [Impact intrinsèque d'un équipement](../general.md#impact-intrinsèque-dun-équipement), avec :
 - Le facteur d’impact intrinsèque à récupérer dans la colonne « Desktop » du tableau de la page précédente en fonction de l’indicateur environnemental étudié 
-- Une durée d’utilisation évaluée à partir des paramètres desktop  et selon la formule suivante :
-     
-TODO UsageDuration_desktop (s) = Views_desktop (-) *  UsageDurationPerView_desktop (s) * RatioDesktopUser (-)
+- Une durée d’utilisation évaluée à partir des paramètres desktop et selon la formule suivante :
 
-### Impact opérationnel du terminal
+$$
+\begin{align*}
+&D_{usage,desktop} = V_{mobile} \times D_{view,desktop}\htmlClass{unit}{[s]}\\
+Avec \\
+&D_{usage,desktop} = \text{Durée d'usage par des ordinateurs}\htmlClass{unit}{[s]}\\
+&V_{mobile} = \text{Nombre de vues effectuées avec un ordinateur}\\
+&D_{view,desktop} = \text{Durée moyenne d'une vue effectuée avec un ordinateur}\htmlClass{unit}{[s]}\\
+\end{align*}
+$$
+
+#### Impact opérationnel du terminal
 
 La consommation d’électricité du terminal s’évalue avec des facteurs propres à la nature du terminal. On a donc : 
 
-TODO ImpactEnergyTerminal_web =
-ImpactEnergyEquipment(mobile) + ImpactEnergyEquipment(desktop)
+$$
+\begin{align*}
+&E_{elec_{equipement}} = E_{elec_{mobile}} + E_{elec_{desktop}}\htmlClass{unit}{[kWh]}\\
+Avec \\
+&E_{elec_{equipement}} = \text{Consommation électrique des équipements}\htmlClass{unit}{[kWh]}\\
+&E_{elec_{mobile}} = \text{Consommation électrique des mobiles}\htmlClass{unit}{[kWh]}\\
+&E_{elec_{desktop}} = \text{Consommation électrique des ordinateurs}\htmlClass{unit}{[kWh]}\\
+\end{align*}
+$$
 
-On calcule ImpactEnergyEquipment(mobile) à partir de la formule de consommation d’électricité d’un équipement vue au paragraphe [Impact opérationnel d'un équipement](general.md#impact-operationnel-dun-équipement), avec :
-- Le facteur d’impact opérationnel à récupérer sur la ligne « Impact énergie en kWh/sec» et dans la colonne « Mobile » du tableau de la page précédente 
-- La même durée d’utilisation que pour l’impact intrinsèque : UsageDuration_mobile 
+On calcule $E_{elec_{mobile}}$ à partir de la formule de consommation d’électricité d’un équipement vue au paragraphe [Impact opérationnel d'un équipement](../general.md#impact-opérationnel-dun-équipement), avec :
+- Le facteur d’impact opérationnel à récupérer sur la ligne « Impact énergie en kWh/s » et dans la colonne « Mobile » du tableau de la page précédente 
+- La même durée d’utilisation que pour l’impact intrinsèque : $D_{usage,mobile}$ 
 
-On calcule ImpactEnergyEquipment(desktop) à partir de la formule de consommation d’électricité d’un équipement vue au paragraphe [Impact opérationnel d'un équipement](general.md#impact-operationel-dun-équipement), avec :
--	Le facteur d’impact opérationnel à récupérer sur la ligne « Impact énergie en kWh/sec» et dans la colonne « Desktop » du tableau de la page précédente
--	La même durée d’utilisation que pour l’impact intrinsèque : UsageDuration_desktop
+On calcule $E_{elec_{desktop}}$ à partir de la formule de consommation d’électricité d’un équipement vue au paragraphe [Impact opérationnel d'un équipement](../general.md#impact-opérationnel-dun-équipement), avec :
+-	Le facteur d’impact opérationnel à récupérer sur la ligne « Impact énergie en kWh/s » et dans la colonne « Desktop » du tableau de la page précédente
+-	La même durée d’utilisation que pour l’impact intrinsèque : $D_{usage,desktop}$
 
-La conversion de la consommation électrique en impact opérationnel se fait sur la base de la formule fournie dans le paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
+La conversion de la consommation électrique en impact opérationnel se fait sur la base de la formule fournie dans le paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](../concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
 
-## Evaluation des impacts environnementaux d’une page web – réseau
+### Impact du réseau
 
-### Paramètres
+#### Paramètres
 
 | Nom                   | Définition                                                                                                                                                      | Valeur    par défaut                                                                       |
 |-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------|
@@ -774,31 +807,79 @@ La conversion de la consommation électrique en impact opérationnel se fait sur
 | CacheEfficiency       | Ratio des données transférées non rechargées lors d’une deuxième visite                                                                                         |                                                                                            |
 | CacheHitRatioCDN      | Présence ou non d’un CDN et hit ratio de celui-ci                                                                                                               | Si pas de CDN CacheHitRatio = 0<br/>Sinon CacheHitRatio = 0.95                             |
 
-### Impact intrinsèque du réseau
+#### Segmentation du réseau
 
-L’impact intrinsèque du réseau se calcule en prenant en compte l’effet de cache et les paramètres du réseau étudié :
+![network-operational-map.png](network-operational-map.png)
 
-TODO formule
-TODO carte
+Afin de tenir compte de l'effet des distances et des pays des réseaux sur lesquels transite la donnée, le réseau entre l'utilisateur et le datacenter est modélisé comme l'agrégation de 3 segments :
+- le segment du pays de l’utilisateur (Segment 1)
+- le segment interpays (Segment 2)
+- le segment du pays du centre de donnée (Segment 3)
 
-Cette agrégation prend en compte le hit ratio du CDN s’il en existe un :
+#### Impact intrinsèque du réseau
 
-TODO formule
+L’impact intrinsèque du réseau se calcule en prenant en compte l’effet du cache navigateur, la présence d'un CDN et les paramètres du réseau étudié :
 
-### Impact opérationnel du réseau
+$$
+\begin{align*}
+&I_{embodied_{network}} = V_{page} \times (1 - P_{returning} \times P_{cache}) \times (SI_{embodied_1} + (1 - HR_{CDN}) \times (SI_{embodied_2} + SI_{embodied_3}))\htmlClass{unit}{[U_i]}\\
+Avec \\
+&I_{embodied_{network}} = \text{Impact intrinsèque du réseau}\htmlClass{unit}{[U_i]}\\
+&V_{page} = \text{Nombre de vues de la page}\\
+&P_{returning} = \text{Pourcentage de visiteurs récurrents}\htmlClass{unit}{[0..1]}\\
+&P_{cache} = \text{Pourcentage des données transférées non rechargées par le navigateur}\htmlClass{unit}{[0..1]}\\
+&SI_{embodied_1} = \text{Impact intrinsèque du segment "pays de l'utilisateur"}\htmlClass{unit}{[U_i]}\\
+&SI_{embodied_2} = \text{Impact intrinsèque du segment "interpays"}\htmlClass{unit}{[U_i]}\\
+&SI_{embodied_3} = \text{Impact intrinsèque du segment "pays du datacenter"}\htmlClass{unit}{[U_i]}\\
+&HR_{CDN} = \text{Pourcentage de hits du CDN si présent, 0 sinon}\htmlClass{unit}{[0..1]}\\
+\end{align*}
+$$
 
-La consommation électrique du réseau se calcule en prenant en compte l’effet de cache et les paramètres du réseau étudié :
+#### Impact opérationnel du réseau
 
-TODO formule
-TODO carte
+La consommation électrique du réseau se calcule en prenant en compte l’effet du cache navigateur, la présence d'un CDN et les paramètres du réseau étudié :
 
-Cette agrégation prend en compte le hit ratio du CDN s’il en existe un :
+$$
+\begin{align*}
+&E_{elec_{network}} = V_{page} \times (1 - P_{returning} \times P_{cache}) \times (SE_{elec_1} + (1 - HR_{CDN}) \times (SE_{elec_2} + SE_{elec_3}))\htmlClass{unit}{[kWh]}\\
+Avec \\
+&E_{elec_{network}} = \text{Consommation électrique du réseau}\htmlClass{unit}{[kWh]}\\
+&V_{page} = \text{Nombre de vues de la page}\\
+&P_{returning} = \text{Pourcentage de visiteurs récurrents}\htmlClass{unit}{[0..1]}\\
+&P_{cache} = \text{Pourcentage des données transférées non rechargées par le navigateur}\htmlClass{unit}{[0..1]}\\
+&SE_{elec_1} = \text{Consommation d’électricité du segment "pays de l'utilisateur"}\htmlClass{unit}{[kWh]}\\
+&SE_{elec_2} = \text{Consommation d’électricité du segment "interpays"}\htmlClass{unit}{[kWh]}\\
+&SE_{elec_3} = \text{Consommation d’électricité du segment "pays du datacenter"}\htmlClass{unit}{[kWh]}\\
+&HR_{CDN} = \text{Pourcentage de hits du CDN si présent, 0 sinon}\htmlClass{unit}{[0..1]}\\
+\end{align*}
+$$
 
-TODO formule
+On dispose ici de la consommation électrique globale de l’utilisation du réseau, ce qui correspond à l’indicateur de flux attendu conformément au paragraphe [Indicateurs pris en compte dans l’évaluation](../principles.md#indicateurs-pris-en-compte-dans-lévaluation).
 
-## Evaluation des impacts environnementaux d’une page web – serveur
+On calcule l'énergie des 3 segments $SE_{elec_n}$ conformément aux dispositions vues au paragraphe [Cas d’un réseau externe, type WAN](../general.md#approche--système----cas-dun-réseau-externe-type-wan). Les mêmes valeurs par défaut sont appliquées que pour l’impact intrinsèque lorsqu’on ne connaît pas les ratios d’usages mobiles/fixes et mobile/desktop.
 
-### Répartition de l’impact par page
+Sur les 3 segments, le réseau peut traverser potentiellement plusieurs pays différents et donc avec des mix électriques qui leur sont propres. La conversion de la consommation électrique en impact doit ainsi se faire de manière individuelle par segment, conformément à la formule fournie au paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](../concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
+
+Ces impacts par segments sont ensuite agrégés, sur le même modèle que $E_{elec_{network}}$, pour obtenir l’impact global du réseau sur tout son trajet.
+
+$$
+\begin{align*}
+&I_{i_{network}} = V_{page} \times (1 - P_{returning} \times P_{cache}) \times (SI_{i_1} + (1 - HR_{CDN}) \times (SI_{i_2} + SI_{i_3}))\htmlClass{unit}{[U_i]}\\
+Avec \\
+&I_{i_{network}} = \text{Impact du réseau}\text{pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&V_{page} = \text{Nombre de vues de la page}\\
+&P_{returning} = \text{Pourcentage de visiteurs récurrents}\htmlClass{unit}{[0..1]}\\
+&P_{cache} = \text{Pourcentage des données transférées non rechargées par le navigateur}\htmlClass{unit}{[0..1]}\\
+&SI_{i_1} = \text{Impact du segment "pays de l'utilisateur"}\text{pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&SI_{i_2} = \text{Impact du segment "interpays"}\text{pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&SI_{i_3} = \text{Impact du segment "pays du datacenter"}\text{pour l’indicateur environnemental}\textit{ i }\htmlClass{unit}{[U_i]}\\
+&HR_{CDN} = \text{Pourcentage de hits du CDN si présent, 0 sinon}\htmlClass{unit}{[0..1]}\\
+\end{align*}
+$$
+
+### Impact du serveur
+
+#### Répartition de l’impact par page
 
 L’impact du centre de donnée est évalué de manière globale, pour l’ensemble du site web $$I_{datacenter}$$. 
 Cet impact est ensuite réparti avec le ratio de vues pour chacune des pages ($$V_{page}/V_{total}$$) pour obtenir l’impact de chaque page $$I_{datacenter,page}$$ :
@@ -815,7 +896,7 @@ Avec \\
 $$
 
 
-### Simulation des paramètres serveur
+#### Simulation des paramètres serveur
 
 L’utilisation des données et caractéristiques réelles des serveurs est toujours à privilégier par rapport aux méthodes de simulation que nous allons exposer ici.
 
@@ -828,7 +909,7 @@ Nous cherchons à obtenir 2 valeurs :
 
 Dans la suite de la section, nous prenons l’hypothèse d’une durée d’évaluation d’1 an, c’est-à-dire d’un cas où on cherche à connaître l’impact serveur sur 1 an d’utilisation du site web.
 
-#### Si nous ne disposons d'aucune information sur la durée et la configuration serveur.
+##### Si nous ne disposons d'aucune information sur la durée et la configuration serveur.
 
 Dans un premier temps, nous estimons la durée d’utilisation totale du service $D_{total}$ qui correspond à la durée cumulée de toutes les vues.
 
@@ -876,7 +957,7 @@ Avec \\
 \end{align*}
 $$
 
-#### Si on connait la durée d’utilisation du serveur
+##### Si on connait la durée d’utilisation du serveur
 
 La valeur de la durée d'utilisation serveur $D_{server}$ est déterminée depuis les analytics ou les données serveurs. Nous déterminons le nombre de VM nécessaires au fonctionnement $N_{VM,ideal}$ à partir de celle-ci et de l'audience du service $D_{total}$.
 
@@ -893,7 +974,7 @@ $$
 
 [^42]: Configuration : 8 vCPU, 32 GB dedicated RAM, 5 years lifespan
 
-### Impact intrinsèque du centre de données
+#### Impact intrinsèque du centre de données
 
 Les impacts intrinsèques des serveurs reposent sur une approche équipement. Le fait que seuls les impacts des équipements informatiques sont considérés (et pas ceux du centre de donnée dans son ensemble) constitue une limite actuelle de la méthodologie.
 
@@ -904,14 +985,14 @@ $$
 &I_{embodied_i} = (1 - HR_{CDN}) \times \left( N_{VM} \times I_{\text{embodied, VM}_{i}} \right) + I_{\text{embodied, CDN}_{i}}\htmlClass{unit}{[U_i]}\\
 Avec \\
 &I_{embodied_i} = \text{Impact intrinsèque du centre de données pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
-&HR_{cache} = \text{Pourcentage de hits du CDN si présent, 0 sinon}\htmlClass{unit}{[0..1]}\\
+&HR_{CDN} = \text{Pourcentage de hits du CDN si présent, 0 sinon}\htmlClass{unit}{[0..1]}\\
 &N_{VM} = \text{Quantité réelle de VM nécessaire pour délivrer le service}\\
 &I_{\text{embodied, VM}_{i}} = \text{Impact intrinsèque d'une VM pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
 &I_{\text{embodied, CDN}_{i}} = \text{Impact intrinsèque du CDN pour l’indicateur}\textit{ i }\text{si présent, 0 sinon}\htmlClass{unit}{[U_i]}\\
 \end{align*}
 $$
 
-### Impact opérationnel du centre de données
+#### Impact opérationnel du centre de données
 
 Les impacts opérationnels des serveurs reposent sur une estimation de type système. On fait la somme des impacts des n VM $N_{VM}$ pour estimer la consommation d’énergie puis on transforme pour connaitre la consommation d’énergie du centre de données. 
 
@@ -920,7 +1001,7 @@ $$
 &I_{operational_i} = (1 - HR_{CDN}) \times \left( N_{VM} \times I_{\text{operational, VM}_{i}} \right) + I_{\text{operational, CDN}_{i}}\htmlClass{unit}{[U_i]}\\
 Avec \\
 &I_{operational_i} = \text{Impact opérationnel du centre de données pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
-&HR_{cache} = \text{Pourcentage de hits du CDN si présent, 0 sinon}\htmlClass{unit}{[0..1]}\\
+&HR_{CDN} = \text{Pourcentage de hits du CDN si présent, 0 sinon}\htmlClass{unit}{[0..1]}\\
 &N_{VM} = \text{Quantité réelle de VM nécessaire pour délivrer le service}\\
 &I_{\text{operational, VM}_{i}} = \text{Impact opérationnel d'une VM pour l’indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
 &I_{\text{operational, CDN}_{i}} = \text{Impact opérationnel du CDN pour l’indicateur}\textit{ i }\text{si présent, 0 sinon}\htmlClass{unit}{[U_i]}\\

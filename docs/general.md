@@ -1,5 +1,5 @@
 ---
-sidebar_label: Générale
+sidebar_label: Méthodologie générale
 sidebar_position: 4
 slug: /general
 ---
@@ -339,7 +339,7 @@ La conversion de la consommation électrique en impact opérationnel se fait sur
 
 $$
 \begin{align*}
-&I_{operational_{i,p}} = E_{elec_p} \times (REF \times IF_{i,p} + (1 - REF) \times RIF_{i,p})\htmlClass{unit}{[U_i]}\\
+&I_{operational_{i,p}} = E_{elec_p} \times (REF \times RIF_{i,p} + (1 - REF) \times IF_{i,p})\htmlClass{unit}{[U_i]}\\
 Avec\\
 &I_{operational_{i,p}} = \text{Impact opérationnel pour l’indicateur environnemental}\textit{ i }\text{dans le pays}\textit{ p }\htmlClass{unit}{[U_i]}\\
 &E_{elec_p} = \text{Energie électrique consommée dans le pays}\textit{ p }\htmlClass{unit}{[kWh]}\\
