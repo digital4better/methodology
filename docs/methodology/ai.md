@@ -1,7 +1,7 @@
 ---
 sidebar_label: IA Génératives
+sidebar_position: 6
 slug: /ai
-unlisted: true
 ---
 
 # Méthodologie d'évaluation des impacts environnementaux des IA génératives
@@ -22,7 +22,7 @@ C --> D[Consommation énergétique GPU]
 D --> E[Impact opérationnel GPU]
 C --> F[Impact fabrication GPU]
 C --> C'[Détermination part serveur]
-C' --> D'[Consommation énergétique serveur]    
+C' --> D'[Consommation énergétique serveur]
 D' --> E'[Impact opérationnel serveur]
 C' --> F'[Impact fabrication serveur]
 F --> G[Impact total]
@@ -38,19 +38,19 @@ Plutôt que de partir de mesures globales de consommation électrique au niveau 
 
 Cette charge de calcul est exprimée en FLOPs, puis convertie en temps d’utilisation effectif du matériel (GPUh) en tenant compte de l’efficacité réelle (Model FLOP Utilization, MFU).
 
-L’étape suivante consiste à traduire ce temps d’utilisation en énergie consommée et en émissions GES, à partir des caractéristiques physiques des GPU/serveurs et des conditions d’exploitation (PUE, facteur d’émission électrique).
-
-Enfin, une part de l’impact lié à la fabrication et au cycle de vie des équipements est ajoutée proportionnellement au temps d’usage.
-
 L’étape suivante traduit ce temps d’utilisation en consommation énergétique et en émissions de GES, à partir des caractéristiques physiques des GPU/serveurs et des conditions d’exploitation (PUE, facteur d’émission électrique).
 
 Enfin, une part de l’impact lié à la fabrication et au cycle de vie des équipements est ajoutée proportionnellement au temps d’usage, suivant une logique inspirée de l’Analyse de Cycle de Vie (ACV) (ISO 14040 et 14044).
+
+:::note[Pourquoi utiliser les FLOPs comme métrique ?]
+D'après l'étude Green AI[^15], les FLOPs sont une métrique pertinente pour mesurer l’impact des IA génératives, car ils expriment la charge de calcul réellement effectuée, directement corrélée à la consommation d’énergie et fournissent une base indépendante du matériel pour comparer équitablement différents modèles.
+:::
 
 ## Evaluation des impacts
 
 ### Estimation de la charge de calcul
 
-| Cas d'usage          | Formule de calcul                                                                           | Variables                                                                                                                                                                                         | Explication                                                                                                                                                                                                                                                                                      | 
+| Cas d'usage          | Formule de calcul                                                                           | Variables                                                                                                                                                                                         | Explication                                                                                                                                                                                                                                                                                      |
 |----------------------|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Entraînement         | $FLOP \approx 6 \times P_\text{total} \times T_\text{training}$                             | $P_{total}$ : nombre total de paramètres du modèle<br/>$T_{training}$: nombre de tokens traités pendant l'entraînement (tokens × batch × steps)                                                   | Pour chaque jeton et paramètre il faut 6 FLOPs : 2 FLOPs pour la passe forward et 4 pour le calcul de gradient et la propagation<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                               |
 | Fine tuning          | $FLOP \approx (2 \times P_\text{total} + 4 \times P_\text{tuned}) \times T_\text{training}$ | $P_{total}$ : nombre total de paramètres du modèle<br/>$P_{tuned}$ : nombre de paramètres fine tunés<br/>$T_{training}$: nombre de tokens traités pendant l'entraînement (tokens × batch × steps) | Idem que pour l'entrainement complet, néanmoins le nombre de paramètres mis à jour est moindre<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                                                                 |
@@ -115,7 +115,7 @@ $$$I_{total} = I_{gpu} + \frac{I_{server}}{N_{gpu/server}}$$$
 
 - Prendre en compte des métriques publiques comme tokens/s en plus des FLOPs.
 - Prendre en compte plus précisément le Time To First Token (latence de l'inférence du prompt + overhead réseau, allocation, ...).
-- Intégrer à la méthodologie l'amortissement de l’entraînement sur l’inférence.  
+- Intégrer à la méthodologie l'amortissement de l’entraînement sur l’inférence.
 - Adapter le MFU en fonction des caractéristiques du serveur (nombre de GPU par serveur, ...).
 - Adapter la méthodologie aux modèles multimodaux (texte, image, vidéo).
 - Intégrer des facteurs d’impact multi-critères (énergie primaire, eau, métaux rares).
@@ -162,7 +162,7 @@ Le NVIDIA DGX H100 est une configuration "classique" sur laquelle sont exécuté
 
 Llama 3.1 (405B paramètres) a été entrainé avec environ 15 trillions (15e12) jetons.
 D'après Huggingface, il a été entrainé avec 24576 GPU H100 :
-Training Time (GPU hours)	Power Consumption (W)	Emissions (tons CO2eq)
+Training Time (GPU hours)    Power Consumption (W)    Emissions (tons CO2eq)
 Llama 3.1 8B	1.46M	700	420
 Llama 3.1 70B	7.0M	700	2 040
 Llama 3.1 405B	30.84M	700	8 930
@@ -211,6 +211,7 @@ $$$
 $$$
 
 Si l'on considère une taille de "prompt moyen" d'environ 400 jetons, alors l'impact d'une requête est d'environ 0,1 gCO2e.
+
 
 [^1]: J. Kaplan, S. McCandlish, ..., 2020. [Scaling Laws for Neural Language Models](https://arxiv.org/pdf/2001.08361)
 [^2]: A. Habibian, A. Ghodrati, ... 2024. [Clockwork Diffusion: Efficient Generation With Model-Step Distillation](https://arxiv.org/html/2312.08128v2)
