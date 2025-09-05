@@ -1,5 +1,15 @@
 export const UNITS = {
-  flops: ["FLOPS", "kFLOPS", "MFLOPS", "GFLOPS", "TFLOPS", "PFLOPS"],
+  flops: [
+    "FLOPS",
+    "kFLOPS",
+    "MFLOPS",
+    "GFLOPS",
+    "TFLOPS",
+    "PFLOPS",
+    "EFLOPS",
+    "ZFLOPS",
+    "YFLOPS",
+  ],
   wh: ["Wh", "kWh", "MWh", "GWh", "TWh", "PWh"],
   gwp: ["gCO2e", "kgCO2e", "tCO2e", "ktCO2e", "MtCO2e", "GtCO2e"],
   tokens: ["tokens/s"],

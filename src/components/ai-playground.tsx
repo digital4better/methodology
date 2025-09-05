@@ -15,10 +15,10 @@ const COLORS = [
 
 const MODELS = [
   {
-    label: "LLama 3.1 450b",
-    value: "llama-3.1-450",
+    label: "LLama 3.1 405b",
+    value: "llama-3.1-405",
     architecture: "dense",
-    parameters: [450e9, 450e9],
+    parameters: [405e9, 405e9],
   },
   {
     label: "LLama 3.1 70b",
@@ -198,6 +198,7 @@ const compute = ({
   height: number;
   steps: number;
 }): Result => {
+  const pue = 1.2;
   const lifespan = 5 * 365.25 * 24;
   const { gwp } = REGIONS.find(({ value }) => region === value);
   const {
@@ -277,11 +278,11 @@ const compute = ({
     enclosure: 0,
     total: 0,
   };
-  wh.gpu = gpu_hours * gpu_power;
-  wh.cpu = (gpu_hours * (cpu_count * cpu_power)) / gpu_count;
-  wh.ram = (gpu_hours * (ram * ram_power)) / gpu_count;
-  wh.storage = (gpu_hours * (ssd * ssd_power)) / gpu_count;
-  wh.enclosure = (gpu_hours * enclosure_power) / gpu_count;
+  wh.gpu = gpu_hours * gpu_power * pue;
+  wh.cpu = ((gpu_hours * (cpu_count * cpu_power)) / gpu_count) * pue;
+  wh.ram = ((gpu_hours * (ram * ram_power)) / gpu_count) * pue;
+  wh.storage = ((gpu_hours * (ssd * ssd_power)) / gpu_count) * pue;
+  wh.enclosure = ((gpu_hours * enclosure_power) / gpu_count) * pue;
   wh.total = wh.cpu + wh.gpu + wh.ram + wh.storage + wh.enclosure;
 
   const energy = {
