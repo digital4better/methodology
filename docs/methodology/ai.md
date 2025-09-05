@@ -4,7 +4,7 @@ sidebar_position: 6
 slug: /ai
 ---
 
-# Méthodologie d'évaluation des impacts environnementaux des IA génératives
+# Méthodologie appliquée aux IA génératives
 
 ## Résumé
 
@@ -50,13 +50,13 @@ D'après l'étude Green AI[^15], les FLOPs sont une métrique pertinente pour me
 
 ### Estimation de la charge de calcul
 
-| Cas d'usage          | Formule de calcul                                                                           | Variables                                                                                                                                                                                         | Explication                                                                                                                                                                                                                                                                                      |
-|----------------------|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Entraînement         | $FLOP \approx 6 \times P_\text{total} \times T_\text{training}$                             | $P_{total}$ : nombre total de paramètres du modèle<br/>$T_{training}$: nombre de tokens traités pendant l'entraînement (tokens × batch × steps)                                                   | Pour chaque jeton et paramètre il faut 6 FLOPs : 2 FLOPs pour la passe forward et 4 pour le calcul de gradient et la propagation<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                               |
-| Fine tuning          | $FLOP \approx (2 \times P_\text{total} + 4 \times P_\text{tuned}) \times T_\text{training}$ | $P_{total}$ : nombre total de paramètres du modèle<br/>$P_{tuned}$ : nombre de paramètres fine tunés<br/>$T_{training}$: nombre de tokens traités pendant l'entraînement (tokens × batch × steps) | Idem que pour l'entrainement complet, néanmoins le nombre de paramètres mis à jour est moindre<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                                                                 |
-| Traitement du prompt | $FLOP \approx 1 \times P_{active} \times T_{input}$                                         | $P_{active}$ : nombre de paramètres actifs<br/>$T_{input}$: nombre de tokens du prompt                                                                                                            | Avec le KV cache activé, le prompt est encodé une fois : le coût est réduit à ≈ 1 FLOP par paramètre/token.<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                                                    |
-| Génération de texte  | $FLOP \approx 2 \times P_\text{active} \times T_\text{output}$                              | $P_{active}$ : nombre de paramètres actifs<br/>$T_{output}$: nombre de tokens générés                                                                                                             | Pour chaque jeton et paramètre il faut 2 FLOPs pour la passe forward.<br/>Le nombre de paramètres actifs lors de l'inférence dépend de l'architecture du modèle (en particulier pour les MoE).<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8]) |
-| Génération d'image   | $FLOP \approx 2 \times P_\text{active} \times N_\text{activation}$                          | $N_{activations}$: nombre d'activations = largeur x hauteur x nombre de canaux                                                                                                                    | Pour chaque activation et paramètre il faut 2 FLOPs pour la passe forward<br/>(Source : Clockwork Diffusion[^2], Transformers Inference Arithmetic)                                                                                                                                              |
+| Cas d'usage          | Formule de calcul                                                                             | Variables                                                                                                                                                                                                                                    | Explication                                                                                                                                                                                                                                                                                      |
+|----------------------|-----------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Entraînement         | $FLOP \approx 6 \times P_\text{total} \times T_\text{training}$                               | $P_{total}$ : nombre total de paramètres du modèle<br/>$T_{training}$: nombre de tokens traités pendant l'entraînement (tokens × batch × steps)                                                                                              | Pour chaque jeton et paramètre il faut 6 FLOPs : 2 FLOPs pour la passe forward et 4 pour le calcul de gradient et la propagation<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                               |
+| Fine tuning          | $FLOP \approx (2 \times P_\text{total} + 4 \times P_\text{tunable}) \times T_\text{training}$ | $P_{total}$ : nombre total de paramètres du modèle<br/>$P_{tunable}$ : nombre de paramètres entrainables (dépend de l'optimisation : LoRA, ...)<br/>$T_{training}$: nombre de tokens traités pendant l'entraînement (tokens × batch × steps) | Idem que pour l'entrainement complet, néanmoins le nombre de paramètres mis à jour est moindre<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                                                                 |
+| Traitement du prompt | $FLOP \approx 1 \times P_{active} \times T_{input}$                                           | $P_{active}$ : nombre de paramètres actifs<br/>$T_{input}$: nombre de tokens du prompt                                                                                                                                                       | Avec le KV cache activé, le prompt est encodé une fois : le coût est réduit à ≈ 1 FLOP par paramètre/token.<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                                                    |
+| Génération de texte  | $FLOP \approx 2 \times P_\text{active} \times T_\text{output}$                                | $P_{active}$ : nombre de paramètres actifs<br/>$T_{output}$: nombre de tokens générés                                                                                                                                                        | Pour chaque jeton et paramètre il faut 2 FLOPs pour la passe forward.<br/>Le nombre de paramètres actifs lors de l'inférence dépend de l'architecture du modèle (en particulier pour les MoE).<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8]) |
+| Génération d'image   | $FLOP \approx 2 \times P_\text{active} \times N_\text{activation}$                            | $N_{activations}$: nombre d'activations = largeur x hauteur x nombre de canaux                                                                                                                                                               | Pour chaque activation et paramètre il faut 2 FLOPs pour la passe forward<br/>(Source : Clockwork Diffusion[^2], Transformers Inference Arithmetic)                                                                                                                                              |
 
 ### Conversion en usage GPU
 
@@ -111,34 +111,17 @@ $$$I_{total} = I_{gpu} + \frac{I_{server}}{N_{gpu/server}}$$$
 - Pas de prise en charge des spécificités éventuelles des TPU, FPGA, Asics, ...
 - Pas d'ACV fiable sur les équipements.
 
-### Améliorations possibles
+### Perspectives
 
 - Prendre en compte des métriques publiques comme tokens/s en plus des FLOPs.
-- Prendre en compte plus précisément le Time To First Token (latence de l'inférence du prompt + overhead réseau, allocation, ...).
+- Prendre en compte la précision (FP32, FP16, ...)
+- Intégrer un overhead pour prendre en compte l'impact du parallélisme (réseau, réplication, queuing, ...).
+- Intégrer la mémoire GPU comme goulet d'étranglement.
 - Intégrer à la méthodologie l'amortissement de l’entraînement sur l’inférence.
+- Adapter le MFU en fonction des caractéristiques du serveur (nombre de GPU par serveur, ...).
 - Adapter le MFU en fonction des caractéristiques du serveur (nombre de GPU par serveur, ...).
 - Adapter la méthodologie aux modèles multimodaux (texte, image, vidéo).
 - Intégrer des facteurs d’impact multi-critères (énergie primaire, eau, métaux rares).
-
-## Comparaison
-
-Cette section propose une comparaison de méthodologies disponibles pour l’évaluation des impacts environnementaux des modèles d’IA générative. Elle met en évidence leurs périmètres, leurs forces et leurs limites, afin de situer la méthodologie D4B par rapport aux approches existantes.
-
-| Caractéristique                                           | Full ACV (Google, 2025)[^3][^4]                                                                                 | Ecologits[^14]                                                                        | Méthodologie D4B                                                        |
-|-----------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| Type d’approche                                           | Mesure full-stack : CPU/DRAM, machines idle, datacenter overhead, eau, ACV partielle du hardware                | Evaluation bottom-up appliqué à l’inférence uniquement (usage + fabrication)          | Modélisation FLOPs → GPUh → Impacts                                     |
-| Périmètre                                                 | Fabrication (partielle), usage (tous composants serveur), infrastructure datacenter, eau, émissions Scope 2/3   | Usage infra + fabrication, inférence seulement                                        | Usage entraînement, fine tuning, inférence + fabrication GPU et serveur |
-| Granularité & mesure                                      | Très fine : mesures réelles sur production Gemini, énergie, eau, émissions                                      | Moyenne haute, open data multi-critères (GWP, PE, ADPe) agrégés par appel API         | Moyenne modérée : dépend des données disponibles (FLOPs, TDP, ...)      |
-| Accessibilité                                             | Faible : données internes Google peu explicitées                                                                | Elevée : code open-source, API ouverte                                                | Elevée : méthodes et hypothèses documentées publiquement                |
-| Reproductibilité                                          | Faible : instrumentation propriétaire et données internes                                                       | Forte : outil public, calculs transparents et reproductibles                          | Moyenne à élevée : si les données d’entrée sont estimables              |
-| Transparence                                              | Moyenne : publication méthode mais accès aux données limité                                                     | Forte : codes, hypothèses et modèle open source                                       | Forte : toutes les formules et sources sont explicitées                 |
-| Précision (sur inférence)                                 | Très élevée : vrai déploiement mesuré, inclut spectre complet d’énergie                                         | Moyenne : repose sur modèles simplifiés et hypothèses généralisées                    | Moyenne à élevée selon la précision des paramètres choisis              |
-| Applicabilité                                             | Limitée : spécifique à l’infrastructure Google et inférence                                                     | Moyenne : inférence sur divers fournisseurs, mais pas entraînement                    | Très large : entraînement, fine tuning, inférence sur base publique     |
-| Usages visés                                              | Analyse interne, reporting fin, communication                                                                   | Évaluation publique, sensibilisation, comparateur multi-fournisseurs                  | Recherche, évaluation interne, FinOps, Green AI                         |
-| Résultats chiffrés<br/>(Prompt moyen, environ 400 jetons) | ~0,03 gCO2e Gemini                                                                                              | ~40 gCO2e LLama 3.1 405b                                                              | ~0,1 gCO2e LLama 3.1 405b<br/>(cf. Applications)                        |
-| Limites clés                                              | Données propriétaires, ne couvre pas l’entraînement, se concentre sur l'inférence, biais sur le “prompt median” | Périmètre limité (inférence seule), possible surestimation du fait de l'extrapolation | Dépend fortement des hypothèses (MFU, durée de vie)                     |
-
-Ces résultats montrent que chaque approche a un positionnement spécifique : Google privilégie la précision mais reste fermé et non reproductible, Ecologits mise sur la transparence et la simplicité mais au prix d’une surestimation possible, tandis que la méthodologie D4B propose un compromis reproductible et adaptable aux différents contextes d’usage mais dépend de la précision des données d'entrée.
 
 ## Application
 
@@ -148,15 +131,15 @@ Cette section a pour but d'évaluer le modèle en utilisant les données publiqu
 
 Le NVIDIA DGX H100 est une configuration "classique" sur laquelle sont exécutés les traitements.
 
-| Caractéristiques     | Composant                                                  | Puissance                          | Impact cycle de vie (approximatif)           |
-|----------------------|------------------------------------------------------------|------------------------------------|----------------------------------------------|
-| CPU                  | 2 x Intel Xeon Platinum 8480C processors (112 cores total) | 2 x 350 = 700 W                    | 2 x 25 = 50 kgCO2e                           |
-| RAM                  | 2TB2 x 1024 x 0.392 = 803 W                                | 2 x 1024 x 533 / 284 = 3843 kgCO2e |                                              |
-| Storage              | 30 TB SSD                                                  | 30 x 1024 x 0.0012 = 37 W          | 30 x 1024 x 0.16 = 4915 kgCO2e               |
-| GPU                  | 8 x H100 80 GB(989 TFLOP/s par GPU)                        | 8 x 700 W                          | 8 x 250 kgCO2e                               |
-| Chassis              |                                                            | -                                  | 250 kgCO2e                                   |
-| Total (hors GPU)     |                                                            | 1540 W                             | 9058 kgCO2e                                  |
-| Total (hors GPU) / h |                                                            | 1540 W                             | 9058 / (5 x 24 x 365, 25) = 0,206 kgCO2e / h |
+| Caractéristiques     | Composant                                                  | Puissance                 | Impact cycle de vie (approximatif)            |
+|----------------------|------------------------------------------------------------|---------------------------|-----------------------------------------------|
+| CPU                  | 2 x Intel Xeon Platinum 8480C processors (112 cores total) | 2 x 350 = 700 W           | 2 x 25 = 50 kgCO2e                            |
+| RAM                  | 2TB                                                        | 2 x 1024 x 0.392 = 803 W  | 2 x 1024 x 533 / 384 = 2843 kgCO2e            |                                             
+| Storage              | 30 TB SSD                                                  | 30 x 1024 x 0.0012 = 37 W | 30 x 1024 x 0.16 = 4915 kgCO2e                |
+| GPU                  | 8 x H100 80 GB(989 TFLOP/s par GPU)                        | 8 x 700 W                 | 8 x 250 kgCO2e                                |
+| Chassis              |                                                            | -                         | 250 kgCO2e                                    |
+| Total (hors GPU)     |                                                            | 1540 W                    | 10058 kgCO2e                                  |
+| Total (hors GPU) / h |                                                            | 1540 W                    | 10058 / (5 x 24 x 365, 25) = 0,230 kgCO2e / h |
 
 ### Impact de l'entrainement
 
@@ -195,7 +178,7 @@ A l'impact du GPU il convient d'ajouter l'impact opérationnel et intrinsèque d
 $$$
 \begin{aligned}
 &I_{training_{ope}} = I^{gpu}_{training_{ope}} + \frac{I^{server}_{training_{ope}}}{8} = 9030 + \frac{25,6e6 \times 1,540 \times 0,420 \times 1,2 }{8} = 11513 tCO2e \\
-&I_{training_{emb}} = I^{gpu}_{training_{emb}} + \frac{I^{server}_{training_{emb}}}{8} = 146 + \frac{25,6e6 \times 0,000206}{8} = 805tCO2e
+&I_{training_{emb}} = I^{gpu}_{training_{emb}} + \frac{I^{server}_{training_{emb}}}{8} = 146 + \frac{25,6e6 \times 0,000230}{8} = 899tCO2e
 \end{aligned}
 $$$
 
@@ -206,12 +189,37 @@ Dans le cloud, lorsqu'on utilise un LLM en mode "complétion", grâce au KV cach
 $$$
 \begin{aligned}
 &I^{gpu}_{output_{ope}} = \frac{2 \times 405e9 \times 1e6}{989e12 \times 3600 \times 0,40} \times (0,700 + \frac{1,540}{8}) \times 1,2 \times 0,420 = 256gCO2e \\
-&I^{gpu}_{output_{emb}} = \frac{2 \times 405e9 \times 1e6}{989e12 \times 3600 \times 0,40} \times \frac{250 + \frac{9058}{8}}{5\times24\times365,25} = 18gCO2e
+&I^{gpu}_{output_{emb}} = \frac{2 \times 405e9 \times 1e6}{989e12 \times 3600 \times 0,40} \times \frac{250 + \frac{10058}{8}}{5\times24\times365,25} = 20gCO2e
 \end{aligned}
 $$$
 
 Si l'on considère une taille de "prompt moyen" d'environ 400 jetons, alors l'impact d'une requête est d'environ 0,1 gCO2e.
 
+## Simulateur
+
+import { AIPlayGround } from '@site/src/components/ai-playground';
+
+<AIPlayGround />
+
+## Comparaison
+
+Cette section propose une comparaison de méthodologies disponibles pour l’évaluation des impacts environnementaux des modèles d’IA générative. Elle met en évidence leurs périmètres, leurs forces et leurs limites, afin de situer la méthodologie D4B par rapport aux approches existantes.
+
+| Caractéristique                                           | Full ACV (Google, 2025)[^3][^4]                                                                                 | Ecologits[^14]                                                                        | Méthodologie D4B                                                                |
+|-----------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|---------------------------------------------------------------------------------|
+| Type d’approche                                           | Mesure full-stack : CPU/DRAM, machines idle, datacenter overhead, eau, ACV partielle du hardware                | Evaluation bottom-up appliqué à l’inférence uniquement (usage + fabrication)          | Modélisation FLOPs → GPUh → Impacts                                             |
+| Périmètre                                                 | Fabrication (partielle), usage (tous composants serveur), infrastructure datacenter, eau, émissions Scope 2/3   | Usage infra + fabrication, inférence seulement                                        | Usage entraînement, fine tuning, inférence + fabrication GPU et serveur         |
+| Granularité & mesure                                      | Très fine : mesures réelles sur production Gemini, énergie, eau, émissions                                      | Moyenne haute, open data multi-critères (GWP, PE, ADPe) agrégés par appel API         | Moyenne modérée : dépend des données disponibles (FLOPs, TDP, ...)              |
+| Accessibilité                                             | Faible : données internes Google peu explicitées                                                                | Elevée : code open-source, API ouverte                                                | Elevée : méthodes et hypothèses documentées publiquement                        |
+| Reproductibilité                                          | Faible : instrumentation propriétaire et données internes                                                       | Forte : outil public, calculs transparents et reproductibles                          | Moyenne à élevée : si les données d’entrée sont estimables                      |
+| Transparence                                              | Moyenne : publication méthode mais accès aux données limité                                                     | Forte : codes, hypothèses et modèle open source                                       | Forte : toutes les formules et sources sont explicitées                         |
+| Précision (sur inférence)                                 | Très élevée : vrai déploiement mesuré, inclut spectre complet d’énergie                                         | Moyenne : repose sur modèles simplifiés et hypothèses généralisées                    | Moyenne à élevée selon la précision des paramètres choisis                      |
+| Applicabilité                                             | Limitée : spécifique à l’infrastructure Google et inférence                                                     | Moyenne : inférence sur divers fournisseurs, mais pas entraînement                    | Très large : entraînement, fine tuning, inférence sur base publique             |
+| Usages visés                                              | Analyse interne, reporting fin, communication                                                                   | Évaluation publique, sensibilisation, comparateur multi-fournisseurs                  | Recherche, évaluation interne, FinOps, Green AI                                 |
+| Résultats chiffrés<br/>(Prompt moyen, environ 400 jetons) | ~0,03 gCO2e<br/>~0,24 Wh<br/>Gemini                                                                             | ~40 gCO2e<br/>~95 Wh<br/>LLama 3.1 405b                                               | ~0,1 gCO2e<br/>~0,5 Wh<br/>LLama 3.1 405b<br/>(cf. [Application](#application)) |
+| Limites clés                                              | Données propriétaires, ne couvre pas l’entraînement, se concentre sur l'inférence, biais sur le “prompt median” | Périmètre limité (inférence seule), possible surestimation du fait de l'extrapolation | Dépend fortement des hypothèses (MFU, durée de vie)                             |
+
+Ces résultats montrent que chaque approche a un positionnement spécifique : Google privilégie la précision mais reste fermé et non reproductible, Ecologits mise sur la transparence et la simplicité mais au prix d’une surestimation possible, tandis que la méthodologie D4B propose un compromis reproductible et adaptable aux différents contextes d’usage mais dépend de la précision des données d'entrée.
 
 [^1]: J. Kaplan, S. McCandlish, ..., 2020. [Scaling Laws for Neural Language Models](https://arxiv.org/pdf/2001.08361)
 [^2]: A. Habibian, A. Ghodrati, ... 2024. [Clockwork Diffusion: Efficient Generation With Model-Step Distillation](https://arxiv.org/html/2312.08128v2)
@@ -227,4 +235,5 @@ Si l'on considère une taille de "prompt moyen" d'environ 400 jetons, alors l'im
 [^12]: Meta, 2024. [The Llama 3 Herd of Models](https://arxiv.org/pdf/2407.21783)
 [^13]: NVidia, 2025. [Llama 3.1 70B 24.11.1 (DGXC Benchmarking)](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/dgxc-benchmarking/resources/llama31-70b-dgxc-benchmarking-a?utm_source=chatgpt.com)
 [^14]: GenAI Impact. [EcoLogits](https://ecologits.ai/latest/methodology/)
-[^15]: Schwartz et al., 2020 ; Henderson et al., 2020. [Green AI](https://arxiv.org/pdf/1907.10597)
+[^15]: Schwartz et al., 2020, Henderson et al., 2020. [Green AI](https://arxiv.org/pdf/1907.10597)
+[^16]: Edward Hu, 2021. [LoRA, Low-rank Adaptation of LLMs](https://arxiv.org/pdf/2106.09685)

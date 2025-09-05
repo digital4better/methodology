@@ -24,7 +24,10 @@
     "@docusaurus/core": "^3.8.1",
     "@docusaurus/preset-classic": "^3.8.1",
     "@docusaurus/theme-mermaid": "^3.8.1",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@mdx-js/react": "^3.0.0",
+    "@mui/system": "^7.3.2",
     "clsx": "^2.0.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
@@ -36,6 +39,7 @@
     "@docusaurus/module-type-aliases": "^3.8.1",
     "@docusaurus/tsconfig": "^3.8.1",
     "@docusaurus/types": "3.8.1",
+    "prettier": "^3.6.2",
     "typescript": "~5.2.2"
   },
   "browserslist": {
