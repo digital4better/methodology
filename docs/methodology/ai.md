@@ -119,7 +119,6 @@ $$$I_{total} = I_{gpu} + \frac{I_{server}}{N_{gpu/server}}$$$
 - Intégrer la mémoire GPU comme goulet d'étranglement.
 - Intégrer à la méthodologie l'amortissement de l’entraînement sur l’inférence.
 - Adapter le MFU en fonction des caractéristiques du serveur (nombre de GPU par serveur, ...).
-- Adapter le MFU en fonction des caractéristiques du serveur (nombre de GPU par serveur, ...).
 - Adapter la méthodologie aux modèles multimodaux (texte, image, vidéo).
 - Intégrer des facteurs d’impact multi-critères (énergie primaire, eau, métaux rares).
 
