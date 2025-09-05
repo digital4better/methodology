@@ -108,6 +108,7 @@ $$$I_{total} = I_{gpu} + \frac{I_{server}}{N_{gpu/server}}$$$
 ### Limitations
 
 - Incertitudes sur les données d'entrée : données d’entraînement réelles, caractéristiques des modèles souvent confidentiels, MFU, ...
+- Pas de prise en compte du fait que les modèles tiennent ou non en mémoire sur le matériel sélectionné
 - Pas de prise en charge des spécificités éventuelles des TPU, FPGA, Asics, ...
 - Pas d'ACV fiable sur les équipements.
 
@@ -121,6 +122,7 @@ $$$I_{total} = I_{gpu} + \frac{I_{server}}{N_{gpu/server}}$$$
 - Adapter le MFU en fonction des caractéristiques du serveur (nombre de GPU par serveur, ...).
 - Adapter la méthodologie aux modèles multimodaux (texte, image, vidéo).
 - Intégrer des facteurs d’impact multi-critères (énergie primaire, eau, métaux rares).
+- Intégrer l'entrainement des versions de développement imputables à la version actuelle d'un modèle
 
 ## Application
 

@@ -72,7 +72,7 @@ const HARDWARES = [
     gpu_embodied: 250e3,
     ram: 2e12,
     ram_power: 392e-12,
-    ram_embodied: 533e3 / 384e9,
+    ram_embodied: 533e3 / 384e9, // Or 546e3 / 640e9 (cf. NVidia PCFs)
     ssd: 30e12,
     ssd_power: 1.2e-3 / 1e9,
     ssd_embodied: 0.16e3 / 1e9,
