@@ -57,6 +57,7 @@ const USE_CASES = [
   { label: "Fine tuning", value: "fine-tuning" },
   { label: "Inférence de texte", value: "text-inference" },
   { label: "Inférence d'image", value: "image-inference" },
+  { label: "Inférence de vidéo", value: "video-inference" },
 ];
 
 const HARDWARES = [
@@ -266,6 +267,25 @@ const compute = ({
       (gpu_flops * mfu) /
       gpu_count;
   }
+  if (useCase === "video-inference") {
+    const downscaleFactor = 8;
+    const hiddenSize = 8 * 1024; // 8 layers of 1024 channels
+    const latentChannels = 4;
+    const latentWidth = Math.floor(width / downscaleFactor);
+    const latentHeight = Math.floor(height / downscaleFactor);
+    const activations = latentWidth * latentHeight * latentChannels;
+    flops =
+      (architecture === "dense" ? Ptotal : Pactive) * prompt +
+      images *
+        (steps *
+          (2 * (architecture === "dense" ? Ptotal : Pactive) * activations) +
+          40e9) /* CLIP + VAE */ +
+      steps * 2 * Math.pow(images * latentWidth * latentHeight, 2) * hiddenSize;
+    latency =
+      ((architecture === "dense" ? Ptotal : Pactive) * prompt) /
+      (gpu_flops * mfu) /
+      gpu_count;
+  }
   const gpu_seconds = flops / (gpu_flops * mfu);
   const duration = gpu_seconds / gpu_count;
   const gpu_hours = gpu_seconds / 3600;
@@ -427,7 +447,9 @@ export const AIPlayGround = () => {
             onChange={(value) => setCorpus(parseInt(value) || 0)}
           />
         )}
-        {(useCase === "text-inference" || useCase === "image-inference") && (
+        {(useCase === "text-inference" ||
+          useCase === "image-inference" ||
+          useCase === "video-inference") && (
           <Input
             label="Prompt (jetons)"
             type="text"
@@ -445,7 +467,7 @@ export const AIPlayGround = () => {
             onChange={(value) => setResponse(parseInt(value) || 0)}
           />
         )}
-        {useCase === "image-inference" && (
+        {(useCase === "image-inference" || useCase === "video-inference") && (
           <>
             <Input
               label="Images"
