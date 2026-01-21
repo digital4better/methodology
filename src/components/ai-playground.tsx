@@ -269,7 +269,7 @@ const compute = ({
   }
   if (useCase === "video-inference") {
     const downscaleFactor = 8;
-    const hiddenSize = 8 * 1024; // 8 layers of 1024 channels
+    const hiddenSize = 2048;
     const latentChannels = 4;
     const latentWidth = Math.floor(width / downscaleFactor);
     const latentHeight = Math.floor(height / downscaleFactor);
@@ -280,7 +280,12 @@ const compute = ({
         (steps *
           (2 * (architecture === "dense" ? Ptotal : Pactive) * activations) +
           40e9) /* CLIP + VAE */ +
-      steps * 2 * Math.pow(images * latentWidth * latentHeight, 2) * hiddenSize;
+      steps *
+        2 *
+        Math.pow(images * latentWidth * latentHeight, 2) *
+        4 * // MLP
+        32 * // Couches
+        hiddenSize;
     latency =
       ((architecture === "dense" ? Ptotal : Pactive) * prompt) /
       (gpu_flops * mfu) /
