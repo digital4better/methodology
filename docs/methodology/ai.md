@@ -54,25 +54,18 @@ Un **jeton** ou **token** est l’unité discrète manipulée par le modèle pou
 
 Le tableau ci‑dessous donne un repère rapide pour chaque modalité et une façon simple d’estimer les variables utilisées dans les formules.
 
-| Modalité  | Ce qu’est un token                                  | Formule (tokens / activations)                                                                                   | Exemple / estimation                                                                                                                                                         |
-|-----------|-----------------------------------------------------|------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Texte** | Fragment de mot (souvent 3–4 caractères en moyenne) | $T_\text{text} = \text{nombre de mots} \times \text{tokens par mot}$                                             | 100 mots → $T_\text{text} \approx 130$–160 tokens selon le tokenizer.                                                                                                        |
-| **Image** | Token spatial / latent (patch)                      | $T_\text{image} = (\text{largeur}/\text{patch}) \times (\text{hauteur}/\text{patch})$                            | Image 512×512, patches 16×16 → 512/16 = 32 tokens par axe → 32×32 = 1 024 tokens.                                                                                            |
-| **Audio** | Token temporel issu d’un codec (ex. EnCodec)        | $T_\text{audio} = \text{durée (s)} \times \text{sample rate} \div \text{downscale} \times \text{canaux latents}$ | Clip audio 10 s, sample rate 24 kHz, downscale 320, 8 canaux → $T_\text{audio} \approx 6\,000$ tokens.                                                                       |
-| **Vidéo** | Token spatial par frame + nombre de frames          | $T_\text{frame} = (\text{largeur}/\text{patch}) \times (\text{hauteur}/\text{patch})$                            | Vidéo 4 s à 24 fps → $F=96$ frames. Frame 512×512, patches 16×16 → $32\times32=1\,024$ tokens par frame. Total vidéo : $T_\text{video} = 96 \times 1\,024 = 98\,304$ tokens. |
+| Modalité  | Ce qu’est un token                                  | Formule (tokens / activations)                                                                                   | Exemple / estimation                                                                                                                                                                    |
+|-----------|-----------------------------------------------------|------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Texte** | Fragment de mot (souvent 3–4 caractères en moyenne) | $T_\text{text} = \text{nombre de mots} \times \text{tokens par mot}$                                             | 100 mots → $T_\text{text} \approx 130$–160 tokens selon le tokenizer.                                                                                                                   |
+| **Image** | Token spatial / latent (patch)                      | $T_\text{image} = (\text{largeur}/\text{patch}) \times (\text{hauteur}/\text{patch})$                            | Image 512×512, patches 16×16 → 512/16 = 32 tokens par axe → 32×32 = 1 024 tokens.                                                                                                       |
+| **Audio** | Token temporel issu d’un codec (ex. EnCodec)        | $T_\text{audio} = \text{durée (s)} \times \text{sample rate} \div \text{downscale} \times \text{canaux latents}$ | Clip audio 10 s, sample rate 24 kHz, downscale 320, 8 canaux → $T_\text{audio} \approx 6\,000$ tokens.                                                                                  |
+| **Vidéo** | Token spatial par frame + nombre de frames          | $T_\text{frame} = (\text{largeur}/\text{patch}) \times (\text{hauteur}/\text{patch})$                            | Vidéo 4 s à 24 fps → $F=96$ frames. Frame 512×512, patches 16×16 → $T_\text{frame} \approx 32\times32=1\,024$ tokens par frame et $T_\text{video} = 96 \times 1\,024 = 98\,304$ tokens. |
 
 #### Explications des termes techniques
 
 - **Patch** : découpage de l’image ou de la frame en blocs carrés traités comme un **token** par le modèle.
 - **Downscale / downsampling** : réduction de la résolution spatiale (images/vidéo) ou temporelle (audio) pour passer dans un espace latent plus petit, utilisé pour le calcul des **activations**. Exemple : downscale 8 → largeur et hauteur divisées par 8.
 - **Canaux latents** : nombre de dimensions dans l’espace latent (profondeur des features) pour image, vidéo ou audio.
-
-#### Explications des termes techniques
-
-- **Downscale / downsampling** : réduction de la résolution spatiale ou temporelle pour passer dans un espace latent plus petit, afin de diminuer le nombre de tokens à traiter. Exemple : downscale 8 → largeur et hauteur divisées par 8.
-- **Canaux latents** : nombre de dimensions dans l’espace latent (pour image ou audio), équivalent à “profondeur” des features.
-- **Activations** : nombre total de valeurs intermédiaires générées par le modèle à une étape ; pour une image ou vidéo, $N_\text{activation} = \text{largeur latente} \times \text{hauteur latente} \times \text{canaux latents}$.
-- **Patches** : découpage de l’image en blocs carrés (ex. 16×16) pour traiter chaque patch comme un token dans le modèle, couramment utilisé dans les architectures type Vision Transformer (ViT).
 
 ### Estimation de la charge de calcul
 
