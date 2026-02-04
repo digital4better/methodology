@@ -1,7 +1,7 @@
 ---
 sidebar_label: Services web
 sidebar_position: 5
-slug: /web
+slug: web
 ---
 
 # Méthodologie appliquée aux services web

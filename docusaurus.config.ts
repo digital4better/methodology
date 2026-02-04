@@ -70,6 +70,10 @@ export default {
           label: 'Docs',
         },
         {
+          type: 'localeDropdown',
+          position: 'right',
+        },
+        {
           href: 'https://digital4better.github.io/data',
           label: 'Open Data',
           position: 'right',

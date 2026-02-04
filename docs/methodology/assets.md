@@ -1,7 +1,7 @@
 ---
 sidebar_label: Parcs informatiques
 sidebar_position: 7
-slug: /assets
+slug: assets
 ---
 
 # Méthodologie appliquée aux parcs informatiques
@@ -102,5 +102,4 @@ $$
 #### Conversion en impact opérationnel
 
 L’impact de consommation électrique corrigé est converti en impact opérationnel sur la base de la formule fournie au paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](../concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
-
 

@@ -1,7 +1,7 @@
 ---
 sidebar_label: Méthodologie générale
 sidebar_position: 4
-slug: /general
+slug: general
 ---
 
 # Méthodologies d'évaluation des impacts environnementaux 

@@ -21,9 +21,9 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@docusaurus/core": "^3.8.1",
-    "@docusaurus/preset-classic": "^3.8.1",
-    "@docusaurus/theme-mermaid": "^3.8.1",
+    "@docusaurus/core": "^3.9.2",
+    "@docusaurus/preset-classic": "^3.9.2",
+    "@docusaurus/theme-mermaid": "^3.9.2",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mdx-js/react": "^3.0.0",
@@ -36,9 +36,9 @@
     "remark-math": "6"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^3.8.1",
-    "@docusaurus/tsconfig": "^3.8.1",
-    "@docusaurus/types": "3.8.1",
+    "@docusaurus/module-type-aliases": "^3.9.2",
+    "@docusaurus/tsconfig": "^3.9.2",
+    "@docusaurus/types": "^3.9.2",
     "prettier": "^3.6.2",
     "typescript": "~5.2.2"
   },
@@ -58,5 +58,6 @@
     "node": "^20.19.1",
     "yarn": "1",
     "npm": "please-use-yarn"
-  }
+  },
+  "packageManager": "yarn@1.22.21+sha512.ca75da26c00327d26267ce33536e5790f18ebd53266796fbb664d2a4a5116308042dd8ee7003b276a20eace7d3c5561c3577bdd71bcb67071187af124779620a"
 }

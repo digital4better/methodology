@@ -1,0 +1,10 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.sidebar.category.Méthodologie appliquée": {
+    "message": "Applied methodology",
+    "description": "The label for category Méthodologie appliquée in sidebar sidebar"
+  }
+}

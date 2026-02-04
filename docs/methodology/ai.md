@@ -1,7 +1,7 @@
 ---
 sidebar_label: IA Génératives
 sidebar_position: 6
-slug: /ai
+slug: ai
 ---
 
 # Méthodologie appliquée aux IA génératives
@@ -241,5 +241,4 @@ Ces résultats montrent que chaque approche a un positionnement spécifique : Go
 [^15]: Schwartz et al., 2020, Henderson et al., 2020. [Green AI](https://arxiv.org/pdf/1907.10597)
 [^16]: Edward Hu, 2021. [LoRA, Low-rank Adaptation of LLMs](https://arxiv.org/pdf/2106.09685)
 [^17]: Julien Delavande, Regis Pierrard, 2025. [Video Killed the Energy Budget: Characterizing the Latency and Power Regimes of Open Text-to-Video Models](https://arxiv.org/pdf/2509.19222)
-
 
