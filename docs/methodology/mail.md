@@ -1,5 +1,5 @@
 ---
 sidebar_label: E-mail
-slug: mail
+slug: /mail
 unlisted: true
 ---

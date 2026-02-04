@@ -1,6 +1,6 @@
 ---
 sidebar_label: Infrastructures
-slug: infrastructure
+slug: /infrastructure
 ---
 
 # Méthodologie appliquée aux infrastructures d'hébergement

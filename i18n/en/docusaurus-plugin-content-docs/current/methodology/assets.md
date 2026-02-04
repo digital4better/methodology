@@ -1,7 +1,7 @@
 ---
 sidebar_label: IT assets
 sidebar_position: 7
-slug: assets
+slug: /assets
 ---
 
 # Methodology applied to IT asset fleets

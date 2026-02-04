@@ -1,7 +1,7 @@
 ---
 sidebar_label: Generative AI
 sidebar_position: 6
-slug: ai
+slug: /ai
 ---
 
 # Methodology applied to generative AI

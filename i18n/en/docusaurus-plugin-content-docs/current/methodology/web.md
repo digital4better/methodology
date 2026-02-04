@@ -1,7 +1,7 @@
 ---
 sidebar_label: Web services
 sidebar_position: 5
-slug: web
+slug: /web
 ---
 
 # Methodology applied to web services
