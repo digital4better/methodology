@@ -353,7 +353,7 @@ const compute = ({
   };
 };
 
-export const AIPlayGround = () => {
+export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
   const [model, setModel] = useState(MODELS[0]?.value);
   const [useCase, setUseCase] = useState(USE_CASES[0]?.value);
   const [hardware, setHardware] = useState(HARDWARES[0]?.value);
@@ -402,12 +402,12 @@ export const AIPlayGround = () => {
       sx={{
         appearance: "none",
         borderRadius: 2,
-        borderStyle: "solid",
-        borderWidth: "1px",
-        borderColor: "border.primary",
-        py: 2,
-        px: 2,
-        mb: 6,
+        borderStyle: embedded ? "none" : "solid",
+        borderWidth: embedded ? 0 : "1px",
+        borderColor: embedded ? "transparent" : "border.primary",
+        py: embedded ? 0 : 2,
+        px: embedded ? 0 : 2,
+        mb: embedded ? 0 : 6,
         ".group>*": { flex: 1 },
       }}
     >

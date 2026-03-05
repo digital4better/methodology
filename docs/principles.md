@@ -82,7 +82,7 @@ Toutefois, des bases communes existent dans toutes ces mises en application. C�
 |--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
 | Informations transverses | [Principes méthodologiques](principles.md)<br/>[Notions transverses](concepts.md)                                                         | Cette division reprend les bases méthodologiques de notre approche ainsi que les concepts communs à toutes les déclinaisons suivantes.             |
 | Méthodologies générales  | [Méthodologies d’évaluation des impacts environnementaux](general.md)                                                                     | Cette division présente les formules de calcul générales pour chaque tiers composant un service numérique : équipement, réseau, centre de données. |
-| Méthodologies appliquées | [Méthodologie appliquée aux services web](methodology/web.md)<br/>[Méthodologie appliquée aux parcs informatiques](methodology/assets.md) | Cette division illustre des déclinaisons des méthodologies générales sur des périmètres spécifiques.                                               |
+| Méthodologies appliquées | [Méthodologie appliquée aux services web](/web)<br/>[Méthodologie appliquée aux parcs informatiques](/assets) | Cette division illustre des déclinaisons des méthodologies générales sur des périmètres spécifiques.                                               |
 
 Pour chaque chapitre présentant une méthodologie, celle-ci est présentée autant que possible selon le plan suivant :
 - Spécificités du périmètre 
@@ -100,5 +100,4 @@ Les équations sont présentées en anglais, avec leurs unités. Elles sont tout
 	
 
 	
-
 

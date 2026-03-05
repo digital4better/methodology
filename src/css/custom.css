@@ -45,3 +45,10 @@
   position: absolute;
   right: 0;
 }
+
+.ai-embed {
+  padding: 0;
+  margin: 0 auto;
+  max-width: 1200px;
+  width: 100%;
+}
