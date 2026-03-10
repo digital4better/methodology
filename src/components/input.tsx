@@ -7,12 +7,21 @@ export const Input: FC<
     | { type: "text"; options?: never; placeholder?: string }
     | {
         type: "select";
-        options: { label: string; value: string }[];
+        options:
+          | { label: string; value: string }[]
+          | {
+              label: string;
+              options: { label: string; value: string }[];
+            }[];
         placeholder?: never;
       }
   ) & { label: string; value: string; onChange: (value: string) => void }
 > = ({ type, options, placeholder, label, value, onChange }) => {
   const id = useId();
+  const hasGroups =
+    type === "select" &&
+    options.length > 0 &&
+    "options" in options[0];
   return (
     <Stack
       sx={{
@@ -41,9 +50,17 @@ export const Input: FC<
           value={value}
           onChange={(event) => onChange(event.target.value)}
         >
-          {options.map(({ label, value }) => (
-            <option key={value} label={label} value={value} />
-          ))}
+          {hasGroups
+            ? options.map(({ label, options }) => (
+                <optgroup key={label} label={label}>
+                  {options.map(({ label, value }) => (
+                    <option key={value} label={label} value={value} />
+                  ))}
+                </optgroup>
+              ))
+            : options.map(({ label, value }) => (
+                <option key={value} label={label} value={value} />
+              ))}
         </Box>
       ) : (
         <Box

@@ -13,44 +13,334 @@ const COLORS = [
   { bgcolor: "#fb8500", color: "inherit" },
 ];
 
-const MODELS = [
+type CuratedModel = {
+  label: string;
+  value: string;
+  provider: string;
+  category: string;
+  architecture: "dense" | "moe";
+  parameters: [number, number];
+  estimated: boolean;
+  source: string;
+};
+
+const CURATED_MODELS: CuratedModel[] = [
   {
-    label: "LLama 3.1 405b",
-    value: "llama-3.1-405",
+    label: "Anthropic - Claude Haiku 4.5",
+    value: "claude-haiku-4-5-20251001",
+    provider: "anthropic",
+    category: "généraliste",
     architecture: "dense",
-    parameters: [405e9, 405e9],
+    parameters: [22.5e9, 22.5e9],
+    estimated: true,
+    source: "https://docs.anthropic.com/en/docs/about-claude/models/overview",
   },
   {
-    label: "LLama 3.1 70b",
-    value: "llama-3.1-70",
-    architecture: "dense",
-    parameters: [70e9, 70e9],
+    label: "Anthropic - Claude Opus 4.5",
+    value: "claude-opus-4-5-20251101",
+    provider: "anthropic",
+    category: "généraliste",
+    architecture: "moe",
+    parameters: [133.5e9, 670e9],
+    estimated: true,
+    source: "https://docs.anthropic.com/en/docs/about-claude/models/overview",
   },
   {
-    label: "LLama 3.1 8b",
-    value: "llama-3.1-8",
-    architecture: "dense",
-    parameters: [8e9, 8e9],
+    label: "Anthropic - Claude Sonnet 4.5",
+    value: "claude-sonnet-4-5-20250929",
+    provider: "anthropic",
+    category: "généraliste",
+    architecture: "moe",
+    parameters: [88e9, 440e9],
+    estimated: true,
+    source: "https://docs.anthropic.com/en/docs/about-claude/models/overview",
   },
   {
-    label: "Mistral Large 2",
-    value: "mistral-large-2",
+    label: "DeepSeek - DeepSeek-V3",
+    value: "deepseek-v3",
+    provider: "deepseek",
+    category: "généraliste",
+    architecture: "moe",
+    parameters: [37e9, 671e9],
+    estimated: false,
+    source: "https://huggingface.co/docs/transformers/en/model_doc/deepseek_v3",
+  },
+  {
+    label: "Google - CodeGemma 7B",
+    value: "codegemma-7b-it",
+    provider: "google",
+    category: "code/dev",
+    architecture: "dense",
+    parameters: [8.54e9, 8.54e9],
+    estimated: false,
+    source: "https://huggingface.co/google/codegemma-7b-it",
+  },
+  {
+    label: "Google - Gemini 3.1 Flash Image",
+    value: "gemini-3.1-flash-image-preview",
+    provider: "google",
+    category: "multimodal",
+    architecture: "moe",
+    parameters: [240e9, 1200e9],
+    estimated: true,
+    source: "https://ai.google.dev/gemini-api/docs/models",
+  },
+  {
+    label: "Google - Gemini 3.1 Pro",
+    value: "gemini-3.1-pro-preview",
+    provider: "google",
+    category: "généraliste",
+    architecture: "moe",
+    parameters: [240e9, 1200e9],
+    estimated: true,
+    source: "https://ai.google.dev/gemini-api/docs/models",
+  },
+  {
+    label: "Google - Gemma 3 27B",
+    value: "gemma-3-27b-it",
+    provider: "google",
+    category: "open-weight",
+    architecture: "dense",
+    parameters: [27.4e9, 27.4e9],
+    estimated: false,
+    source: "https://ai.google.dev/gemini-api/docs/models",
+  },
+  {
+    label: "Google - Gemma 3 4B",
+    value: "gemma-3-4b-it",
+    provider: "google",
+    category: "compact",
+    architecture: "dense",
+    parameters: [4.3e9, 4.3e9],
+    estimated: false,
+    source: "https://ai.google.dev/gemini-api/docs/models",
+  },
+  {
+    label: "Google - Gemma 3n E4B",
+    value: "gemma-3n-e4b-it",
+    provider: "google",
+    category: "compact",
+    architecture: "dense",
+    parameters: [7.85e9, 7.85e9],
+    estimated: false,
+    source: "https://ai.google.dev/gemini-api/docs/models",
+  },
+  {
+    label: "Meta - Llama 3.1 70B",
+    value: "meta-llama-3.1-70b-instruct",
+    provider: "meta",
+    category: "open-weight",
+    architecture: "dense",
+    parameters: [70.55e9, 70.55e9],
+    estimated: false,
+    source: "https://huggingface.co/meta-llama/Meta-Llama-3.1-70B-Instruct",
+  },
+  {
+    label: "Meta - Llama 3.1 405B",
+    value: "meta-llama-3.1-405b-instruct",
+    provider: "meta",
+    category: "open-weight",
+    architecture: "dense",
+    parameters: [405.87e9, 405.87e9],
+    estimated: false,
+    source:
+      "https://huggingface.co/meta-llama/Meta-Llama-3.1-405B-Instruct-FP8",
+  },
+  {
+    label: "Meta - Llama 4",
+    value: "llama-4-maverick",
+    provider: "meta",
+    category: "multimodal",
+    architecture: "moe",
+    parameters: [17e9, 400e9],
+    estimated: false,
+    source: "https://ai.meta.com/blog/llama-4-multimodal-intelligence/",
+  },
+  {
+    label: "Mistral - Codestral",
+    value: "codestral-latest",
+    provider: "mistral",
+    category: "code/dev",
+    architecture: "dense",
+    parameters: [22.2e9, 22.2e9],
+    estimated: false,
+    source: "https://docs.mistral.ai/getting-started/models/models_overview",
+  },
+  {
+    label: "Mistral - Devstral Medium 1.0",
+    value: "devstral-medium-latest",
+    provider: "mistral",
+    category: "code/dev",
+    architecture: "dense",
+    parameters: [95e9, 95e9],
+    estimated: true,
+    source: "https://docs.mistral.ai/getting-started/models/models_overview",
+  },
+  {
+    label: "Mistral - Devstral Small",
+    value: "devstral-small-latest",
+    provider: "mistral",
+    category: "code/dev",
+    architecture: "dense",
+    parameters: [23.6e9, 23.6e9],
+    estimated: false,
+    source: "https://docs.mistral.ai/getting-started/models/models_overview",
+  },
+  {
+    label: "Mistral - Magistral Medium 1.2",
+    value: "magistral-medium-latest",
+    provider: "mistral",
+    category: "raisonnement",
+    architecture: "dense",
+    parameters: [95e9, 95e9],
+    estimated: true,
+    source: "https://docs.mistral.ai/getting-started/models/models_overview",
+  },
+  {
+    label: "Mistral - Ministral 8B",
+    value: "ministral-8b-latest",
+    provider: "mistral",
+    category: "compact",
+    architecture: "dense",
+    parameters: [8.02e9, 8.02e9],
+    estimated: false,
+    source: "https://docs.mistral.ai/getting-started/models/models_overview",
+  },
+  {
+    label: "Mistral - Mistral Medium 3.1",
+    value: "mistral-medium-latest",
+    provider: "mistral",
+    category: "généraliste",
+    architecture: "dense",
+    parameters: [95e9, 95e9],
+    estimated: true,
+    source: "https://docs.mistral.ai/models/mistral-medium-3-1-25-08",
+  },
+  {
+    label: "Mistral - Pixtral Large",
+    value: "pixtral-large-latest",
+    provider: "mistral",
+    category: "multimodal",
     architecture: "dense",
     parameters: [123e9, 123e9],
+    estimated: false,
+    source: "https://docs.mistral.ai/getting-started/models/models_overview",
   },
   {
-    label: "GPT-4o",
-    value: "gpt-4o",
+    label: "OpenAI - GPT-5",
+    value: "gpt-5",
+    provider: "openai",
+    category: "généraliste",
     architecture: "moe",
-    parameters: [55e9, 220e9],
+    parameters: [60e9, 300e9],
+    estimated: true,
+    source: "https://platform.openai.com/docs/models",
   },
   {
-    label: "GPT-4",
-    value: "gpt-4",
+    label: "OpenAI - GPT-5 mini",
+    value: "gpt-5-mini",
+    provider: "openai",
+    category: "compact",
+    architecture: "dense",
+    parameters: [47.5e9, 47.5e9],
+    estimated: true,
+    source: "https://platform.openai.com/docs/models",
+  },
+  {
+    label: "OpenAI - GPT-5.1 Codex",
+    value: "gpt-5.1-codex",
+    provider: "openai",
+    category: "code/dev",
     architecture: "moe",
-    parameters: [220e9, 1760e9],
+    parameters: [60e9, 300e9],
+    estimated: true,
+    source: "https://platform.openai.com/docs/models/gpt-5.1-codex",
+  },
+  {
+    label: "OpenAI - GPT-OSS 120B",
+    value: "gpt-oss-120b",
+    provider: "openai",
+    category: "open-weight",
+    architecture: "moe",
+    parameters: [5.1e9, 117e9],
+    estimated: false,
+    source: "https://platform.openai.com/docs/models/gpt-oss-120b",
+  },
+  {
+    label: "OpenAI - GPT-OSS 20B",
+    value: "gpt-oss-20b",
+    provider: "openai",
+    category: "open-weight",
+    architecture: "moe",
+    parameters: [3.6e9, 21e9],
+    estimated: false,
+    source: "https://platform.openai.com/docs/models/gpt-oss-120b",
+  },
+  {
+    label: "OpenAI - o4-mini",
+    value: "o4-mini",
+    provider: "openai",
+    category: "raisonnement",
+    architecture: "dense",
+    parameters: [18e9, 18e9],
+    estimated: true,
+    source: "https://platform.openai.com/docs/models",
+  },
+  {
+    label: "Qwen - Qwen3 32B",
+    value: "qwen3-32b",
+    provider: "qwen",
+    category: "open-weight",
+    architecture: "dense",
+    parameters: [32.8e9, 32.8e9],
+    estimated: false,
+    source: "https://huggingface.co/Qwen/Qwen3-32B",
   },
 ];
+
+const MODELS = CURATED_MODELS.map(
+  ({ label, value, architecture, parameters }) => ({
+    label,
+    value,
+    architecture,
+    parameters,
+  }),
+);
+
+const PROVIDER_LABELS: Record<string, string> = {
+  anthropic: "Anthropic",
+  deepseek: "DeepSeek",
+  google: "Google",
+  meta: "Meta",
+  mistral: "Mistral",
+  openai: "OpenAI",
+  qwen: "Qwen",
+};
+
+const MODEL_OPTIONS = Object.entries(
+  CURATED_MODELS.reduce<Record<string, { label: string; value: string }[]>>(
+    (groups, model) => {
+      const shortLabel = model.label.replace(/^[^-]+ - /, "");
+      const option = {
+        label: `${shortLabel} (${model.category})`,
+        value: model.value,
+      };
+      if (!groups[model.provider]) {
+        groups[model.provider] = [];
+      }
+      groups[model.provider].push(option);
+      return groups;
+    },
+    {},
+  ),
+)
+  .sort(([providerA], [providerB]) =>
+    PROVIDER_LABELS[providerA].localeCompare(PROVIDER_LABELS[providerB], "fr"),
+  )
+  .map(([provider, options]) => ({
+    label: PROVIDER_LABELS[provider],
+    options: options.sort((a, b) => a.label.localeCompare(b.label, "fr")),
+  }));
 
 const USE_CASES = [
   { label: "Entrainement", value: "training" },
@@ -148,9 +438,37 @@ const HARDWARES = [
 ];
 
 const REGIONS = [
-  { label: "États Unis (0.4 kgCO2e/kWh)", value: "us", gwp: 0.4 },
-  { label: "France (0.04 kgCO2e/kWh)", value: "fr", gwp: 0.04 },
+  {
+    label: "Europe",
+    options: [
+      { label: "Allemagne (0.33 kgCO2e/kWh)", value: "de", gwp: 0.3316 },
+      { label: "France (0.04 kgCO2e/kWh)", value: "fr", gwp: 0.04179 },
+      { label: "Irlande (0.3 kgCO2e/kWh)", value: "ie", gwp: 0.3 },
+      { label: "Norvège (0.03 kgCO2e/kWh)", value: "no", gwp: 0.0291 },
+      { label: "Royaume-Uni (0.22 kgCO2e/kWh)", value: "uk", gwp: 0.21709 },
+    ],
+  },
+  {
+    label: "Amériques",
+    options: [
+      { label: "Canada (0.12 kgCO2e/kWh)", value: "ca", gwp: 0.12 },
+      { label: "États-Unis (0.4 kgCO2e/kWh)", value: "us", gwp: 0.4 },
+    ],
+  },
+  {
+    label: "Asie",
+    options: [
+      { label: "Chine (0.56 kgCO2e/kWh)", value: "cn", gwp: 0.5554 },
+      { label: "Inde (0.71 kgCO2e/kWh)", value: "in", gwp: 0.70745 },
+    ],
+  },
+  {
+    label: "Global",
+    options: [{ label: "Monde (0.47 kgCO2e/kWh)", value: "world", gwp: 0.47184 }],
+  },
 ];
+
+const FLAT_REGIONS = REGIONS.flatMap((group) => group.options);
 
 type Parts = {
   cpu: number;
@@ -201,7 +519,9 @@ const compute = ({
 }): Result => {
   const pue = 1.2;
   const lifespan = 5 * 365.25 * 24;
-  const { gwp } = REGIONS.find(({ value }) => region === value);
+  const selectedRegion =
+    FLAT_REGIONS.find(({ value }) => region === value) ?? FLAT_REGIONS[0];
+  const { gwp } = selectedRegion;
   const {
     architecture,
     parameters: [Pactive, Ptotal],
@@ -354,10 +674,16 @@ const compute = ({
 };
 
 export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
-  const [model, setModel] = useState(MODELS[0]?.value);
+  const [model, setModel] = useState(
+    MODELS.find(({ value }) => value === "meta-llama-3.1-405b-instruct")
+      ?.value ?? MODELS[0]?.value,
+  );
   const [useCase, setUseCase] = useState(USE_CASES[0]?.value);
   const [hardware, setHardware] = useState(HARDWARES[0]?.value);
-  const [region, setRegion] = useState(REGIONS[0]?.value);
+  const [region, setRegion] = useState(
+    FLAT_REGIONS.find(({ value }) => value === "us")?.value ??
+      FLAT_REGIONS[0]?.value,
+  );
   const [corpus, setCorpus] = useState(15000);
   const [prompt, setPrompt] = useState(100);
   const [response, setResponse] = useState(400);
@@ -423,7 +749,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
         <Input
           label="Modèle"
           type="select"
-          options={MODELS}
+          options={MODEL_OPTIONS}
           value={model}
           onChange={(value) => setModel(value)}
         />
