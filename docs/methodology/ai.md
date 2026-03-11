@@ -73,7 +73,7 @@ Le tableau ci‑dessous donne un repère rapide pour chaque modalité et une fa�
 |-------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Entraînement**                                | $FLOP \approx 6 \times P_\text{total} \times T_\text{training}$                                                                     | $P_{total}$ : nombre total de paramètres du modèle<br/>$T_{training}$: nombre de tokens traités pendant l'entraînement (tokens × batch × steps)                                                                                                                                            | Pour chaque jeton et paramètre il faut 6 FLOPs : 2 FLOPs pour la passe forward et 4 pour le calcul de gradient et la propagation<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                               |
 | **Fine tuning**                                 | $FLOP \approx (2 \times P_\text{total} + 4 \times P_\text{tunable}) \times T_\text{training}$                                       | $P_{total}$ : nombre total de paramètres du modèle<br/>$P_{tunable}$ : nombre de paramètres entrainables (dépend de l'optimisation : LoRA, ...)<br/>$T_{training}$: nombre de tokens traités pendant l'entraînement (tokens × batch × steps)                                               | Idem que pour l'entrainement complet, néanmoins le nombre de paramètres mis à jour est moindre<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                                                                 |
-| **Traitement du prompt**<br/>(texte)            | $FLOP \approx 1 \times P_{active} \times T_{input}$                                                                                 | $P_{active}$ : nombre de paramètres actifs<br/>$T_{input}$: nombre de tokens du prompt                                                                                                                                                                                                     | Avec le KV cache activé, le prompt est encodé une fois : le coût est réduit à ≈ 1 FLOP par paramètre/token.<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                                                    |
+| **Traitement du prompt**<br/>(texte)            | $FLOP \approx 1 \times P_{active} \times T_{input}$                                                                                 | $P_{active}$ : nombre de paramètres actifs<br/>$T_{input}$: nombre de tokens du prompt                                                                                                                                                                                                     | Le prompt est encodé une première fois par le modèle. Lors de la génération auto-régressive, les états intermédiaires déjà calculés sont ensuite réutilisés pour éviter de recalculer l’ensemble du contexte à chaque nouveau jeton généré.<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8]) |
 | **Traitement du prompt**<br/>(image)            | $FLOP \approx 1 \times P_{active} \times N_\text{activation}$                                                                       | $P_{active}$ : nombre de paramètres actifs<br/>$N_\text{activation}$ : nombre d’activations de l’image = largeur × hauteur × nombre de canaux                                                                                                                                              | Chaque image du prompt est encodée une fois par le modèle. $N_\text{activation}$ correspond au nombre de tokens latents ou pixels encodés.                                                                                                                                                       |
 | **Traitement du prompt**<br/>(audio)            | $FLOP \approx 1 \times P_{active} \times N_\text{audio}$                                                                            | $P_{active}$ : nombre de paramètres actifs<br/>$N_\text{audio}$ : nombre de tokens audio = durée × sample rate ÷ downscale × canaux latents                                                                                                                                                | Chaque clip audio du prompt est encodé une fois par le modèle. $N_\text{audio}$ correspond aux tokens latents utilisés pour représenter le signal audio.                                                                                                                                         |
 | **Génération de texte**                         | $FLOP \approx 2 \times P_\text{active} \times T_\text{output}$                                                                      | $P_{active}$ : nombre de paramètres actifs<br/>$T_{output}$: nombre de tokens générés                                                                                                                                                                                                      | Pour chaque jeton et paramètre il faut 2 FLOPs pour la passe forward.<br/>Le nombre de paramètres actifs lors de l'inférence dépend de l'architecture du modèle (en particulier pour les MoE).<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8]) |
@@ -122,12 +122,52 @@ L’impact des autres composants (CPU, RAM, stockage, châssis) est également p
 
 $$$I_{total} = I_{gpu} + \frac{I_{server}}{N_{gpu/server}}$$$
 
+### Prise en compte des caches
+
+Deux mécanismes de cache peuvent réduire le coût effectif de l’inférence.
+
+Le premier est un **cache d’inférence**, utilisé au sein d’une même requête. Lorsqu’un prompt a été traité une première fois, les états intermédiaires associés aux jetons déjà vus peuvent être réutilisés pendant la génération des jetons suivants. Ce mécanisme explique que le coût de génération ne nécessite pas de recalculer l’ensemble du contexte à chaque étape.
+
+Le second est un **cache de préfixe**, utilisé entre plusieurs requêtes distinctes partageant un même début strictement identique. Dans ce cas, une partie du prompt peut parfois être réutilisée d’une requête à l’autre, ce qui réduit le coût de traitement des jetons d’entrée.
+
+La méthodologie de base calcule un impact brut du traitement du prompt, sans réutilisation inter-requêtes.
+
+Lorsque plusieurs requêtes réutilisent un même préfixe, le taux de réutilisation peut être noté $r_{cache}$ :
+
+$$$r_{cache} = \frac{T_{cached}}{T_{input}}$$$
+
+avec :
+
+- $T_{input}$ le nombre total de jetons d’entrée
+- $T_{cached}$ le nombre de jetons d’entrée réutilisés depuis le cache
+- $r_{cache} \in [0;1]$
+- $r_{cache} = 0$ : aucune réutilisation du prompt
+- $r_{cache} = 1$ : prompt entièrement réutilisé
+
+Les jetons réutilisés depuis un cache ne sont toutefois pas supposés sans impact. Un coefficient résiduel $\alpha$ est introduit pour représenter l’impact d’un jeton servi depuis un cache relativement à un jeton recalculé :
+
+- $\alpha \in [0;1]$
+- $\alpha = 0$ : les jetons servis depuis un cache sont supposés négligeables devant l’impact évité
+- $\alpha = 1$ : un jeton servi depuis un cache est supposé avoir le même impact qu’un jeton recalculé
+
+L’impact effectif du prompt peut alors être approximé par :
+
+$$$I_{prompt,effectif} = I_{prompt,brut} \times \big((1-r_{cache}) + \alpha \times r_{cache}\big)$$$
+
+Cette correction peut être appliquée de manière identique à l’impact opérationnel et à l’impact intrinsèque du prompt. Le coût de génération des jetons de sortie reste inchangé.
+
+:::note
+Lorsque des données d’exploitation distinguent les jetons d’entrée effectivement recalculés des jetons d’entrée réutilisés depuis un cache, elles peuvent être utilisées pour estimer empiriquement $r_{cache}$. Le coefficient $\alpha$ reste quant à lui une hypothèse de modélisation : il vise à représenter l’impact résiduel associé à la mémoire, au stockage rapide et aux services nécessaires pour conserver et restituer les états en cache. Cette estimation reflète donc un contexte réel d’usage et de déploiement, et non une propriété générale du modèle.
+:::
+
 ## Hypothèses & limites
 
 ### Hypothèses
 
-- Lors de l'inférence, un cache (KV) est toujours présent (Transformer Inference Arithmetic).
-- Les facteurs d'émissions électriques proviennent du référentiel Open Data D4B.
+- Lors de la génération auto-régressive, un cache d’inférence est généralement utilisé pour réemployer les états intermédiaires déjà calculés.
+- La réutilisation inter-requêtes d’un préfixe de prompt n’est pas systématique. Elle dépend du contexte de déploiement et de la stabilité effective des prompts.
+- En l’absence de mesure directe, le taux de réutilisation $r_{cache}$ est une hypothèse d’usage.
+- En première approximation, trois usages peuvent être retenus : un mode simple avec $\alpha = 0$, un mode prudent avec $\alpha = 0{,}1$, et un mode exploratoire sous forme de fourchette entre $0$ et $0{,}25$.
 
 ### Limitations
 
@@ -135,6 +175,11 @@ $$$I_{total} = I_{gpu} + \frac{I_{server}}{N_{gpu/server}}$$$
 - Pas de prise en compte du fait que les modèles tiennent ou non en mémoire sur le matériel sélectionné
 - Pas de prise en charge des spécificités éventuelles des TPU, FPGA, Asics, ...
 - Pas d'ACV fiable sur les équipements.
+- La méthode ne modélise pas finement les conditions d’activation, de conservation et d’éviction des caches.
+- Les jetons servis depuis un cache ne sont pas sans impact : la méthode suppose simplement que le calcul évité domine l’overhead mémoire et service associé au cache.
+- Le taux réel de réutilisation d’un prompt dépend fortement de la structure des usages, de la répétitivité des préfixes et du contexte technique de déploiement.
+- La valeur de $\alpha$ reste incertaine en l’absence de mesure directe de l’overhead mémoire et service associé au cache.
+- Les données de facturation ou d’exploitation distinguant jetons recalculés et jetons réutilisés peuvent servir de proxy opérationnel, mais ne constituent pas une mesure physique directe de l’impact environnemental.
 
 ### Perspectives
 
@@ -208,7 +253,7 @@ $$$
 
 ### Impact de la génération d'1 million de jetons
 
-Dans le cloud, lorsqu'on utilise un LLM en mode "complétion", grâce au KV caching les jetons d'entrée n'entraînent qu'un coût linéaire par jeton de sortie, car l'attention n'est recalculée que sur les nouveaux jetons générés.
+Dans un usage de type complétion, le coût d’inférence se décompose en deux parties : le traitement initial du prompt, puis la génération des jetons de sortie. Lors de la génération, les états intermédiaires déjà calculés pour le contexte sont réutilisés, ce qui évite de recalculer l’ensemble du prompt à chaque nouveau jeton. Lorsque plusieurs requêtes partagent en plus un même préfixe, le coût de traitement des jetons d’entrée peut être encore réduit si cette réutilisation est effectivement exploitée. Les calculs ci-dessous correspondent toutefois à un cas de base sans correction explicite par $r_{cache}$.
 
 $$$
 \begin{aligned}

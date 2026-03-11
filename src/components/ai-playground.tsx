@@ -441,6 +441,7 @@ const REGIONS = [
   {
     label: "Europe",
     options: [
+      { label: "Europe moyenne (0.25 kgCO2e/kWh)", value: "eu", gwp: 0.25 },
       { label: "Allemagne (0.33 kgCO2e/kWh)", value: "de", gwp: 0.3316 },
       { label: "France (0.04 kgCO2e/kWh)", value: "fr", gwp: 0.04179 },
       { label: "Irlande (0.3 kgCO2e/kWh)", value: "ie", gwp: 0.3 },
@@ -464,11 +465,18 @@ const REGIONS = [
   },
   {
     label: "Global",
-    options: [{ label: "Monde (0.47 kgCO2e/kWh)", value: "world", gwp: 0.47184 }],
+    options: [
+      { label: "Monde (0.47 kgCO2e/kWh)", value: "world", gwp: 0.47184 },
+    ],
   },
 ];
 
 const FLAT_REGIONS = REGIONS.flatMap((group) => group.options);
+const CACHE_OPTIONS = Array.from({ length: 101 }, (_, value) => ({
+  label: `${value}%`,
+  value: `${value}`,
+}));
+const CACHE_ALPHA = 0.1;
 
 type Parts = {
   cpu: number;
@@ -500,6 +508,7 @@ const compute = ({
   corpus,
   prompt,
   response,
+  cache,
   images,
   width,
   height,
@@ -516,6 +525,7 @@ const compute = ({
   width: number;
   height: number;
   steps: number;
+  cache: number;
 }): Result => {
   const pue = 1.2;
   const lifespan = 5 * 365.25 * 24;
@@ -546,6 +556,7 @@ const compute = ({
   } = HARDWARES.find(({ value }) => hardware === value);
 
   let flops = 0;
+  let promptFlops = 0;
   let latency;
   let throughput;
   if (useCase === "training") {
@@ -557,13 +568,11 @@ const compute = ({
     flops = (2 * Ptotal + 4 * Ptunable) * corpus * 1e9;
   }
   if (useCase === "text-inference") {
+    promptFlops = (architecture === "dense" ? Ptotal : Pactive) * prompt;
     flops =
-      (architecture === "dense" ? Ptotal : Pactive) * prompt +
+      promptFlops +
       2 * (architecture === "dense" ? Ptotal : Pactive) * response;
-    latency =
-      ((architecture === "dense" ? Ptotal : Pactive) * prompt) /
-      (gpu_flops * mfu) /
-      gpu_count;
+    latency = promptFlops / (gpu_flops * mfu) / gpu_count;
     throughput =
       response /
       ((2 * (architecture === "dense" ? Ptotal : Pactive) * response) /
@@ -576,16 +585,14 @@ const compute = ({
     const latentWidth = Math.floor(width / downscaleFactor);
     const latentHeight = Math.floor(height / downscaleFactor);
     const activations = latentWidth * latentHeight * latentChannels;
+    promptFlops = (architecture === "dense" ? Ptotal : Pactive) * prompt;
     flops =
-      (architecture === "dense" ? Ptotal : Pactive) * prompt +
+      promptFlops +
       images *
         (steps *
           (2 * (architecture === "dense" ? Ptotal : Pactive) * activations) +
           40e9) /* CLIP + VAE */;
-    latency =
-      ((architecture === "dense" ? Ptotal : Pactive) * prompt) /
-      (gpu_flops * mfu) /
-      gpu_count;
+    latency = promptFlops / (gpu_flops * mfu) / gpu_count;
   }
   if (useCase === "video-inference") {
     const downscaleFactor = 8;
@@ -594,8 +601,9 @@ const compute = ({
     const latentWidth = Math.floor(width / downscaleFactor);
     const latentHeight = Math.floor(height / downscaleFactor);
     const activations = latentWidth * latentHeight * latentChannels;
+    promptFlops = (architecture === "dense" ? Ptotal : Pactive) * prompt;
     flops =
-      (architecture === "dense" ? Ptotal : Pactive) * prompt +
+      promptFlops +
       images *
         (steps *
           (2 * (architecture === "dense" ? Ptotal : Pactive) * activations) +
@@ -606,10 +614,7 @@ const compute = ({
         4 * // MLP
         32 * // Couches
         hiddenSize;
-    latency =
-      ((architecture === "dense" ? Ptotal : Pactive) * prompt) /
-      (gpu_flops * mfu) /
-      gpu_count;
+    latency = promptFlops / (gpu_flops * mfu) / gpu_count;
   }
   const gpu_seconds = flops / (gpu_flops * mfu);
   const duration = gpu_seconds / gpu_count;
@@ -659,6 +664,41 @@ const compute = ({
     embodied.storage +
     embodied.enclosure;
 
+  if (
+    cache > 0 &&
+    promptFlops > 0 &&
+    (useCase === "text-inference" ||
+      useCase === "image-inference" ||
+      useCase === "video-inference")
+  ) {
+    const reuseRate = cache / 100;
+    const promptShare = Math.min(promptFlops / flops, 1);
+    const promptImpactFactor = 1 - reuseRate + CACHE_ALPHA * reuseRate;
+    const totalImpactFactor =
+      1 - promptShare + promptShare * promptImpactFactor;
+
+    wh.cpu *= totalImpactFactor;
+    wh.gpu *= totalImpactFactor;
+    wh.ram *= totalImpactFactor;
+    wh.storage *= totalImpactFactor;
+    wh.enclosure *= totalImpactFactor;
+    wh.total *= totalImpactFactor;
+
+    energy.cpu *= totalImpactFactor;
+    energy.gpu *= totalImpactFactor;
+    energy.ram *= totalImpactFactor;
+    energy.storage *= totalImpactFactor;
+    energy.enclosure *= totalImpactFactor;
+    energy.total *= totalImpactFactor;
+
+    embodied.cpu *= totalImpactFactor;
+    embodied.gpu *= totalImpactFactor;
+    embodied.ram *= totalImpactFactor;
+    embodied.storage *= totalImpactFactor;
+    embodied.enclosure *= totalImpactFactor;
+    embodied.total *= totalImpactFactor;
+  }
+
   return {
     flops,
     duration,
@@ -687,6 +727,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
   const [corpus, setCorpus] = useState(15000);
   const [prompt, setPrompt] = useState(100);
   const [response, setResponse] = useState(400);
+  const [cache, setCache] = useState(0);
   const [images, setImages] = useState(1);
   const [width, setWidth] = useState(512);
   const [height, setHeight] = useState(512);
@@ -702,6 +743,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
         corpus,
         prompt,
         response,
+        cache,
         images,
         width,
         height,
@@ -716,6 +758,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
     corpus,
     prompt,
     response,
+    cache,
     images,
     width,
     height,
@@ -781,13 +824,22 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
         {(useCase === "text-inference" ||
           useCase === "image-inference" ||
           useCase === "video-inference") && (
-          <Input
-            label="Prompt (jetons)"
-            type="text"
-            placeholder="100"
-            value={`${prompt}`}
-            onChange={(value) => setPrompt(parseInt(value) || 0)}
-          />
+          <>
+            <Input
+              label="Prompt (jetons)"
+              type="text"
+              placeholder="100"
+              value={`${prompt}`}
+              onChange={(value) => setPrompt(parseInt(value) || 0)}
+            />
+            <Input
+              label="Cache"
+              type="select"
+              options={CACHE_OPTIONS}
+              value={`${cache}`}
+              onChange={(value) => setCache(parseInt(value) || 0)}
+            />
+          </>
         )}
         {useCase === "text-inference" && (
           <Input

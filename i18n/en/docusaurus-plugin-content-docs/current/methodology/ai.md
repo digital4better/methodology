@@ -73,7 +73,7 @@ The table below provides a quick reference for each modality and a simple way to
 |--------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Training**                               | $FLOP \approx 6 \times P_\text{total} \times T_\text{training}$                                                                     | $P_{total}$: total number of model parameters<br/>$T_{training}$: number of tokens processed during training (tokens × batch × steps)                                                                                                                                              | For each token and parameter, 6 FLOPs are needed: 2 FLOPs for the forward pass and 4 for gradient computation and propagation (Source: Scaling Law, Transformers FLOPs, Transformers Inference Arithmetic)                                                   |
 | **Fine-tuning**                            | $FLOP \approx (2 \times P_\text{total} + 4 \times P_\text{tunable}) \times T_\text{training}$                                       | $P_{total}$: total number of model parameters<br/>$P_{tunable}$: number of trainable parameters (depends on optimization: LoRA, …)<br/>$T_{training}$: number of tokens processed during training (tokens × batch × steps)                                                         | Same as full training, however the number of updated parameters is lower (Source: Scaling Law, Transformers FLOPs, Transformers Inference Arithmetic)                                                                                                        |
-| **Prompt processing**<br/>(text)           | $FLOP \approx 1 \times P_{active} \times T_{input}$                                                                                 | $P_{active}$: number of active parameters<br/>$T_{input}$: number of prompt tokens                                                                                                                                                                                                 | With KV cache enabled, the prompt is encoded once: cost is reduced to ≈ 1 FLOP per parameter/token (Source: Scaling Law, Transformers FLOPs, Transformers Inference Arithmetic)                                                                              |
+| **Prompt processing**<br/>(text)           | $FLOP \approx 1 \times P_{active} \times T_{input}$                                                                                 | $P_{active}$: number of active parameters<br/>$T_{input}$: number of prompt tokens                                                                                                                                                                                                 | The prompt is encoded once by the model. During auto-regressive generation, the intermediate states that have already been computed are then reused to avoid recalculating the full context for each newly generated token. (Source: Scaling Law, Transformers FLOPs, Transformers Inference Arithmetic) |
 | **Prompt processing**<br/>(image)          | $FLOP \approx 1 \times P_{active} \times N_\text{activation}$                                                                       | $P_{active}$: number of active parameters<br/>$N_\text{activation}$: number of image activations = width × height × channels                                                                                                                                                       | Each prompt image is encoded once by the model. $N_\text{activation}$ corresponds to the number of latent tokens or encoded pixels.                                                                                                                          |
 | **Prompt processing**<br/>(audio)          | $FLOP \approx 1 \times P_{active} \times N_\text{audio}$                                                                            | $P_{active}$: number of active parameters<br/>$N_\text{audio}$: number of audio tokens = duration × sample rate ÷ downscale × latent channels                                                                                                                                      | Each prompt audio clip is encoded once by the model. $N_\text{audio}$ corresponds to the latent tokens used to represent the audio signal.                                                                                                                   |
 | **Text generation**                        | $FLOP \approx 2 \times P_\text{active} \times T_\text{output}$                                                                      | $P_{active}$: number of active parameters<br/>$T_{output}$: number of generated tokens                                                                                                                                                                                             | For each token and parameter, 2 FLOPs are needed for the forward pass. The number of active parameters during inference depends on the model architecture (especially for MoE). (Source: Scaling Law, Transformers FLOPs, Transformers Inference Arithmetic) |
@@ -122,12 +122,52 @@ The impact of other components (CPU, RAM, storage, chassis) is also taken into a
 
 $$$I_{total} = I_{gpu} + \frac{I_{server}}{N_{gpu/server}}$$$
 
+### Taking caches into account
+
+Two caching mechanisms can reduce the effective cost of inference.
+
+The first is an **inference cache**, used within the same request. Once a prompt has been processed once, the intermediate states associated with previously seen tokens can be reused during generation of subsequent tokens. This mechanism explains why generation does not require recalculating the full context at each step.
+
+The second is a **prefix cache**, used across multiple distinct requests that share the exact same beginning. In that case, part of the prompt can sometimes be reused from one request to another, which reduces the cost of processing input tokens.
+
+The base methodology first computes a raw impact for prompt processing, without cross-request reuse.
+
+When several requests reuse the same prefix, the reuse rate can be noted $r_{cache}$:
+
+$$$r_{cache} = \frac{T_{cached}}{T_{input}}$$$
+
+with:
+
+- $T_{input}$ the total number of input tokens
+- $T_{cached}$ the number of input tokens reused from the cache
+- $r_{cache} \in [0;1]$
+- $r_{cache} = 0$: no prompt reuse
+- $r_{cache} = 1$: prompt fully reused
+
+Tokens reused from a cache are not, however, assumed to be impact-free. A residual coefficient $\alpha$ is introduced to represent the impact of a token served from a cache relative to a recalculated token:
+
+- $\alpha \in [0;1]$
+- $\alpha = 0$: tokens served from a cache are assumed negligible compared with the avoided impact
+- $\alpha = 1$: a token served from a cache is assumed to have the same impact as a recalculated token
+
+The effective impact of the prompt can then be approximated by:
+
+$$$I_{prompt,effectif} = I_{prompt,brut} \times \big((1-r_{cache}) + \alpha \times r_{cache}\big)$$$
+
+This correction can be applied identically to the operational and embodied impact of the prompt. The cost of generating output tokens remains unchanged.
+
+:::note
+When operating data distinguishes input tokens that were effectively recalculated from input tokens reused from a cache, it can be used to estimate $r_{cache}$ empirically. The coefficient $\alpha$ remains a modeling assumption: it aims to represent the residual impact associated with the memory, fast storage, and services required to retain and serve cached states. This estimate therefore reflects a real usage and deployment context, rather than a general property of the model.
+:::
+
 ## Assumptions & limits
 
 ### Assumptions
 
-- During inference, a cache (KV) is always present (Transformer Inference Arithmetic).
-- Electricity emission factors come from the D4B Open Data reference.
+- During auto-regressive generation, an inference cache is generally used to reuse already computed intermediate states.
+- Cross-request reuse of a prompt prefix is not systematic. It depends on the deployment context and the effective stability of prompts.
+- In the absence of direct measurement, the reuse rate $r_{cache}$ is a usage assumption.
+- As a first approximation, three usages can be retained: a simple mode with $\alpha = 0$, a prudent mode with $\alpha = 0.1$, and an exploratory mode as a range between $0$ and $0.25$.
 
 ### Limitations
 
@@ -135,6 +175,11 @@ $$$I_{total} = I_{gpu} + \frac{I_{server}}{N_{gpu/server}}$$$
 - No accounting for whether models fit in memory on selected hardware.
 - No handling of TPU, FPGA, ASIC specificities.
 - No reliable LCA on equipment.
+- The method does not model in detail the activation, retention, and eviction conditions of caches.
+- Tokens served from a cache are not impact-free: the method simply assumes that the avoided computation dominates the memory and service overhead associated with the cache.
+- The actual reuse rate of a prompt depends strongly on usage structure, prefix repetition, and the technical deployment context.
+- The value of $\alpha$ remains uncertain in the absence of direct measurement of the memory and service overhead associated with the cache.
+- Billing or operating data that distinguishes recalculated tokens from reused tokens can serve as an operational proxy, but does not constitute a direct physical measurement of environmental impact.
 
 ### Perspectives
 
@@ -209,7 +254,7 @@ $$$
 
 ### Impact of generating 1 million tokens
 
-In the cloud, when using an LLM in “completion” mode, thanks to KV caching, input tokens only incur a linear cost per output token because attention is recalculated only on newly generated tokens.
+In a completion-type use case, inference cost is split into two parts: initial prompt processing, then output token generation. During generation, intermediate states already computed for the context are reused, which avoids recalculating the full prompt for each new token. When multiple requests also share the same prefix, the cost of processing input tokens can be reduced further if that reuse is effectively exploited. The calculations below nevertheless correspond to a base case without an explicit correction by $r_{cache}$.
 
 $$$
 \begin{aligned}

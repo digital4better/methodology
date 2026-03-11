@@ -22,6 +22,15 @@ export const Input: FC<
     type === "select" &&
     options.length > 0 &&
     "options" in options[0];
+  const groupedOptions = hasGroups
+    ? (options as {
+        label: string;
+        options: { label: string; value: string }[];
+      }[])
+    : [];
+  const flatOptions = hasGroups
+    ? []
+    : (options as { label: string; value: string }[]);
   return (
     <Stack
       sx={{
@@ -51,14 +60,14 @@ export const Input: FC<
           onChange={(event) => onChange(event.target.value)}
         >
           {hasGroups
-            ? options.map(({ label, options }) => (
+            ? groupedOptions.map(({ label, options }) => (
                 <optgroup key={label} label={label}>
                   {options.map(({ label, value }) => (
                     <option key={value} label={label} value={value} />
                   ))}
                 </optgroup>
               ))
-            : options.map(({ label, value }) => (
+            : flatOptions.map(({ label, value }) => (
                 <option key={value} label={label} value={value} />
               ))}
         </Box>
