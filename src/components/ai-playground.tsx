@@ -472,6 +472,10 @@ const REGIONS = [
 ];
 
 const FLAT_REGIONS = REGIONS.flatMap((group) => group.options);
+const PUE_OPTIONS = Array.from({ length: 11 }, (_, index) => {
+  const value = (1 + index / 10).toFixed(1);
+  return { label: value, value };
+});
 const CACHE_OPTIONS = Array.from({ length: 101 }, (_, value) => ({
   label: `${value}%`,
   value: `${value}`,
@@ -504,6 +508,7 @@ const compute = ({
   model,
   useCase,
   hardware,
+  pue,
   region,
   corpus,
   prompt,
@@ -517,6 +522,7 @@ const compute = ({
   model: string;
   useCase: string;
   hardware: string;
+  pue: number;
   region: string;
   corpus: number;
   prompt: number;
@@ -527,7 +533,6 @@ const compute = ({
   steps: number;
   cache: number;
 }): Result => {
-  const pue = 1.2;
   const lifespan = 5 * 365.25 * 24;
   const selectedRegion =
     FLAT_REGIONS.find(({ value }) => region === value) ?? FLAT_REGIONS[0];
@@ -720,6 +725,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
   );
   const [useCase, setUseCase] = useState(USE_CASES[0]?.value);
   const [hardware, setHardware] = useState(HARDWARES[0]?.value);
+  const [pue, setPue] = useState(1.2);
   const [region, setRegion] = useState(
     FLAT_REGIONS.find(({ value }) => value === "us")?.value ??
       FLAT_REGIONS[0]?.value,
@@ -739,6 +745,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
         model,
         useCase,
         hardware,
+        pue,
         region,
         corpus,
         prompt,
@@ -754,6 +761,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
     model,
     useCase,
     hardware,
+    pue,
     region,
     corpus,
     prompt,
@@ -777,7 +785,8 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
         py: embedded ? 0 : 2,
         px: embedded ? 0 : 2,
         mb: embedded ? 0 : 6,
-        ".group>*": { flex: 1 },
+        ".group>*": { flex: "1 1 0" },
+        ".group>*.compact": { flex: "0 0 75px" },
       }}
     >
       <Box sx={{ typography: "subtitle" }}>Paramètres</Box>
@@ -802,6 +811,14 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
           options={HARDWARES}
           value={hardware}
           onChange={(value) => setHardware(value)}
+        />
+        <Input
+          className="compact"
+          label="PUE"
+          type="select"
+          options={PUE_OPTIONS}
+          value={`${pue.toFixed(1)}`}
+          onChange={(value) => setPue(parseFloat(value) || 1.2)}
         />
         <Input
           label="Région"
@@ -833,6 +850,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
               onChange={(value) => setPrompt(parseInt(value) || 0)}
             />
             <Input
+              className="compact"
               label="Cache"
               type="select"
               options={CACHE_OPTIONS}

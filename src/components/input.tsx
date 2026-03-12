@@ -1,6 +1,7 @@
 import { FC, useId } from "react";
 import Box from "@mui/system/Box";
 import Stack from "@mui/system/Stack";
+import { SxProps, Theme } from "@mui/system";
 
 export const Input: FC<
   (
@@ -15,8 +16,14 @@ export const Input: FC<
             }[];
         placeholder?: never;
       }
-  ) & { label: string; value: string; onChange: (value: string) => void }
-> = ({ type, options, placeholder, label, value, onChange }) => {
+  ) & {
+    className?: string;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    sx?: SxProps<Theme>;
+  }
+> = ({ type, options, placeholder, label, value, onChange, sx, className }) => {
   const id = useId();
   const hasGroups =
     type === "select" &&
@@ -33,8 +40,10 @@ export const Input: FC<
     : (options as { label: string; value: string }[]);
   return (
     <Stack
+      className={className}
       sx={{
         overflow: "hidden",
+        ...sx,
         "select,input": {
           appearance: "none",
           borderRadius: 2,
