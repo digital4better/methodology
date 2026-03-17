@@ -268,7 +268,7 @@ Si l'on considère une taille de "prompt moyen" d'environ 400 jetons, alors l'im
 
 import { AIPlayGround } from '@site/src/components/ai-playground';
 
-<AIPlayGround />
+<AIPlayGround lang="fr" />
 
 ## Comparaison
 

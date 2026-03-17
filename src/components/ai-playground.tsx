@@ -17,11 +17,179 @@ type CuratedModel = {
   label: string;
   value: string;
   provider: string;
-  category: string;
+  category:
+    | "general"
+    | "code"
+    | "multimodal"
+    | "open_weight"
+    | "compact"
+    | "reasoning";
   architecture: "dense" | "moe";
   parameters: [number, number];
   estimated: boolean;
   source: string;
+};
+
+type Lang = "fr" | "en";
+type UseCase =
+  | "training"
+  | "fine-tuning"
+  | "text-inference"
+  | "image-inference"
+  | "video-inference";
+
+const TEXT = {
+  fr: {
+    categories: {
+      compact: "compact",
+      code: "code/dev",
+      general: "généraliste",
+      multimodal: "multimodal",
+      open_weight: "open-weight",
+      reasoning: "raisonnement",
+    },
+    fields: {
+      cache: "Cache",
+      corpus: "Corpus (milliard de jetons)",
+      hardware: "Matériel",
+      height: "Hauteur (px)",
+      images: "Images",
+      model: "Modèle",
+      prompt: "Prompt (jetons)",
+      pue: "PUE",
+      region: "Région",
+      response: "Réponse (jetons)",
+      steps: "Étapes",
+      useCase: "Cas d'usage",
+      width: "Largeur (px)",
+    },
+    groups: {
+      americas: "Amériques",
+      asia: "Asie",
+      europe: "Europe",
+      global: "Global",
+    },
+    regions: {
+      ca: "Canada",
+      cn: "Chine",
+      de: "Allemagne",
+      eu: "Europe moyenne",
+      fr: "France",
+      ie: "Irlande",
+      in: "Inde",
+      no: "Norvège",
+      uk: "Royaume-Uni",
+      us: "États-Unis",
+      world: "Monde",
+    },
+    results: {
+      cache: "Cache",
+      chassis: "Chassis",
+      computeLoad: "Charge de calcul",
+      cpu: "CPU",
+      duration: "Durée de traitement",
+      embodied: "Embodied",
+      energy: "Énergie",
+      emissions: "Émissions GES",
+      gpu: "GPU",
+      latency: "Latence",
+      operational: "Operational",
+      parameters: "Paramètres",
+      ram: "RAM",
+      results: "Résultats",
+      storage: "Stockage",
+      throughput: "Débit",
+    },
+    useCases: {
+      "fine-tuning": "Fine tuning",
+      "image-inference": "Inférence d'image",
+      training: "Entrainement",
+      "text-inference": "Inférence de texte",
+      "video-inference": "Inférence de vidéo",
+    },
+  },
+  en: {
+    categories: {
+      compact: "compact",
+      code: "code/dev",
+      general: "general",
+      multimodal: "multimodal",
+      open_weight: "open-weight",
+      reasoning: "reasoning",
+    },
+    fields: {
+      cache: "Cache",
+      corpus: "Corpus (billion tokens)",
+      hardware: "Hardware",
+      height: "Height (px)",
+      images: "Images",
+      model: "Model",
+      prompt: "Prompt (tokens)",
+      pue: "PUE",
+      region: "Region",
+      response: "Response (tokens)",
+      steps: "Steps",
+      useCase: "Use case",
+      width: "Width (px)",
+    },
+    groups: {
+      americas: "Americas",
+      asia: "Asia",
+      europe: "Europe",
+      global: "Global",
+    },
+    regions: {
+      ca: "Canada",
+      cn: "China",
+      de: "Germany",
+      eu: "Europe average",
+      fr: "France",
+      ie: "Ireland",
+      in: "India",
+      no: "Norway",
+      uk: "United Kingdom",
+      us: "United States",
+      world: "World",
+    },
+    results: {
+      cache: "Cache",
+      chassis: "Chassis",
+      computeLoad: "Compute load",
+      cpu: "CPU",
+      duration: "Processing time",
+      embodied: "Embodied",
+      energy: "Energy",
+      emissions: "GHG emissions",
+      gpu: "GPU",
+      latency: "Latency",
+      operational: "Operational",
+      parameters: "Parameters",
+      ram: "RAM",
+      results: "Results",
+      storage: "Storage",
+      throughput: "Throughput",
+    },
+    useCases: {
+      "fine-tuning": "Fine-tuning",
+      "image-inference": "Image inference",
+      training: "Training",
+      "text-inference": "Text inference",
+      "video-inference": "Video inference",
+    },
+  },
+} as const;
+
+const normalizeLang = (lang?: string): Lang =>
+  lang?.toLowerCase().startsWith("fr") ? "fr" : "en";
+
+const resolveLang = (lang?: string): Lang => {
+  if (lang) {
+    return normalizeLang(lang);
+  }
+  if (typeof navigator !== "undefined") {
+    return normalizeLang(navigator.language);
+  }
+  return "en";
 };
 
 const CURATED_MODELS: CuratedModel[] = [
@@ -29,7 +197,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Anthropic - Claude Haiku 4.5",
     value: "claude-haiku-4-5-20251001",
     provider: "anthropic",
-    category: "généraliste",
+    category: "general",
     architecture: "dense",
     parameters: [22.5e9, 22.5e9],
     estimated: true,
@@ -39,7 +207,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Anthropic - Claude Opus 4.5",
     value: "claude-opus-4-5-20251101",
     provider: "anthropic",
-    category: "généraliste",
+    category: "general",
     architecture: "moe",
     parameters: [133.5e9, 670e9],
     estimated: true,
@@ -49,7 +217,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Anthropic - Claude Sonnet 4.5",
     value: "claude-sonnet-4-5-20250929",
     provider: "anthropic",
-    category: "généraliste",
+    category: "general",
     architecture: "moe",
     parameters: [88e9, 440e9],
     estimated: true,
@@ -59,7 +227,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "DeepSeek - DeepSeek-V3",
     value: "deepseek-v3",
     provider: "deepseek",
-    category: "généraliste",
+    category: "general",
     architecture: "moe",
     parameters: [37e9, 671e9],
     estimated: false,
@@ -69,7 +237,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Google - CodeGemma 7B",
     value: "codegemma-7b-it",
     provider: "google",
-    category: "code/dev",
+    category: "code",
     architecture: "dense",
     parameters: [8.54e9, 8.54e9],
     estimated: false,
@@ -89,7 +257,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Google - Gemini 3.1 Pro",
     value: "gemini-3.1-pro-preview",
     provider: "google",
-    category: "généraliste",
+    category: "general",
     architecture: "moe",
     parameters: [240e9, 1200e9],
     estimated: true,
@@ -99,7 +267,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Google - Gemma 3 27B",
     value: "gemma-3-27b-it",
     provider: "google",
-    category: "open-weight",
+    category: "open_weight",
     architecture: "dense",
     parameters: [27.4e9, 27.4e9],
     estimated: false,
@@ -129,7 +297,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Meta - Llama 3.1 70B",
     value: "meta-llama-3.1-70b-instruct",
     provider: "meta",
-    category: "open-weight",
+    category: "open_weight",
     architecture: "dense",
     parameters: [70.55e9, 70.55e9],
     estimated: false,
@@ -139,7 +307,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Meta - Llama 3.1 405B",
     value: "meta-llama-3.1-405b-instruct",
     provider: "meta",
-    category: "open-weight",
+    category: "open_weight",
     architecture: "dense",
     parameters: [405.87e9, 405.87e9],
     estimated: false,
@@ -160,7 +328,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Mistral - Codestral",
     value: "codestral-latest",
     provider: "mistral",
-    category: "code/dev",
+    category: "code",
     architecture: "dense",
     parameters: [22.2e9, 22.2e9],
     estimated: false,
@@ -170,7 +338,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Mistral - Devstral Medium 1.0",
     value: "devstral-medium-latest",
     provider: "mistral",
-    category: "code/dev",
+    category: "code",
     architecture: "dense",
     parameters: [95e9, 95e9],
     estimated: true,
@@ -180,7 +348,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Mistral - Devstral Small",
     value: "devstral-small-latest",
     provider: "mistral",
-    category: "code/dev",
+    category: "code",
     architecture: "dense",
     parameters: [23.6e9, 23.6e9],
     estimated: false,
@@ -190,7 +358,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Mistral - Magistral Medium 1.2",
     value: "magistral-medium-latest",
     provider: "mistral",
-    category: "raisonnement",
+    category: "reasoning",
     architecture: "dense",
     parameters: [95e9, 95e9],
     estimated: true,
@@ -210,7 +378,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Mistral - Mistral Medium 3.1",
     value: "mistral-medium-latest",
     provider: "mistral",
-    category: "généraliste",
+    category: "general",
     architecture: "dense",
     parameters: [95e9, 95e9],
     estimated: true,
@@ -230,7 +398,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "OpenAI - GPT-5",
     value: "gpt-5",
     provider: "openai",
-    category: "généraliste",
+    category: "general",
     architecture: "moe",
     parameters: [60e9, 300e9],
     estimated: true,
@@ -250,7 +418,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "OpenAI - GPT-5.1 Codex",
     value: "gpt-5.1-codex",
     provider: "openai",
-    category: "code/dev",
+    category: "code",
     architecture: "moe",
     parameters: [60e9, 300e9],
     estimated: true,
@@ -260,7 +428,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "OpenAI - GPT-OSS 120B",
     value: "gpt-oss-120b",
     provider: "openai",
-    category: "open-weight",
+    category: "open_weight",
     architecture: "moe",
     parameters: [5.1e9, 117e9],
     estimated: false,
@@ -270,7 +438,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "OpenAI - GPT-OSS 20B",
     value: "gpt-oss-20b",
     provider: "openai",
-    category: "open-weight",
+    category: "open_weight",
     architecture: "moe",
     parameters: [3.6e9, 21e9],
     estimated: false,
@@ -280,7 +448,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "OpenAI - o4-mini",
     value: "o4-mini",
     provider: "openai",
-    category: "raisonnement",
+    category: "reasoning",
     architecture: "dense",
     parameters: [18e9, 18e9],
     estimated: true,
@@ -290,7 +458,7 @@ const CURATED_MODELS: CuratedModel[] = [
     label: "Qwen - Qwen3 32B",
     value: "qwen3-32b",
     provider: "qwen",
-    category: "open-weight",
+    category: "open_weight",
     architecture: "dense",
     parameters: [32.8e9, 32.8e9],
     estimated: false,
@@ -317,38 +485,16 @@ const PROVIDER_LABELS: Record<string, string> = {
   qwen: "Qwen",
 };
 
-const MODEL_OPTIONS = Object.entries(
-  CURATED_MODELS.reduce<Record<string, { label: string; value: string }[]>>(
-    (groups, model) => {
-      const shortLabel = model.label.replace(/^[^-]+ - /, "");
-      const option = {
-        label: `${shortLabel} (${model.category})`,
-        value: model.value,
-      };
-      if (!groups[model.provider]) {
-        groups[model.provider] = [];
-      }
-      groups[model.provider].push(option);
-      return groups;
-    },
-    {},
-  ),
-)
-  .sort(([providerA], [providerB]) =>
-    PROVIDER_LABELS[providerA].localeCompare(PROVIDER_LABELS[providerB], "fr"),
-  )
-  .map(([provider, options]) => ({
-    label: PROVIDER_LABELS[provider],
-    options: options.sort((a, b) => a.label.localeCompare(b.label, "fr")),
-  }));
-
 const USE_CASES = [
-  { label: "Entrainement", value: "training" },
-  { label: "Fine tuning", value: "fine-tuning" },
-  { label: "Inférence de texte", value: "text-inference" },
-  { label: "Inférence d'image", value: "image-inference" },
-  { label: "Inférence de vidéo", value: "video-inference" },
-];
+  { value: "training" },
+  { value: "fine-tuning" },
+  { value: "text-inference" },
+  { value: "image-inference" },
+  { value: "video-inference" },
+] as const satisfies ReadonlyArray<{ value: UseCase }>;
+
+const isUseCase = (value: string): value is UseCase =>
+  USE_CASES.some((useCase) => useCase.value === value);
 
 const HARDWARES = [
   {
@@ -437,41 +583,39 @@ const HARDWARES = [
   },
 ];
 
-const REGIONS = [
+const REGION_GROUPS = [
   {
-    label: "Europe",
+    key: "europe",
     options: [
-      { label: "Europe moyenne (0.25 kgCO2e/kWh)", value: "eu", gwp: 0.25 },
-      { label: "Allemagne (0.33 kgCO2e/kWh)", value: "de", gwp: 0.3316 },
-      { label: "France (0.04 kgCO2e/kWh)", value: "fr", gwp: 0.04179 },
-      { label: "Irlande (0.3 kgCO2e/kWh)", value: "ie", gwp: 0.3 },
-      { label: "Norvège (0.03 kgCO2e/kWh)", value: "no", gwp: 0.0291 },
-      { label: "Royaume-Uni (0.22 kgCO2e/kWh)", value: "uk", gwp: 0.21709 },
+      { key: "eu", value: "eu", gwp: 0.25 },
+      { key: "de", value: "de", gwp: 0.3316 },
+      { key: "fr", value: "fr", gwp: 0.04179 },
+      { key: "ie", value: "ie", gwp: 0.3 },
+      { key: "no", value: "no", gwp: 0.0291 },
+      { key: "uk", value: "uk", gwp: 0.21709 },
     ],
   },
   {
-    label: "Amériques",
+    key: "americas",
     options: [
-      { label: "Canada (0.12 kgCO2e/kWh)", value: "ca", gwp: 0.12 },
-      { label: "États-Unis (0.4 kgCO2e/kWh)", value: "us", gwp: 0.4 },
+      { key: "ca", value: "ca", gwp: 0.12 },
+      { key: "us", value: "us", gwp: 0.4 },
     ],
   },
   {
-    label: "Asie",
+    key: "asia",
     options: [
-      { label: "Chine (0.56 kgCO2e/kWh)", value: "cn", gwp: 0.5554 },
-      { label: "Inde (0.71 kgCO2e/kWh)", value: "in", gwp: 0.70745 },
+      { key: "cn", value: "cn", gwp: 0.5554 },
+      { key: "in", value: "in", gwp: 0.70745 },
     ],
   },
   {
-    label: "Global",
-    options: [
-      { label: "Monde (0.47 kgCO2e/kWh)", value: "world", gwp: 0.47184 },
-    ],
+    key: "global",
+    options: [{ key: "world", value: "world", gwp: 0.47184 }],
   },
 ];
 
-const FLAT_REGIONS = REGIONS.flatMap((group) => group.options);
+const FLAT_REGIONS = REGION_GROUPS.flatMap((group) => group.options);
 const PUE_OPTIONS = Array.from({ length: 11 }, (_, index) => {
   const value = (1 + index / 10).toFixed(1);
   return { label: value, value };
@@ -520,7 +664,7 @@ const compute = ({
   steps,
 }: {
   model: string;
-  useCase: string;
+  useCase: UseCase;
   hardware: string;
   pue: number;
   region: string;
@@ -718,12 +862,61 @@ const compute = ({
   };
 };
 
-export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
+export const AIPlayGround = ({
+  embedded = false,
+  lang,
+}: {
+  embedded?: boolean;
+  lang?: string;
+}) => {
+  const [locale, setLocale] = useState<Lang>(() => resolveLang(lang));
+  useEffect(() => {
+    setLocale(resolveLang(lang));
+  }, [lang]);
+  const text = TEXT[locale];
+  const modelOptions = Object.entries(
+    CURATED_MODELS.reduce<Record<string, { label: string; value: string }[]>>(
+      (groups, model) => {
+        const shortLabel = model.label.replace(/^[^-]+ - /, "");
+        const option = {
+          label: `${shortLabel} (${text.categories[model.category]})`,
+          value: model.value,
+        };
+        if (!groups[model.provider]) {
+          groups[model.provider] = [];
+        }
+        groups[model.provider].push(option);
+        return groups;
+      },
+      {},
+    ),
+  )
+    .sort(([providerA], [providerB]) =>
+      PROVIDER_LABELS[providerA].localeCompare(
+        PROVIDER_LABELS[providerB],
+        locale,
+      ),
+    )
+    .map(([provider, options]) => ({
+      label: PROVIDER_LABELS[provider],
+      options: options.sort((a, b) => a.label.localeCompare(b.label, locale)),
+    }));
+  const regionOptions = REGION_GROUPS.map((group) => ({
+    label: text.groups[group.key],
+    options: group.options.map((region) => ({
+      label: `${text.regions[region.key]} (${format(region.gwp, UNITS.gwp)})`,
+      value: region.value,
+    })),
+  }));
+  const useCaseOptions = USE_CASES.map(({ value }) => ({
+    label: text.useCases[value],
+    value,
+  }));
   const [model, setModel] = useState(
     MODELS.find(({ value }) => value === "meta-llama-3.1-405b-instruct")
       ?.value ?? MODELS[0]?.value,
   );
-  const [useCase, setUseCase] = useState(USE_CASES[0]?.value);
+  const [useCase, setUseCase] = useState<UseCase>(USE_CASES[0]?.value);
   const [hardware, setHardware] = useState(HARDWARES[0]?.value);
   const [pue, setPue] = useState(1.2);
   const [region, setRegion] = useState(
@@ -789,24 +982,28 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
         ".group>*.compact": { flex: "0 0 75px" },
       }}
     >
-      <Box sx={{ typography: "subtitle" }}>Paramètres</Box>
+      <Box sx={{ typography: "subtitle" }}>{text.results.parameters}</Box>
       <Stack className="group" direction="row" spacing={2}>
         <Input
-          label="Cas d'usage"
+          label={text.fields.useCase}
           type="select"
-          options={USE_CASES}
+          options={useCaseOptions}
           value={useCase}
-          onChange={(value) => setUseCase(value)}
+          onChange={(value) => {
+            if (isUseCase(value)) {
+              setUseCase(value);
+            }
+          }}
         />
         <Input
-          label="Modèle"
+          label={text.fields.model}
           type="select"
-          options={MODEL_OPTIONS}
+          options={modelOptions}
           value={model}
           onChange={(value) => setModel(value)}
         />
         <Input
-          label="Matériel"
+          label={text.fields.hardware}
           type="select"
           options={HARDWARES}
           value={hardware}
@@ -814,16 +1011,16 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
         />
         <Input
           className="compact"
-          label="PUE"
+          label={text.fields.pue}
           type="select"
           options={PUE_OPTIONS}
           value={`${pue.toFixed(1)}`}
           onChange={(value) => setPue(parseFloat(value) || 1.2)}
         />
         <Input
-          label="Région"
+          label={text.fields.region}
           type="select"
-          options={REGIONS}
+          options={regionOptions}
           value={region}
           onChange={(value) => setRegion(value)}
         />
@@ -831,7 +1028,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
       <Stack className="group" direction="row" spacing={2}>
         {(useCase === "training" || useCase === "fine-tuning") && (
           <Input
-            label="Corpus (milliard de jetons)"
+            label={text.fields.corpus}
             type="text"
             placeholder="15000"
             value={`${corpus}`}
@@ -843,7 +1040,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
           useCase === "video-inference") && (
           <>
             <Input
-              label="Prompt (jetons)"
+              label={text.fields.prompt}
               type="text"
               placeholder="100"
               value={`${prompt}`}
@@ -851,7 +1048,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
             />
             <Input
               className="compact"
-              label="Cache"
+              label={text.fields.cache}
               type="select"
               options={CACHE_OPTIONS}
               value={`${cache}`}
@@ -861,7 +1058,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
         )}
         {useCase === "text-inference" && (
           <Input
-            label="Réponse (jetons)"
+            label={text.fields.response}
             type="text"
             placeholder="400"
             value={`${response}`}
@@ -871,28 +1068,28 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
         {(useCase === "image-inference" || useCase === "video-inference") && (
           <>
             <Input
-              label="Images"
+              label={text.fields.images}
               type="text"
               placeholder="1"
               value={`${images}`}
               onChange={(value) => setImages(parseInt(value) || 0)}
             />
             <Input
-              label="Largeur (px)"
+              label={text.fields.width}
               type="text"
               placeholder="512"
               value={`${width}`}
               onChange={(value) => setWidth(parseInt(value) || 0)}
             />
             <Input
-              label="Hauteur (px)"
+              label={text.fields.height}
               type="text"
               placeholder="512"
               value={`${height}`}
               onChange={(value) => setHeight(parseInt(value) || 0)}
             />
             <Input
-              label="Étapes"
+              label={text.fields.steps}
               type="text"
               placeholder="30"
               value={`${steps}`}
@@ -910,7 +1107,7 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
           pt: 1,
         }}
       >
-        Résultats
+        {text.results.results}
       </Box>
       <Stack
         sx={{
@@ -924,13 +1121,15 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
       >
         <Stack className="group" direction="row" spacing={1}>
           <Box>
-            Charge de calcul{" : "}
+            {text.results.computeLoad}
+            {" : "}
             <Box component="span" sx={{ fontWeight: "bold" }}>
               {format(result?.flops, UNITS.flops)}
             </Box>
           </Box>
           <Box>
-            Latence :{" "}
+            {text.results.latency}
+            {" : "}
             <Box component="span" sx={{ fontWeight: "bold" }}>
               {formatDuration(result?.latency)}
             </Box>
@@ -938,13 +1137,15 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
         </Stack>
         <Stack className="group" direction="row" spacing={1}>
           <Box>
-            Durée de traitement :{" "}
+            {text.results.duration}
+            {" : "}
             <Box component="span" sx={{ fontWeight: "bold" }}>
               {formatDuration(result?.duration)}
             </Box>
           </Box>
           <Box>
-            Débit :{" "}
+            {text.results.throughput}
+            {" : "}
             <Box component="span" sx={{ fontWeight: "bold" }}>
               {format(result?.throughput, UNITS.tokens)}
             </Box>
@@ -958,7 +1159,8 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
             pt: 1,
           }}
         >
-          Énergie :{" "}
+          {text.results.energy}
+          {" : "}
           <Box component="span" sx={{ fontWeight: "bold" }}>
             {format(result?.wh.total, UNITS.wh)}
           </Box>
@@ -967,15 +1169,16 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
           colors={COLORS}
           units={UNITS.wh}
           values={[
-            { label: "GPU", value: result?.wh.gpu },
-            { label: "CPU", value: result?.wh.cpu },
-            { label: "RAM", value: result?.wh.ram },
-            { label: "Stockage", value: result?.wh.storage },
-            { label: "Chassis", value: result?.wh.enclosure },
+            { label: text.results.gpu, value: result?.wh.gpu },
+            { label: text.results.cpu, value: result?.wh.cpu },
+            { label: text.results.ram, value: result?.wh.ram },
+            { label: text.results.storage, value: result?.wh.storage },
+            { label: text.results.chassis, value: result?.wh.enclosure },
           ]}
         />
         <Box>
-          Émissions GES :{" "}
+          {text.results.emissions}
+          {" : "}
           <Box component="span" sx={{ fontWeight: "bold" }}>
             {format(result?.gwp.total, UNITS.gwp)}
           </Box>
@@ -985,23 +1188,23 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
           units={UNITS.gwp}
           values={[
             {
-              label: "GPU",
+              label: text.results.gpu,
               value: result?.gwp.energy.gpu + result?.gwp.embodied.gpu,
             },
             {
-              label: "CPU",
+              label: text.results.cpu,
               value: result?.gwp.energy.cpu + result?.gwp.embodied.cpu,
             },
             {
-              label: "RAM",
+              label: text.results.ram,
               value: result?.gwp.energy.ram + result?.gwp.embodied.ram,
             },
             {
-              label: "Stockage",
+              label: text.results.storage,
               value: result?.gwp.energy.storage + result?.gwp.embodied.storage,
             },
             {
-              label: "Chassis",
+              label: text.results.chassis,
               value:
                 result?.gwp.energy.enclosure + result?.gwp.embodied.enclosure,
             },
@@ -1012,11 +1215,11 @@ export const AIPlayGround = ({ embedded = false }: { embedded?: boolean }) => {
           units={UNITS.gwp}
           values={[
             {
-              label: "Operational",
+              label: text.results.operational,
               value: result?.gwp.energy.total,
             },
             {
-              label: "Embodied",
+              label: text.results.embodied,
               value: result?.gwp.embodied.total,
             },
           ]}

@@ -269,7 +269,7 @@ If we consider an average prompt size of about 400 tokens, then the impact of a 
 
 import { AIPlayGround } from '@site/src/components/ai-playground';
 
-<AIPlayGround />
+<AIPlayGround lang="en" />
 
 ## Comparison
 
