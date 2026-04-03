@@ -1,14 +1,57 @@
----
-sidebar_label: IA Génératives
-sidebar_position: 6
-slug: /ai
----
-
-# Méthodologie appliquée aux IA génératives
+# IA générative
 
 ## Résumé
 
 Cette note méthodologique propose un cadre de calcul pour évaluer l’empreinte environnementale des modèles d’IA générative, en intégrant l’entraînement, le fine-tuning et l’inférence. La démarche repose sur l’estimation de la charge de calcul (FLOPs) requise par chaque usage, sa conversion en temps d’utilisation des GPU, puis en consommation énergétique et en émissions de gaz à effet de serre (GES). Elle inclut également la part d’impact liée à la fabrication et au cycle de vie des équipements. Cette approche vise à fournir une méthode reproductible, transparente et adaptée à différents modèles et contextes d’usage, en cohérence avec les recommandations de la recherche sur la Green AI[^15].
+
+### Périmètre évalué
+
+Ce chapitre couvre :
+
+- l’entraînement ;
+- le fine-tuning ;
+- l’inférence ;
+- la part d’impact liée au matériel de calcul et au serveur support.
+
+Il couvre les usages où l’on peut relier un modèle à une charge de calcul estimable, puis à un usage matériel.
+
+## Paramètres d'entrée
+
+- la nature de l’usage étudié : entraînement, fine-tuning ou inférence ;
+- le nombre de paramètres, ou une approximation documentée ;
+- le volume de tokens ou d’activations traités ;
+- les hypothèses matérielles : GPU, serveur, durée de vie ;
+- les hypothèses d’exploitation : `MFU`, `PUE`, facteur électrique, éventuel `REF`.
+
+### Dépendances tierces
+
+Ce cas d’usage dépend souvent :
+
+- d’un fournisseur cloud ou d’hébergement ;
+- d’un constructeur ou fournisseur matériel ;
+- d’un modèle tiers ou d’une API tierce dans le cas d’une IA consommée comme service.
+
+Ces dépendances doivent être explicitées car elles conditionnent la visibilité réelle sur le matériel, l’énergie et les facteurs d’impact.
+
+### Règle d'allocation
+
+L’allocation repose principalement sur le temps d’usage du matériel exprimé en `GPUh`, puis sur une répartition prorata des autres composants du serveur.
+
+### Risque de double comptage
+
+Le principal risque de double comptage apparaît :
+
+- si l’infrastructure GPU est déjà comptée ailleurs dans un chapitre cloud ou hébergement ;
+- si l’entraînement est amorti sur l’inférence sans préciser clairement le périmètre retenu ;
+- si des services tiers d’IA sont comptés à la fois comme API et comme infrastructure reconstruite.
+
+### Hypothèses temporelles
+
+Les résultats dépendent notamment :
+
+- de la durée de vie retenue pour les GPU et serveurs ;
+- de la période sur laquelle l’usage est observé ;
+- du facteur électrique retenu pour la période et la localisation considérées.
 
 ## Principe
 
@@ -46,7 +89,7 @@ Enfin, une part de l’impact lié à la fabrication et au cycle de vie des équ
 D'après l'étude Green AI[^15], les FLOPs sont une métrique pertinente pour mesurer l’impact des IA génératives, car ils expriment la charge de calcul réellement effectuée, directement corrélée à la consommation d’énergie et fournissent une base indépendante du matériel pour comparer équitablement différents modèles.
 :::
 
-## Evaluation des impacts
+## Évaluation des impacts
 
 ### Qu’est-ce qu’un token ?
 
@@ -162,14 +205,14 @@ Lorsque des données d’exploitation distinguent les jetons d’entrée effecti
 
 ## Hypothèses & limites
 
-### Hypothèses
+### Hypothèses retenues
 
 - Lors de la génération auto-régressive, un cache d’inférence est généralement utilisé pour réemployer les états intermédiaires déjà calculés.
 - La réutilisation inter-requêtes d’un préfixe de prompt n’est pas systématique. Elle dépend du contexte de déploiement et de la stabilité effective des prompts.
 - En l’absence de mesure directe, le taux de réutilisation $r_{cache}$ est une hypothèse d’usage.
 - En première approximation, trois usages peuvent être retenus : un mode simple avec $\alpha = 0$, un mode prudent avec $\alpha = 0{,}1$, et un mode exploratoire sous forme de fourchette entre $0$ et $0{,}25$.
 
-### Limitations
+### Limitations connues
 
 - Incertitudes sur les données d'entrée : données d’entraînement réelles, caractéristiques des modèles souvent confidentiels, MFU, ...
 - Pas de prise en compte du fait que les modèles tiennent ou non en mémoire sur le matériel sélectionné
@@ -289,6 +332,21 @@ Cette section propose une comparaison de méthodologies disponibles pour l’év
 | Limites clés                                              | Données propriétaires, ne couvre pas l’entraînement, se concentre sur l'inférence, biais sur le “prompt median” | Périmètre limité (inférence seule), possible surestimation du fait de l'extrapolation | Dépend fortement des hypothèses (MFU, durée de vie)                               |
 
 Ces résultats montrent que chaque approche a un positionnement spécifique : Google privilégie la précision mais reste fermé et non reproductible, Ecologits mise sur la transparence et la simplicité mais au prix d’une surestimation possible, tandis que la méthodologie D4B propose un compromis reproductible et adaptable aux différents contextes d’usage mais dépend de la précision des données d'entrée.
+
+## Références
+
+### Données mobilisées
+
+- `digital4better/data/data/factor/*`
+- `digital4better/data/data/energy/*`
+- `digital4better/data/data/cloud/*`
+- `digital4better/data/data/hardware/*`
+
+### Sources
+
+- références détaillées en notes de bas de page ;
+- corpus `inputs/md` ;
+- [digital4better/data](https://github.com/digital4better/data)
 
 [^1]: J. Kaplan, S. McCandlish, ..., 2020. [Scaling Laws for Neural Language Models](https://arxiv.org/pdf/2001.08361)
 [^2]: A. Habibian, A. Ghodrati, ... 2024. [Clockwork Diffusion: Efficient Generation With Model-Step Distillation](https://arxiv.org/html/2312.08128v2)

@@ -1,12 +1,74 @@
----
-sidebar_label: Services web
-sidebar_position: 5
-slug: /web
----
+# Service web
 
-# Méthodologie appliquée aux services web
+## Résumé
 
-## Spécificités des services web
+Ce chapitre décrit comment évaluer un service web en combinant trois couches : terminal, réseau et hébergement. Il vise à conserver un lien clair entre les usages réellement observés du service et les impacts environnementaux des équipements et infrastructures mobilisés.
+
+### Périmètre évalué
+
+Ce chapitre couvre principalement :
+
+- la consultation d’un site ou d’une application web ;
+- les terminaux utilisateurs ;
+- les flux réseau nécessaires à l’affichage des pages ;
+- l’hébergement et le traitement côté serveurs.
+
+L’évaluation est pensée au niveau de la page, puis agrégée au niveau du service.
+
+## Paramètres d'entrée
+
+- le nombre de vues, ou une méthode de répartition des vues par page ;
+- la durée moyenne d’usage par vue ;
+- le poids des pages et les volumes transférés ;
+- des hypothèses sur les terminaux ;
+- des hypothèses sur l’hébergement, la présence d’un CDN et l’usage serveur.
+
+### Dépendances tierces
+
+Les dépendances tierces peuvent comprendre :
+
+- CDN et services de distribution ;
+- analytics ;
+- services tiers chargés côté navigateur ;
+- hébergement ou composants applicatifs opérés par un tiers.
+
+Elles doivent être documentées quand elles modifient matériellement le trafic, le temps d’usage, la charge serveur ou le périmètre technique du service.
+
+### Règle d'allocation
+
+L’allocation repose principalement :
+
+- sur la durée d’utilisation pour les terminaux et les centres de données ;
+- sur les volumes de données transférés pour le réseau ;
+- sur la répartition du trafic entre pages pour agréger le service complet.
+
+### Risque de double comptage
+
+Le risque principal apparaît si :
+
+- l’hébergement est déjà évalué séparément ;
+- le CDN est compté deux fois ;
+- certains services tiers sont déjà intégrés dans un autre périmètre d’étude ;
+- le même service est évalué à la fois comme service web et comme application mobile sans règles de frontière claires.
+
+### Hypothèses temporelles
+
+Les résultats dépendent fortement :
+
+- de la période d’observation du trafic ;
+- de la durée moyenne d’utilisation retenue ;
+- de l’extrapolation éventuelle à une année ;
+- de la date des facteurs électriques et des hypothèses d’hébergement.
+
+## Principe
+
+1. Définir l’unité fonctionnelle, le plus souvent la page vue ou le service observé sur une période donnée.
+2. Estimer les usages par page, soit à partir des analytics, soit à partir d’une méthode de répartition documentée.
+3. Calculer les impacts côté terminal à partir du temps d’usage et du mix d’équipements.
+4. Calculer les impacts réseau à partir des volumes transférés, des distances et du rôle éventuel du CDN.
+5. Calculer les impacts d’hébergement à partir des ressources serveur ou d’archétypes techniques, puis agréger les résultats au niveau du service.
+
+## Évaluation des impacts
 
 ### Définition de l’utilisation d’un service web
 
@@ -21,14 +83,14 @@ On distingue le cycle de vie d’un service web et le cycle de vie des équipeme
 
 ### Approche ACV
 
-L’approche multi-composant énoncée au paragraphe [Approche multi-composants](principles.md#approche-multi-composants) est mise en œuvre en décomposant le service en 3 couches d’équipements et infrastructures numériques impliquées dans l’utilisation d’un service web :
+L’approche multi-composants énoncée dans [Principes ACV appliqués au numérique](../../fondations/principes-acv-appliques-au-numerique.md#approche-multi-composants) est mise en œuvre en décomposant le service en 3 couches d’équipements et infrastructures numériques impliquées dans l’utilisation d’un service web :
 - Terminaux utilisateur final : comprend les équipements utilisés par les utilisateurs pour consulter le service. 
 - Réseau : comprend les infrastructures réseau internet pour les échanges de données entre les terminaux des utilisateurs finaux et les centres de données. 
 - Datacenters : comprend les équipements liés à l’hébergement et au traitement des données.
      
 L’allocation des terminaux et des centres de données est basée sur la durée d’utilisation du service, le réseau sur les octets transférés. Les impacts d’un service web résultent de la somme de ces 3 composantes :
 
-![web.png](web.png)
+![web.png](../../methodology/web.png)
 
 L’évaluation des impacts d’un service web est une agrégation des impacts par page, la méthodologie d’évaluation présentée ici s’applique au niveau d’une page.
 
@@ -72,7 +134,7 @@ In fine, nous obtenons une chance de vues par page comprise entre 0 et 1, et la 
 
 Pour chaque page, en multipliant le résultat final par le nombre de vues totales, on a alors les vues prédites par pages.
 
-## Evaluation des impacts environnementaux d’une page web 
+### Évaluation détaillée des impacts d’une page web
 
 ### Impact du terminal
 
@@ -743,7 +805,7 @@ Avec \\
 \end{align*}
 $$
 
-On calcule $I_{embodied_\text{mobile,i}}$ à partir de la formule d’impact intrinsèque d’un équipement, vue au paragraphe [Impact intrinsèque d'un équipement](../general.md#impact-intrinsèque-dun-équipement), avec :
+On calcule $I_{embodied_\text{mobile,i}}$ à partir de la formule d’impact intrinsèque d’un équipement, vue dans [Modélisation d’un équipement](../../modelisation/modelisation-d-un-equipement.md#impact-intrinseque-d-un-equipement), avec :
 - Le facteur d’impact intrinsèque à récupérer dans la colonne « Mobile » du tableau de la page précédente en fonction de l’indicateur environnemental étudié 
 - Une durée d’utilisation évaluée à partir des paramètres mobiles et selon la formule suivante : 
 
@@ -757,7 +819,7 @@ Avec \\
 \end{align*}
 $$
 
-On calcule $I_{embodied_\text{desktop,i}}$ à partir de la formule d’impact intrinsèque d’un équipement, vue au paragraphe [Impact intrinsèque d'un équipement](../general.md#impact-intrinsèque-dun-équipement), avec :
+On calcule $I_{embodied_\text{desktop,i}}$ à partir de la formule d’impact intrinsèque d’un équipement, vue dans [Modélisation d’un équipement](../../modelisation/modelisation-d-un-equipement.md#impact-intrinseque-d-un-equipement), avec :
 - Le facteur d’impact intrinsèque à récupérer dans la colonne « Desktop » du tableau de la page précédente en fonction de l’indicateur environnemental étudié 
 - Une durée d’utilisation évaluée à partir des paramètres desktop et selon la formule suivante :
 
@@ -785,15 +847,15 @@ Avec \\
 \end{align*}
 $$
 
-On calcule $E_{elec_{mobile}}$ à partir de la formule de consommation d’électricité d’un équipement vue au paragraphe [Impact opérationnel d'un équipement](../general.md#impact-opérationnel-dun-équipement), avec :
+On calcule $E_{elec_{mobile}}$ à partir de la formule de consommation d’électricité d’un équipement vue dans [Modélisation d’un équipement](../../modelisation/modelisation-d-un-equipement.md#impact-operationnel-d-un-equipement), avec :
 - Le facteur d’impact opérationnel à récupérer sur la ligne « Impact énergie en kWh/s » et dans la colonne « Mobile » du tableau de la page précédente 
 - La même durée d’utilisation que pour l’impact intrinsèque : $D_{usage,mobile}$ 
 
-On calcule $E_{elec_{desktop}}$ à partir de la formule de consommation d’électricité d’un équipement vue au paragraphe [Impact opérationnel d'un équipement](../general.md#impact-opérationnel-dun-équipement), avec :
+On calcule $E_{elec_{desktop}}$ à partir de la formule de consommation d’électricité d’un équipement vue dans [Modélisation d’un équipement](../../modelisation/modelisation-d-un-equipement.md#impact-operationnel-d-un-equipement), avec :
 -	Le facteur d’impact opérationnel à récupérer sur la ligne « Impact énergie en kWh/s » et dans la colonne « Desktop » du tableau de la page précédente
 -	La même durée d’utilisation que pour l’impact intrinsèque : $D_{usage,desktop}$
 
-La conversion de la consommation électrique en impact opérationnel se fait sur la base de la formule fournie dans le paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](../concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
+La conversion de la consommation électrique en impact opérationnel se fait sur la base de la formule fournie dans [Impacts de la consommation d’énergie](../../fondations/impacts-de-la-consommation-d-energie.md#conversion-consommation-electricite-impact-operationnel).
 
 ### Impact du réseau
 
@@ -809,7 +871,7 @@ La conversion de la consommation électrique en impact opérationnel se fait sur
 
 #### Segmentation du réseau
 
-![network-operational-map.png](network-operational-map.png)
+![network-operational-map.png](../../methodology/network-operational-map.png)
 
 Afin de tenir compte de l'effet des distances et des pays des réseaux sur lesquels transite la donnée, le réseau entre l'utilisateur et le datacenter est modélisé comme l'agrégation de 3 segments :
 - le segment du pays de l’utilisateur (Segment 1)
@@ -854,11 +916,11 @@ Avec \\
 \end{align*}
 $$
 
-On dispose ici de la consommation électrique globale de l’utilisation du réseau, ce qui correspond à l’indicateur de flux attendu conformément au paragraphe [Indicateurs pris en compte dans l’évaluation](../principles.md#indicateurs-pris-en-compte-dans-lévaluation).
+On dispose ici de la consommation électrique globale de l’utilisation du réseau, ce qui correspond à l’indicateur de flux attendu conformément à [Indicateurs environnementaux](../../fondations/indicateurs-environnementaux.md#indicateurs-pris-en-compte-dans-l-evaluation).
 
-On calcule l'énergie des 3 segments $SE_{elec_n}$ conformément aux dispositions vues au paragraphe [Cas d’un réseau externe, type WAN](../general.md#approche--système----cas-dun-réseau-externe-type-wan). Les mêmes valeurs par défaut sont appliquées que pour l’impact intrinsèque lorsqu’on ne connaît pas les ratios d’usages mobiles/fixes et mobile/desktop.
+On calcule l'énergie des 3 segments $SE_{elec_n}$ conformément aux dispositions vues dans [Réseau WAN](../../materiel/reseau-et-infrastructure/reseau-wan). Les mêmes valeurs par défaut sont appliquées que pour l’impact intrinsèque lorsqu’on ne connaît pas les ratios d’usages mobiles/fixes et mobile/desktop.
 
-Sur les 3 segments, le réseau peut traverser potentiellement plusieurs pays différents et donc avec des mix électriques qui leur sont propres. La conversion de la consommation électrique en impact doit ainsi se faire de manière individuelle par segment, conformément à la formule fournie au paragraphe [Conversion d’une consommation d’électricité en impact opérationnel](../concepts.md#conversion-dune-consommation-délectricité-en-impact-opérationnel).
+Sur les 3 segments, le réseau peut traverser potentiellement plusieurs pays différents et donc avec des mix électriques qui leur sont propres. La conversion de la consommation électrique en impact doit ainsi se faire de manière individuelle par segment, conformément à la formule fournie dans [Impacts de la consommation d’énergie](../../fondations/impacts-de-la-consommation-d-energie.md#conversion-consommation-electricite-impact-operationnel).
 
 Ces impacts par segments sont ensuite agrégés, sur le même modèle que $E_{elec_{network}}$, pour obtenir l’impact global du réseau sur tout son trajet.
 
@@ -1012,7 +1074,7 @@ Dans le calcul des variables $I_{operational_i}$, la valeur du REF est basée su
 
 [^47]: https://www.thegreenwebfoundation.org/
 
-## Restitutions chiffrées des impacts environnementaux des services web
+## Application
 
 Les formules présentées précédemment permettent d’obtenir des impacts environnementaux. Elles sont déclinables pour l’évaluation des empreintes environnementales48 mais aussi l’estimation de scores.
 
@@ -1020,7 +1082,7 @@ Les empreintes correspondent à l’impact réel lié à l’utilisation sur 1 a
 
 Les scores s’affichent sous la forme d’un entier entre 0 et 100. Ils sont mis en forme à partir des impacts estimés sur les services web. Leur calcul prend en compte les variables du service, mais aussi certaines hypothèses d’utilisation fixes. L’application de ces critères communs permet d’obtenir un score comparable aux scores d’autres services, et cela quelle que soit la taille ou la fréquentation du site web. On prend comme référence pour tous les services et toutes les pages analysées le cas d’1 nouvelle visite (pas de cache), avec 58% d’utilisateurs à partir de terminaux mobiles et une durée moyenne d’utilisation de 20s. 
 
-![impact-scores.png](impact-scores.png)
+![impact-scores.png](../../methodology/impact-scores.png)
 
 Les scores environnementaux du site sont déterminés par une moyenne pondérée des scores par page. La pondération (coefficient de trafic) a pour objectif de prendre en compte l’impact final du site en donnant plus de poids aux pages vues le plus souvent. On applique cette formule :
 
@@ -1036,3 +1098,32 @@ $$
 
 - **Nombre de vues par page** : Si on dispose du nombre de vues par page, la pondération se base directement sur le nombre de vues par page remonté par un service d'analyse d'audience.
 - **Chance de vues par page** : Si on ne connait pas la répartition du nombre de vues sur chacune des pages, la pondération se fait à l’aide de facteurs de « chance de vue » attribués à chacune des pages (Ces facteurs sont déterminés, pour chacune des pages d’un service, conformément aux dispositions du paragraphe [Simulation du nombre de vues par page](#simulation-du-nombre-de-vues-par-page)).
+
+## Hypothèses & limites
+
+### Hypothèses retenues
+
+La méthode suppose qu’il est possible de relier un service web à trois couches principales : terminal, réseau et hébergement. Quand les données observées manquent, elle repose sur des hypothèses d’usage, de mix terminal, de répartition des vues et de configuration d’hébergement.
+
+### Limitations connues
+
+- le modèle de répartition des vues par page reste une approximation quand les analytics détaillées n’existent pas ;
+- certains appels tiers côté navigateur ou côté serveur peuvent rester partiellement invisibles ;
+- les hypothèses sur le CDN, les caches et la configuration serveur influencent fortement le résultat ;
+- l’impact de conception et de développement du service n’est pas inclus dans ce chapitre.
+
+## Références
+
+### Données mobilisées
+
+- `digital4better/data/data/factor/*`
+- `digital4better/data/data/energy/*`
+- `digital4better/data/data/hardware/*`
+- `digital4better/data/data/equipment/*`
+- données d’analytics, de trafic et d’hébergement
+
+### Sources
+
+- références citées dans le chapitre ;
+- corpus `inputs/md` ;
+- [digital4better/data](https://github.com/digital4better/data)

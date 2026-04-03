@@ -1,9 +1,4 @@
----
-sidebar_label: Infrastructures
-slug: /infrastructure
----
-
-# Méthodologie appliquée aux infrastructures d'hébergement
+# Infrastructure d’hébergement
 
 ## Résumé
 
@@ -12,6 +7,59 @@ Cette note méthodologique propose un cadre de calcul pour évaluer l’empreint
 La démarche suit les principes de l’Analyse de Cycle de Vie (ACV) numérique (ISO 14040-44, ADEME/ARCEP) et vise à fournir une méthode reproductible, transparente et comparable entre différents contextes d’hébergement : on-premise, cloud privé, cloud public.
 
 Elle repose sur un principe simple : relier les infrastructures techniques réellement utilisées (serveurs, stockage, réseau) à leur empreinte environnementale, en s’appuyant soit sur des inventaires physiques disponibles, soit sur la conversion des usages cloud en ressources matérielles équivalentes.
+
+### Périmètre évalué
+
+Ce chapitre couvre :
+
+- les environnements on-premise ;
+- les salles serveurs ou infrastructures maîtrisées ;
+- les contextes hybrides où l’on connaît au moins partiellement les ressources techniques mobilisées.
+
+Le cloud public opaque est traité plus spécifiquement dans le chapitre `Cloud`.
+
+## Paramètres d'entrée
+
+- un inventaire matériel ou un inventaire de ressources techniques ;
+- une localisation d’hébergement ;
+- des hypothèses de durée de vie ;
+- des hypothèses d’exploitation : `PUE`, facteur électrique, éventuel `WUE` ou `REF` ;
+- des hypothèses de conversion pour les environnements partiellement observables.
+
+### Dépendances tierces
+
+Les dépendances tierces peuvent comprendre :
+
+- colocation ou datacenter opérés par un tiers ;
+- services d’infrastructure managés ;
+- services cloud partiellement intégrés au périmètre.
+
+Elles doivent être décrites pour éviter de confondre infrastructure maîtrisée et infrastructure seulement consommée.
+
+### Règle d'allocation
+
+L’allocation dépend du niveau d’observation disponible :
+
+- allocation par équipement quand l’inventaire est connu ;
+- allocation par composant ou par ressource technique quand l’inventaire est partiel ;
+- allocation par usage ou par ressource facturée dans les contextes plus opaques.
+
+### Risque de double comptage
+
+Le principal risque apparaît si :
+
+- le datacenter est compté à la fois comme infrastructure et comme service cloud ;
+- les mêmes serveurs sont inclus dans plusieurs périmètres applicatifs ;
+- le réseau interne et le réseau externe sont additionnés sans frontière claire.
+
+### Hypothèses temporelles
+
+Les résultats dépendent :
+
+- de la période d’observation ;
+- de la durée de vie retenue pour les équipements ;
+- de la date des facteurs électriques ;
+- de la stabilité des hypothèses d’exploitation du site.
 
 ## Principe
 
@@ -83,7 +131,7 @@ Le détail de cette inférence des ressources matérielles est présenté dans l
 
 À l’issue de l’inventaire, chaque composant est identifié avec sa durée d’utilisation. En croisant ces informations avec des référentiels détaillant les caractéristiques des composants et les impacts associés à leur fabrication, il devient possible d’estimer à la fois la consommation énergétique opérationnelle et les impacts liés à la fabrication, répartis sur la durée d’usage.
 
-Le détail des caractéristiques prises en compte et des facteurs appliqués est détaillé dans la section [Evaluation de l'impact du matériel](/).
+Le détail des caractéristiques prises en compte et des facteurs appliqués est détaillé dans la section [Vue d’ensemble du matériel](../../materiel/vue-d-ensemble-du-materiel.md).
 
 ### Prise en compte des caractéristiques de l'hébergement
 
@@ -95,27 +143,56 @@ Localisation géographique du datacenter : le mix énergétique du pays ou de la
 - **WUE (Water Usage Effectiveness) du datacenter** : ce facteur mesure la quantité d’eau utilisée pour le refroidissement par unité d’énergie consommée. Il permet d’évaluer l’impact en termes de consommation d’eau et de stress hydrique lié à l’exploitation du datacenter.  
 - **Durée de vie des équipements** : les impacts de fabrication, transport et fin de vie sont annualisés sur la durée d’usage prévue. Pour le cloud, cette durée est généralement connue seulement de manière globale, et non par composant ou par datacenter.
 
-## Inférence du matériel cloud
+### Inférence du matériel cloud
 
-### Azure
+#### Azure
 Les données d'entrées sont récupérées depuis l'API Billing.
 
 | Service | Données d'entrée | Données de sortie |
 |---------|------------------|-------------------|
 |         |                  |                   |
 
-### AWS
+#### AWS
 Les données d'entrées sont récupérées depuis les exports Cost and Usage Report ou FOCUS.
 
 | Service | Données d'entrée | Données de sortie |
 |---------|------------------|-------------------|
 |         |                  |                   |
 
-### GCP
+#### GCP
 Les données d'entrées sont récupérées depuis les exports Cloud Billing.
 
 | Service | Données d'entrée | Données de sortie |
 |---------|------------------|-------------------|
 |         |                  |                   |
+
+## Hypothèses & limites
+
+### Hypothèses retenues
+
+La méthode suppose qu’il est possible de relier l’environnement étudié à un inventaire matériel réel ou à des ressources techniques suffisamment proches du matériel pour être converties de manière documentée.
+
+### Limitations connues
+
+- les environnements hybrides ou partiellement observables obligent souvent à reconstruire une partie de l’inventaire ;
+- la précision varie fortement entre on-premise, colocation et cloud ;
+- les paramètres de site comme `PUE`, `WUE` ou `REF` ne sont pas toujours disponibles au bon niveau géographique ;
+- l’inférence du matériel cloud reste dépendante de la transparence fournisseur et des règles de correspondance retenues.
+
+## Références
+
+### Données mobilisées
+
+- `digital4better/data/data/cloud/*`
+- `digital4better/data/data/hardware/*`
+- `digital4better/data/data/equipment/*`
+- `digital4better/data/data/factor/*`
+- inventaires matériels, CMDB, exports billing ou FOCUS selon le contexte
+
+### Sources
+
+- corpus `inputs/md` ;
+- [digital4better/data](https://github.com/digital4better/data) ;
+- documentation fournisseurs cloud et FinOps Foundation
 
 		
