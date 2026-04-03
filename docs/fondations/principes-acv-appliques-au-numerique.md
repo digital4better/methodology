@@ -109,6 +109,76 @@ flowchart TD
 
 Cette hiérarchie permet de construire les évaluations du plus granulaire (composant) au plus agrégé (service), en traçant à chaque étape les données, les hypothèses et les règles d'allocation mobilisées.
 
+## Cycle de vie d'un service numérique
+
+### Deux cycles de vie imbriqués
+
+Un service numérique possède son propre cycle de vie, distinct de celui du matériel mais indissociable de lui. À chaque phase du cycle de vie du service, du matériel est mobilisé — et c'est l'ACV de ce matériel qui porte l'impact environnemental.
+
+```mermaid
+flowchart TD
+    subgraph "Cycle de vie du service"
+        S1[Planification] --> S2[Développement]
+        S2 --> S3[Exploitation<br>run]
+        S3 --> S4[Maintenance<br>corrective et évolutive]
+        S4 --> S3
+        S3 --> S5[Décommissionnement]
+    end
+
+    subgraph "Matériel mobilisé"
+        M1[Postes développeurs<br>serveurs CI/CD]
+        M2[Postes développeurs<br>environnements de test<br>serveurs de build]
+        M3[Terminaux utilisateurs<br>réseau<br>serveurs de production<br>datacenter]
+        M4[Postes développeurs<br>environnements de staging<br>serveurs de production]
+        M5[Serveurs en fin d'usage<br>données à migrer ou supprimer]
+    end
+
+    S1 -.-> M1
+    S2 -.-> M2
+    S3 -.-> M3
+    S4 -.-> M4
+    S5 -.-> M5
+
+    style S1 fill:#264653,color:#fff
+    style S2 fill:#2a9d8f,color:#fff
+    style S3 fill:#e9c46a,color:#000
+    style S4 fill:#f4a261,color:#000
+    style S5 fill:#e76f51,color:#fff
+```
+
+### Phases du cycle de vie d'un service
+
+| Phase | Description | Matériel impliqué | Impact dominant |
+|---|---|---|---|
+| **Planification** | Cadrage fonctionnel et technique, choix d'architecture, dimensionnement | Postes de travail des équipes projet, outils collaboratifs | Faible (peu d'équipements, courte durée) |
+| **Développement** | Conception, codage, tests, intégration, déploiement initial | Postes développeurs, serveurs CI/CD, environnements de test et de staging | Modéré (environnements souvent mutualisés, mais nombreux cycles de build/test) |
+| **Exploitation (run)** | Service en production, accessible aux utilisateurs | Terminaux utilisateurs, réseau (WAN, CDN), serveurs de production, datacenter | **Dominant** — c'est la phase la plus longue et la plus consommatrice |
+| **Maintenance** | Corrections de bugs, évolutions fonctionnelles, mises à jour de sécurité | Mêmes ressources que le développement + environnements de production | Modéré à significatif (s'accumule sur la durée de vie du service) |
+| **Décommissionnement** | Arrêt du service, migration ou suppression des données, libération des ressources | Serveurs en fin d'usage, transfert/effacement de données | Faible (ponctuel, mais peut libérer ou réaffecter du matériel) |
+
+### Lecture ACV croisée
+
+Pour chaque phase du cycle de vie du service, l'impact environnemental est porté par le matériel mobilisé. Ce matériel a lui-même son propre cycle de vie (extraction, fabrication, transport, utilisation, fin de vie). La lecture croisée est donc :
+
+$$
+\begin{align*}
+&I_{service} = \sum_{p \in phases} \sum_{e \in équipements_p} \left( I_{emb_{e,p}} + I_{ope_{e,p}} \right)
+\end{align*}
+$$
+
+Où $I_{emb_{e,p}}$ est la part d'impact intrinsèque de l'équipement $e$ allouée à la phase $p$, et $I_{ope_{e,p}}$ est l'impact opérationnel de cet équipement pendant la phase $p$.
+
+:::note[Périmètre couvert par la méthode]
+Dans cette itération, la méthode se concentre sur la **phase d'exploitation** (run), qui représente la majorité de l'impact pour la plupart des services. Les phases de développement et de maintenance ne sont pas encore modélisées en détail, mais leur matériel peut être évalué avec les mêmes formules que le reste du corpus (allocation temporelle des postes développeurs, impact des serveurs CI/CD, etc.).
+:::
+
+### Implications pratiques
+
+- **Développement** : l'impact des postes développeurs, des pipelines CI/CD et des environnements de test peut être significatif pour les projets longs ou les équipes nombreuses. Il s'évalue comme un parc informatique dédié sur la durée du projet.
+- **Exploitation** : c'est le périmètre principal de la méthode. Les cas d'usage (service web, mail, mobile, IA) couvrent cette phase.
+- **Maintenance** : chaque cycle de correction ou d'évolution mobilise des ressources de développement et peut modifier le profil d'exploitation (changement de consommation serveur, ajout de fonctionnalités plus intensives).
+- **Décommissionnement** : la fin de vie d'un service ne fait pas disparaître l'impact du matériel. Si les serveurs sont réaffectés, leur impact est transféré à un autre périmètre. S'ils sont mis au rebut, leur impact de fin de vie doit être comptabilisé.
+
 ## Ce que cela implique pour la méthode
 
 Cette base ACV implique que :
@@ -117,13 +187,14 @@ Cette base ACV implique que :
 2. Les impacts de fabrication et d'usage doivent être **lus ensemble** pour éviter les transferts d'impact masqués.
 3. Les **règles d'allocation**, de frontière et de qualité des données sont aussi importantes que les formules elles-mêmes (voir [Règles](../regles/allocation-et-partage-des-impacts)).
 4. Les cas d'usage ne sont que des **assemblages** de composants, d'équipements et de règles plus générales — la méthode est conçue pour être modulaire.
+5. Le cycle de vie du service **ne se réduit pas à sa phase d'exploitation** : planification, développement, maintenance et décommissionnement mobilisent aussi du matériel dont l'impact doit être documenté, même s'il est souvent secondaire.
 
 ## Hypothèses et limites
 
 - Toutes les phases du cycle de vie ne sont pas connues avec le même niveau de détail selon les objets étudiés. La phase de fabrication est généralement la mieux documentée pour les équipements ; la fin de vie reste la moins connue.
 - Certaines couches amont, notamment dans la section `Matériaux`, sont d'abord traitées à un niveau explicatif et non comme un modèle complet.
 - La posture attributionnelle retenue ne résout pas à elle seule tous les débats méthodologiques ; elle fournit surtout un cadre cohérent et traçable.
-- La méthode ne couvre pas (encore) les impacts liés au développement logiciel lui-même (conception, codage, tests).
+- Les phases de planification, développement et maintenance du service ne sont pas encore modélisées en détail dans cette itération. Le matériel impliqué peut néanmoins être évalué avec les formules existantes du corpus.
 
 ## Données mobilisées
 
