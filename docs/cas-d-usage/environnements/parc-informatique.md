@@ -87,7 +87,7 @@ La durée d’utilisation correspond au temps durant lequel l’équipement a ef
 ### Évaluation détaillée des impacts du parc informatique
 
 Le parc informatique étant constitué d’équipements :
-- l’évaluation se basera uniquement sur les formules présentées dans [Modélisation d’un équipement](../../modelisation/modelisation-d-un-equipement.md#impacts-equipement)
+- l’évaluation se basera uniquement sur les formules présentées dans [Modélisation d’un équipement](../../modelisation/modelisation-d-un-equipement#impacts-equipement)
 - l’impact du parc sera égal à la somme des impacts par équipement
 
 $$

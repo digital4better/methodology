@@ -4,156 +4,193 @@
 
 Tous les objets du numérique ne se modélisent pas de la même façon. Cette page explique quand choisir une approche fine par composants, quand préférer un facteur d'équipement, quand basculer vers une approche système et quand reconstruire un équivalent matériel à partir de données d'usage.
 
-L'objectif n'est pas d'appliquer partout la méthode la plus détaillée possible, mais de choisir le niveau de modélisation le plus robuste au regard :
-
-- des données disponibles ;
-- du poids de l'objet dans le résultat ;
-- de la précision réellement utile ;
-- du risque de pseudo-précision.
+L'objectif n'est pas d'appliquer partout la méthode la plus détaillée possible, mais de choisir le niveau de modélisation le plus robuste au regard des données disponibles, du poids de l'objet dans le résultat et du risque de pseudo-précision.
 
 ## Principe
 
-Le RCP mère distingue deux grandes approches pour réaliser l'évaluation d'un service numérique :
+Le RCP mère distingue deux grandes approches :
 
-- `approche équipement` : chaque équipement utilisé par le service constitue une donnée primaire ou secondaire. Le service numérique est alors considéré comme une somme d'usages de chaque équipement, chaque usage étant défini à travers une règle d'allocation par rapport aux impacts totaux de l'équipement ;
-- `approche système` : un certain nombre d'équipements peuvent être regroupés en un système physique ou virtuel, au niveau duquel les impacts environnementaux ont été déterminés. Le service numérique est alors considéré comme une somme d'usages de chaque système.
+- **approche équipement** : chaque équipement utilisé par le service constitue une donnée primaire ou secondaire ; le service est une somme d'usages de chaque équipement, chacun défini par une règle d'allocation ;
+- **approche système** : un ensemble d'équipements est regroupé en un système (physique ou virtuel) au niveau duquel les impacts ont été déterminés.
 
-Dans la pratique, la méthode D4B utilise quatre stratégies complémentaires :
+Dans la pratique, la méthode D4B utilise **quatre stratégies complémentaires** qui affinent cette distinction :
 
-- `bottom-up composant` ;
-- `facteur d’équipement` ;
-- `approche système` ;
-- `inférence depuis l’usage`.
+## Les quatre stratégies
 
-Ces stratégies peuvent coexister dans une même évaluation, à condition que leur articulation soit explicite et que chaque changement de niveau de modélisation soit documenté.
+### Vue d'ensemble
 
-## Paramètres de choix
+```mermaid
+flowchart LR
+    subgraph "Niveau de détail croissant"
+        direction LR
+        SYS[Approche<br>système] --> FE[Facteur<br>d'équipement]
+        FE --> BU[Bottom-up<br>composant]
+    end
 
-Le choix de la stratégie dépend principalement de :
+    INF[Inférence<br>depuis l'usage] -.->|reconstruit| SYS
+    INF -.->|reconstruit| FE
 
-- la disponibilité des données : caractéristiques détaillées, archétypes, facteurs ou seuls usages observés ;
-- le niveau de maîtrise du périmètre : matériel connu, infrastructure opérée par un tiers, système opaque ;
-- la sensibilité du résultat : certains postes pèsent beaucoup plus que d'autres dans le résultat final ;
-- le besoin d'interprétation : un niveau plus fin n'est utile que s'il apporte une vraie valeur de lecture ;
-- le risque de double comptage ou de rupture de cohérence avec d'autres chapitres.
+    style BU fill:#264653,color:#fff
+    style FE fill:#2a9d8f,color:#fff
+    style SYS fill:#e9c46a,color:#000
+    style INF fill:#e76f51,color:#fff
+```
 
-## Les grandes stratégies
+### Comparaison des stratégies
+
+| Stratégie | Données nécessaires | Précision | Complexité | Cas d'usage typique |
+|---|---|---|---|---|
+| **Bottom-up composant** | Composition matérielle détaillée (CPU, RAM, stockage, écran...) | Élevée | Élevée | Serveurs connus, GPU pour IA, terminaux critiques |
+| **Facteur d'équipement** | Type d'équipement, marque/modèle ou famille | Moyenne | Faible | Parc informatique, terminaux standards |
+| **Approche système** | Facteur agrégé par unité fonctionnelle (Go.an, vCPU.h) | Moyenne à faible | Faible | Réseau WAN, réseau mobile, datacenter opaque |
+| **Inférence depuis l'usage** | Données d'usage, de facturation ou de télémétrie | Variable | Moyenne | Cloud, service web, mobile, IA (FLOPs, GPUh, tokens) |
 
 ### Bottom-up composant
 
-Cette stratégie est adaptée quand :
+L'équipement est décomposé en ses composants physiques. L'impact total est la somme des impacts de chaque composant :
 
+$$
+\begin{align*}
+&I_{equipement_i} = \sum_{c \in composants} I_{c,i}\htmlClass{unit}{[U_i]}
+\end{align*}
+$$
+
+Cette stratégie est pertinente quand :
 - la composition matérielle est connue ou reconstruisable ;
 - l'objet évalué est critique dans le résultat ;
-- la granularité apporte une vraie valeur d'interprétation.
+- la granularité apporte une vraie valeur d'interprétation (identifier quel composant pèse le plus).
 
-Elle est particulièrement pertinente pour :
+Exemples : [Processeurs et accélérateurs](../materiel/composants/processeurs-et-accelerateurs), [Serveurs](../materiel/equipements/serveurs), cas d'[IA générative](../cas-d-usage/services/ia-generative) (décomposition GPU + CPU + RAM + stockage).
 
-- les [Processeurs et accélérateurs](../materiel/composants/processeurs-et-accelerateurs) ;
-- la [Mémoire vive](../materiel/composants/memoire-vive) ;
-- le [Stockage](../materiel/composants/stockage) ;
-- certains [Serveurs](../materiel/equipements/serveurs) et cas d'[IA générative](../cas-d-usage/services/ia-generative).
+### Facteur d'équipement
 
-### Facteur d’équipement
+L'équipement est modélisé comme un tout, via un facteur d'impact par unité de temps ou par quantité de référence :
 
-Cette stratégie est adaptée quand :
+$$
+\begin{align*}
+&I_{embodied_{i}} = D_{usage} \times IF_{embodied_{i}}\htmlClass{unit}{[U_i]}
+\end{align*}
+$$
 
+Cette stratégie est pertinente quand :
 - l'objet est connu au niveau équipement mais pas au niveau composant ;
-- des facteurs suffisamment robustes existent ;
+- des facteurs suffisamment robustes existent (Base Empreinte, constructeur) ;
 - l'objectif est de rester lisible à coût méthodologique raisonnable.
 
-Elle est souvent mobilisée pour :
-
-- les [Terminaux](../materiel/equipements/terminaux) ;
-- les [Équipements réseau actifs](../materiel/equipements/equipements-reseau-actifs) ;
-- certains cas de [Parc informatique](../cas-d-usage/environnements/parc-informatique).
+Exemples : [Terminaux](../materiel/equipements/terminaux), [Équipements réseau actifs](../materiel/equipements/equipements-reseau-actifs), [Parc informatique](../cas-d-usage/environnements/parc-informatique).
 
 ### Approche système
 
-Cette stratégie est adaptée quand :
+Le périmètre est assimilé à un système fermé avec un facteur d'impact agrégé par unité fonctionnelle (1 Go transféré, 1 Go stocké pendant 1 an, etc.) :
 
+$$
+\begin{align*}
+&I_{systeme_{i}} = Q \times CF_{i}\htmlClass{unit}{[U_i]}
+\end{align*}
+$$
+
+Où $Q$ est la quantité d'usage (volume, durée, nombre de requêtes) et $CF_i$ le facteur de conversion du système.
+
+Cette stratégie est pertinente quand :
 - le périmètre support est partagé ou opaque ;
 - les ressources individuelles ne sont pas observables ;
-- un facteur ou un modèle de système est plus fiable qu'une décomposition spéculative.
+- un facteur de système est plus fiable qu'une décomposition spéculative.
 
-Elle est particulièrement utile pour :
+Exemples : [Réseau WAN](../materiel/reseau-et-infrastructure/reseau-wan), [RAN](../materiel/reseau-et-infrastructure/reseau-d-acces-mobile-ran), certains [Datacenter](../materiel/reseau-et-infrastructure/datacenter).
 
-- le [Réseau WAN](../materiel/reseau-et-infrastructure/reseau-wan) ;
-- le [Réseau d’accès mobile (RAN)](../materiel/reseau-et-infrastructure/reseau-d-acces-mobile-ran) ;
-- certains [Datacenter](../materiel/reseau-et-infrastructure/datacenter) ;
-- certains périmètres [Cloud](../cas-d-usage/environnements/cloud).
+### Inférence depuis l'usage
 
-### Inférence depuis l’usage
+On part de données d'usage (facturation cloud, télémétrie, analytics) pour reconstruire un équivalent matériel calculable :
 
-Cette stratégie est adaptée quand :
+```mermaid
+flowchart LR
+    A[Données d'usage<br>vCPU.h, Go.mois,<br>tokens, requêtes] --> B[Correspondance<br>vers ressources<br>matérielles]
+    B --> C[Application des<br>formules par<br>composant ou système]
+    C --> D[Impact<br>environnemental]
 
-- on part de données d'usage, de facturation ou de télémétrie ;
+    style A fill:#264653,color:#fff
+    style B fill:#2a9d8f,color:#fff
+    style C fill:#e9c46a,color:#000
+    style D fill:#f4a261,color:#000
+```
+
+Cette stratégie est pertinente quand :
 - l'infrastructure physique sous-jacente n'est pas directement connue ;
-- il faut reconstruire un équivalent matériel calculable.
+- il faut reconstruire un équivalent matériel calculable ;
+- les données d'usage sont la meilleure information disponible.
 
-Elle est particulièrement utile pour :
+Exemples : [Cloud](../cas-d-usage/environnements/cloud), [Service web](../cas-d-usage/services/service-web), [IA générative](../cas-d-usage/services/ia-generative) (FLOPs → GPUh → impact).
 
-- [Cloud](../cas-d-usage/environnements/cloud) ;
-- [Service web](../cas-d-usage/services/service-web) ;
-- [Mobile](../cas-d-usage/services/mobile) ;
-- [IA générative](../cas-d-usage/services/ia-generative), quand on part de `FLOPs`, `GPUh` ou tokens.
+## Arbre de décision
 
-## Comment choisir
+```mermaid
+flowchart TD
+    A[Quel est l'objet<br>à modéliser ?] --> B{La composition<br>matérielle est-elle<br>connue ?}
+    B -- oui --> C{L'objet pèse-t-il<br>significativement<br>dans le résultat ?}
+    C -- oui --> D[Bottom-up composant]
+    C -- non --> E[Facteur d'équipement]
+    B -- non --> F{Un facteur<br>d'équipement ou<br>de système existe ?}
+    F -- oui --> G{Le facteur est-il<br>suffisamment proche<br>du contexte ?}
+    G -- oui --> H[Facteur d'équipement<br>ou approche système]
+    G -- non --> I[Inférence depuis l'usage]
+    F -- non --> I
+```
 
-Le choix doit être explicite et répondre à quatre questions simples :
+## Application concrète
 
-1. Quel est l'objet réellement observable : composant, équipement, système ou usage ?
-2. Quelle est l'unité d'analyse réellement pertinente pour cet objet ?
-3. Quel niveau de détail améliore réellement la qualité du résultat ?
-4. À partir de quel point le raffinement devient-il spéculatif ?
+**Cas : évaluer l'infrastructure d'un service web**
 
-En pratique :
+Le service web tourne sur 3 VM dans un cloud public, utilise un CDN et sert des utilisateurs via terminaux fixes et mobiles.
 
-- utiliser une approche plus fine quand elle repose sur de vraies données ;
-- préférer une approche plus robuste à une précision artificielle ;
-- documenter les changements de stratégie à l'intérieur d'un même chapitre ou d'un même cas d'usage ;
-- vérifier que la stratégie choisie reste cohérente avec les règles d'[Allocation et partage des impacts](../regles/allocation-et-partage-des-impacts) et de [Double comptabilisation](../regles/double-comptabilisation).
+| Couche | Données disponibles | Stratégie retenue | Justification |
+|---|---|---|---|
+| **Terminaux** | Mix d'équipements (60 % mobile, 40 % desktop) | Facteur d'équipement | Archétypes standards suffisants |
+| **Réseau WAN** | Volume transféré (Go), pays d'origine | Approche système | Facteurs réseau Base Empreinte par Go/km |
+| **CDN** | Volume transféré, taux de cache | Approche système | Facteur réseau avec réduction du trafic |
+| **Serveurs (VM cloud)** | 3 VM : 4 vCPU, 16 Go RAM, 100 Go SSD chacune | Inférence depuis l'usage | Correspondance vCPU/RAM/stockage → composants |
+| **Base de données** | Service managé, 8 vCPU, 32 Go RAM | Inférence depuis l'usage | Correspondance vers ressources équivalentes |
 
-## Application
+Résultat : trois stratégies coexistent dans la même évaluation, chacune au niveau le plus robuste pour sa couche.
 
-Cette page sert de guide de lecture pour l'ensemble de la méthode :
+## Cohérence entre stratégies
 
-- [Modélisation d’un équipement](./modelisation-d-un-equipement) traduit ces stratégies au niveau d'un objet matériel ;
-- [Modélisation d’un service](./modelisation-d-un-service) montre comment les articuler dans un cas d'usage ;
-- les chapitres `Matériel` et `Cas d’usage` appliquent ensuite l'une ou l'autre de ces stratégies selon le contexte.
+Quand plusieurs stratégies coexistent dans une même évaluation :
 
-## Hypothèses & limites
+1. **Documenter** le choix de stratégie pour chaque couche ou composant.
+2. **Vérifier** que les frontières ne se chevauchent pas (voir [Double comptabilisation](../regles/double-comptabilisation)).
+3. **Vérifier** que les règles d'allocation restent cohérentes (voir [Allocation et partage des impacts](../regles/allocation-et-partage-des-impacts)).
+4. **Signaler** les changements de granularité qui pourraient affecter l'interprétation.
 
-### Hypothèses retenues
+## Articulation avec les autres pages
 
-- une méthode plus fine n'est pas toujours plus juste ;
-- une méthode plus forfaitaire n'est pas forcément moins crédible si elle est mieux documentée ;
-- plusieurs stratégies peuvent coexister dans une même évaluation, à condition de garder une traçabilité claire.
+```mermaid
+flowchart TD
+    STRAT[Stratégies de modélisation<br>cette page] --> EQUIP[Modélisation d'un équipement<br>traduit les stratégies<br>au niveau d'un objet matériel]
+    STRAT --> SERV[Modélisation d'un service<br>articule les stratégies<br>dans un cas d'usage]
+    EQUIP --> MAT[Matériel<br>composants, équipements,<br>infrastructure]
+    SERV --> CAS[Cas d'usage<br>service web, mail,<br>mobile, IA, cloud]
 
-### Limitations connues
+    style STRAT fill:#264653,color:#fff
+    style EQUIP fill:#2a9d8f,color:#fff
+    style SERV fill:#e9c46a,color:#000
+    style MAT fill:#f4a261,color:#000
+    style CAS fill:#e76f51,color:#fff
+```
 
-- la frontière entre approche équipement et approche système n'est pas toujours nette ;
-- certains objets changent de stratégie selon la qualité des données disponibles ;
-- cette page donne un cadre de choix mais ne remplace pas les règles détaillées des chapitres spécialisés.
+## Hypothèses et limites
 
-### Perspectives
+- Une méthode plus fine n'est pas toujours plus juste ; une méthode plus forfaitaire n'est pas forcément moins crédible si elle est mieux documentée.
+- Plusieurs stratégies peuvent coexister dans une même évaluation, à condition de garder une traçabilité claire.
+- La frontière entre approche équipement et approche système n'est pas toujours nette ; certains objets changent de stratégie selon la qualité des données disponibles.
+- Cette page donne un cadre de choix mais ne remplace pas les règles détaillées des chapitres spécialisés.
 
-- formaliser davantage des arbres de décision par grande famille d'objet ;
-- mieux relier ces stratégies au registre des hypothèses par défaut ;
-- proposer à terme des aides au choix ou simulateurs de stratégie quand les conventions seront stabilisées.
+## Données mobilisées
 
-## Références
+- `digital4better/data` → `data/hardware/*`, `data/equipment/*`, `data/cloud/*`, `data/factor/*`
 
-### Données mobilisées
+## Sources
 
-- selon les cas :
-  - `digital4better/data/data/hardware/*`
-  - `digital4better/data/data/equipment/*`
-  - `digital4better/data/data/cloud/*`
-  - `digital4better/data/data/factor/*`
-
-### Sources
-
-- Référentiel ADEME / ARCEP
-- Boavizta
-- corpus `inputs/md`, notamment `Green Cloud Computing`, `PAIA` et `imec`
+- ISO 14040 / ISO 14044
+- Référentiel ADEME / ARCEP (RCP mère)
+- [Boavizta Documentation](https://doc.api.boavizta.org/)
+- Corpus `inputs/md` : Green Cloud Computing (UBA), PAIA, IMEC NetZero
