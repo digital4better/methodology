@@ -119,15 +119,17 @@ Un service numérique possède son propre cycle de vie, distinct de celui du mat
 flowchart TD
     subgraph "Cycle de vie du service"
         S1[Planification] --> S2[Développement]
-        S2 --> S3[Exploitation<br>run]
+        S2 --> S2b[Déploiement /<br>delivery]
+        S2b --> S3[Exploitation<br>run]
         S3 --> S4[Maintenance<br>corrective et évolutive]
-        S4 --> S3
+        S4 --> S2b
         S3 --> S5[Décommissionnement]
     end
 
     subgraph "Matériel mobilisé"
-        M1[Postes développeurs<br>serveurs CI/CD]
+        M1[Postes développeurs<br>outils collaboratifs]
         M2[Postes développeurs<br>environnements de test<br>serveurs de build]
+        M2b[Pipeline CI/CD<br>registres d'images<br>stores d'applications<br>CDN de distribution<br>réseau de téléchargement]
         M3[Terminaux utilisateurs<br>réseau<br>serveurs de production<br>datacenter]
         M4[Postes développeurs<br>environnements de staging<br>serveurs de production]
         M5[Serveurs en fin d'usage<br>données à migrer ou supprimer]
@@ -135,12 +137,14 @@ flowchart TD
 
     S1 -.-> M1
     S2 -.-> M2
+    S2b -.-> M2b
     S3 -.-> M3
     S4 -.-> M4
     S5 -.-> M5
 
     style S1 fill:#264653,color:#fff
     style S2 fill:#2a9d8f,color:#fff
+    style S2b fill:#287271,color:#fff
     style S3 fill:#e9c46a,color:#000
     style S4 fill:#f4a261,color:#000
     style S5 fill:#e76f51,color:#fff
@@ -148,13 +152,14 @@ flowchart TD
 
 ### Phases du cycle de vie d'un service
 
-| Phase | Description | Matériel impliqué | Impact dominant |
-|---|---|---|---|
-| **Planification** | Cadrage fonctionnel et technique, choix d'architecture, dimensionnement | Postes de travail des équipes projet, outils collaboratifs | Faible (peu d'équipements, courte durée) |
-| **Développement** | Conception, codage, tests, intégration, déploiement initial | Postes développeurs, serveurs CI/CD, environnements de test et de staging | Modéré (environnements souvent mutualisés, mais nombreux cycles de build/test) |
-| **Exploitation (run)** | Service en production, accessible aux utilisateurs | Terminaux utilisateurs, réseau (WAN, CDN), serveurs de production, datacenter | **Dominant** — c'est la phase la plus longue et la plus consommatrice |
-| **Maintenance** | Corrections de bugs, évolutions fonctionnelles, mises à jour de sécurité | Mêmes ressources que le développement + environnements de production | Modéré à significatif (s'accumule sur la durée de vie du service) |
-| **Décommissionnement** | Arrêt du service, migration ou suppression des données, libération des ressources | Serveurs en fin d'usage, transfert/effacement de données | Faible (ponctuel, mais peut libérer ou réaffecter du matériel) |
+| Phase | Équivalent ACV produit | Description | Matériel impliqué | Impact dominant |
+|---|---|---|---|---|
+| **Planification** | Conception | Cadrage fonctionnel et technique, choix d'architecture, dimensionnement | Postes de travail des équipes projet, outils collaboratifs | Faible (peu d'équipements, courte durée) |
+| **Développement** | Fabrication | Conception, codage, tests, intégration | Postes développeurs, environnements de test et de staging, serveurs de build | Modéré (environnements souvent mutualisés, mais nombreux cycles de build/test) |
+| **Déploiement / delivery** | Transport / distribution | Publication, distribution et installation du logiciel auprès des utilisateurs ou des environnements cibles | Pipeline CI/CD, registres d'images (Docker, OCI), stores d'applications (App Store, Play Store), CDN de distribution, réseau de téléchargement | Variable — peut être significatif pour les applications mobiles largement distribuées |
+| **Exploitation (run)** | Utilisation | Service en production, accessible aux utilisateurs | Terminaux utilisateurs, réseau (WAN, CDN), serveurs de production, datacenter | **Dominant** — c'est la phase la plus longue et la plus consommatrice |
+| **Maintenance** | Maintenance / réparation | Corrections de bugs, évolutions fonctionnelles, mises à jour de sécurité | Mêmes ressources que développement + déploiement + environnements de production | Modéré à significatif (s'accumule sur la durée de vie du service) |
+| **Décommissionnement** | Fin de vie | Arrêt du service, migration ou suppression des données, libération des ressources | Serveurs en fin d'usage, transfert/effacement de données | Faible (ponctuel, mais peut libérer ou réaffecter du matériel) |
 
 ### Lecture ACV croisée
 
@@ -174,9 +179,10 @@ Dans cette itération, la méthode se concentre sur la **phase d'exploitation** 
 
 ### Implications pratiques
 
-- **Développement** : l'impact des postes développeurs, des pipelines CI/CD et des environnements de test peut être significatif pour les projets longs ou les équipes nombreuses. Il s'évalue comme un parc informatique dédié sur la durée du projet.
+- **Développement** : l'impact des postes développeurs et des environnements de test peut être significatif pour les projets longs ou les équipes nombreuses. Il s'évalue comme un parc informatique dédié sur la durée du projet.
+- **Déploiement / delivery** : l'équivalent du transport dans l'ACV produit. Pour un service web, c'est la pipeline CI/CD et le push vers les serveurs. Pour une application mobile, c'est la publication sur un store et le téléchargement par les utilisateurs — une app de 200 Mo téléchargée 10 millions de fois génère 2 Po de trafic réseau. Pour un conteneur Docker, c'est le push vers un registre et le pull par les nœuds de production. Chaque mise à jour déclenche un nouveau cycle de déploiement.
 - **Exploitation** : c'est le périmètre principal de la méthode. Les cas d'usage (service web, mail, mobile, IA) couvrent cette phase.
-- **Maintenance** : chaque cycle de correction ou d'évolution mobilise des ressources de développement et peut modifier le profil d'exploitation (changement de consommation serveur, ajout de fonctionnalités plus intensives).
+- **Maintenance** : chaque cycle de correction ou d'évolution mobilise des ressources de développement, déclenche un nouveau déploiement et peut modifier le profil d'exploitation (changement de consommation serveur, ajout de fonctionnalités plus intensives).
 - **Décommissionnement** : la fin de vie d'un service ne fait pas disparaître l'impact du matériel. Si les serveurs sont réaffectés, leur impact est transféré à un autre périmètre. S'ils sont mis au rebut, leur impact de fin de vie doit être comptabilisé.
 
 ## Ce que cela implique pour la méthode
@@ -187,7 +193,7 @@ Cette base ACV implique que :
 2. Les impacts de fabrication et d'usage doivent être **lus ensemble** pour éviter les transferts d'impact masqués.
 3. Les **règles d'allocation**, de frontière et de qualité des données sont aussi importantes que les formules elles-mêmes (voir [Règles](../regles/allocation-et-partage-des-impacts)).
 4. Les cas d'usage ne sont que des **assemblages** de composants, d'équipements et de règles plus générales — la méthode est conçue pour être modulaire.
-5. Le cycle de vie du service **ne se réduit pas à sa phase d'exploitation** : planification, développement, maintenance et décommissionnement mobilisent aussi du matériel dont l'impact doit être documenté, même s'il est souvent secondaire.
+5. Le cycle de vie du service **ne se réduit pas à sa phase d'exploitation** : planification, développement, déploiement, maintenance et décommissionnement mobilisent aussi du matériel dont l'impact doit être documenté, même s'il est souvent secondaire.
 
 ## Hypothèses et limites
 
