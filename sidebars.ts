@@ -7,7 +7,6 @@ const sidebars: SidebarsConfig = {
       label: 'Introduction',
       items: [
         'index',
-        'introduction/comment-lire-cette-methodologie',
         'introduction/positionnement-par-rapport-aux-referentiels-existants',
       ],
     },
