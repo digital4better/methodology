@@ -99,11 +99,9 @@ L'affichage est en général alloué via l'équipement qui le porte, sauf dans l
 
 ## Simulateur
 
-L'impact de l'affichage se lit au niveau du terminal ou de l'écran qui l'embarque :
+import { DisplayPlayGround } from '@site/src/components/display-playground';
 
-import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
-
-<EquipmentPlayGround lang="fr" filter={["smartphone", "tablet", "laptop", "screen"]} />
+<DisplayPlayGround lang="fr" />
 
 ## Hypothèses & limites
 

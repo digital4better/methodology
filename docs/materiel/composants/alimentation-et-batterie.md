@@ -92,11 +92,9 @@ Les règles générales sont décrites dans [Allocation et partage des impacts](
 
 ## Simulateur
 
-L'impact de l'alimentation et de la batterie se lit au niveau du terminal qui l'embarque :
+import { BatteryPlayGround } from '@site/src/components/battery-playground';
 
-import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
-
-<EquipmentPlayGround lang="fr" filter={["smartphone", "tablet", "laptop"]} />
+<BatteryPlayGround lang="fr" />
 
 ## Hypothèses & limites
 
