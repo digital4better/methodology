@@ -88,6 +88,14 @@ La mémoire est souvent allouée :
 
 L'annualisation se fait au niveau du composant ou de l'équipement selon la qualité des données disponibles.
 
+## Simulateur
+
+L'impact de la mémoire vive se lit au niveau de l'équipement qui l'embarque :
+
+import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+
+<EquipmentPlayGround lang="fr" filter={["laptop", "desktop_professional", "vm_small", "vm_medium", "vm_large"]} />
+
 ## Hypothèses & limites
 
 ### Hypothèses retenues

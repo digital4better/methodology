@@ -123,8 +123,29 @@ L'annualisation repose sur la durée de vie de référence du serveur. La cohér
 
 - mieux distinguer les archétypes de serveurs par usage ;
 - affiner les profils de charge et les consommations en contexte réel ;
-- enrichir les données D4B sur les serveurs accélérés ;
-- proposer un simulateur pour les serveurs quand la composition et les hypothèses de charge seront suffisamment stabilisées.
+- enrichir les données D4B sur les serveurs accélérés.
+
+## Ordres de grandeur (machines virtuelles)
+
+Quand l'inventaire physique n'est pas accessible, la méthode utilise des archétypes de VM comme proxy des ressources serveur mobilisées :
+
+| VM | Config | GWP emb. (kg CO₂ eq./an) | ADPe emb. (mg Sb eq./an) | WU emb. (m³ eq./an) | Puissance (W) |
+|---|---|---|---|---|---|
+| **Petite** | 1 vCPU, 4 Go RAM | 3,8 | 0,09 | 16 | 4 |
+| **Moyenne** | 8 vCPU, 32 Go RAM | 30,0 | 0,70 | 123 | 31,4 |
+| **Grande** | 48 vCPU, 192 Go RAM | 180,2 | 4,23 | 742 | 185,7 |
+
+Source : `digital4better/data/equipment/embodied.csv` et `energy.csv`.
+
+:::note[PUE]
+L'impact opérationnel des VM doit intégrer le PUE du datacenter (1,58 par défaut). Le simulateur ci-dessous permet de faire varier ce paramètre.
+:::
+
+## Simulateur
+
+import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+
+<EquipmentPlayGround lang="fr" filter={["vm_small", "vm_medium", "vm_large"]} />
 
 ## Application
 

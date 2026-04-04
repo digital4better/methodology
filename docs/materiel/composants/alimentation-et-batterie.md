@@ -90,6 +90,14 @@ L'impact de l'alimentation et de la batterie est généralement annualisé avec 
 
 Les règles générales sont décrites dans [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts).
 
+## Simulateur
+
+L'impact de l'alimentation et de la batterie se lit au niveau du terminal qui l'embarque :
+
+import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+
+<EquipmentPlayGround lang="fr" filter={["smartphone", "tablet", "laptop"]} />
+
 ## Hypothèses & limites
 
 ### Hypothèses retenues

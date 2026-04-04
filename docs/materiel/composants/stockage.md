@@ -87,6 +87,14 @@ Le stockage se prête bien à une allocation par capacité et par durée. Selon 
 
 L'annualisation reste indispensable pour éviter de comparer un stockage persistant de long terme à un usage ponctuel sans base commune.
 
+## Simulateur
+
+L'impact du stockage se lit au niveau de l'équipement qui l'embarque :
+
+import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+
+<EquipmentPlayGround lang="fr" filter={["laptop", "desktop_professional", "vm_small", "vm_medium", "vm_large"]} />
+
 ## Hypothèses & limites
 
 ### Hypothèses retenues

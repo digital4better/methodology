@@ -85,6 +85,14 @@ Les éléments structurels sont annualisés avec l'équipement auquel ils appart
 - les règles de partage d'usage applicables à cet équipement ;
 - les conventions définies dans [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts).
 
+## Simulateur
+
+L'impact des éléments structurels se lit au niveau de l'équipement complet :
+
+import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+
+<EquipmentPlayGround lang="fr" filter={["laptop", "desktop_professional", "smartphone"]} />
+
 ## Hypothèses & limites
 
 ### Hypothèses retenues

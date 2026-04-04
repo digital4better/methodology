@@ -99,6 +99,14 @@ Un processeur ou un accélérateur n'est presque jamais évalué isolément dans
 
 Les règles générales d'allocation sont décrites dans [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts).
 
+## Simulateur
+
+L'impact d'un processeur ou accélérateur se lit au niveau de l'équipement ou du serveur qui l'embarque. Le simulateur ci-dessous permet d'évaluer l'impact d'un serveur virtualisé (VM) en faisant varier la taille, le PUE et le mix électrique.
+
+import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+
+<EquipmentPlayGround lang="fr" filter={["vm_small", "vm_medium", "vm_large"]} />
+
 ## Hypothèses & limites
 
 ### Hypothèses retenues

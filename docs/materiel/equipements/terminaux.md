@@ -102,6 +102,46 @@ Les terminaux sont des équipements fortement mutualisés entre usages. Leur imp
 
 Une mauvaise allocation des terminaux peut fausser fortement le résultat d'un cas d'usage.
 
+## Ordres de grandeur
+
+Les tableaux ci-dessous présentent les impacts intrinsèques annualisés et la consommation électrique des principaux types de terminaux, issus du référentiel `digital4better/data`.
+
+### Impact intrinsèque annuel (fabrication, transport, fin de vie)
+
+| Terminal | GWP (kg CO₂ eq./an) | ADPe (mg Sb eq./an) | WU (m³ eq./an) | AP (mol H+ eq./an) | Puissance (W) |
+|---|---|---|---|---|---|
+| **Smartphone** | 31,9 | 1,13 | 53 | 0,15 | 1 |
+| **Tablette** | 28,1 | 1,49 | 57 | 0,18 | 7,5 |
+| **Laptop** | 37,2 | 1,90 | 167 | 0,23 | 75 |
+| **Desktop (personnel)** | 44,8 | 3,66 | 360 | 0,30 | 175 |
+| **Desktop (professionnel)** | 35,3 | 3,28 | 357 | 0,24 | 175 |
+| **Écran** | 11,6 | 1,95 | 123 | 0,08 | 55 |
+
+Source : `digital4better/data/equipment/embodied.csv`, facteurs par seconde annualisés (×365,25×86 400).
+
+:::note[Lecture]
+Ces valeurs correspondent à l'impact intrinsèque annualisé sur la durée de vie de référence du référentiel. Si la durée de vie réelle diffère, une correction proportionnelle $TL/RL$ doit être appliquée (voir [Temporalité et vieillissement](../../regles/temporalite-vieillissement-et-versionnement-des-donnees)).
+:::
+
+### Impact opérationnel annuel (usage 8h/jour, France)
+
+| Terminal | Énergie (kWh/an) | GWP opérationnel (kg CO₂ eq./an) | Part intrinsèque dans le total |
+|---|---|---|---|
+| **Smartphone** | 2,9 | 0,1 | ~99 % |
+| **Tablette** | 21,9 | 0,8 | ~97 % |
+| **Laptop** | 219 | 7,8 | ~83 % |
+| **Desktop + écran** | 672 | 23,8 | ~60 % |
+
+:::note[Dominance de l'intrinsèque]
+Pour les terminaux mobiles (smartphone, tablette), l'impact intrinsèque domine très largement (&gt;95 %). Pour les desktops, l'impact opérationnel devient significatif, surtout dans les pays à mix carboné élevé.
+:::
+
+## Simulateur
+
+import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+
+<EquipmentPlayGround lang="fr" filter={["smartphone", "tablet", "laptop", "desktop_personal", "desktop_professional", "screen", "computer"]} />
+
 ## Hypothèses & limites
 
 ### Hypothèses retenues

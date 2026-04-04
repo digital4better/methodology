@@ -167,8 +167,15 @@ L'annualisation s'appuie sur la durée de vie des équipements et sur la périod
 ### Perspectives
 
 - enrichir les données D4B sur les paramètres de site et archétypes de datacenter ;
-- mieux relier les approches système, équipement et composant ;
-- proposer un simulateur quand les paramètres d'entrée prioritaires seront suffisamment stabilisés.
+- mieux relier les approches système, équipement et composant.
+
+## Simulateur
+
+Le simulateur ci-dessous permet d'évaluer l'impact d'une ressource serveur virtualisée dans un datacenter, en faisant varier le PUE et le mix électrique du pays d'hébergement.
+
+import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+
+<EquipmentPlayGround lang="fr" filter={["vm_small", "vm_medium", "vm_large"]} />
 
 ## Application
 
