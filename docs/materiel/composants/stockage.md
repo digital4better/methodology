@@ -89,11 +89,9 @@ L'annualisation reste indispensable pour éviter de comparer un stockage persist
 
 ## Simulateur
 
-L'impact du stockage se lit au niveau de l'équipement qui l'embarque :
+import { StoragePlayGround } from '@site/src/components/storage-playground';
 
-import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
-
-<EquipmentPlayGround lang="fr" filter={["laptop", "desktop_professional", "vm_small", "vm_medium", "vm_large"]} />
+<StoragePlayGround lang="fr" />
 
 ## Hypothèses & limites
 

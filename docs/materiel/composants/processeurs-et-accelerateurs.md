@@ -36,18 +36,57 @@ Cette logique complète les chapitres [Semi-conducteurs](../materiaux/semi-condu
 
 ## Impact intrinsèque (fabrication)
 
-### Méthode de calcul
+### Modèle paramétrique
 
-L'impact intrinsèque des processeurs et accélérateurs dépend d'abord de leur procédé de fabrication, de leur complexité et de leur densité matérielle. Quand une donnée de référence fiable existe, le calcul se fait à partir :
+L'impact intrinsèque d'un processeur ou accélérateur est dominé par son procédé de fabrication semi-conducteur. Le modèle paramétrique repose sur trois variables clés :
 
-- d'un facteur constructeur ou d'un facteur issu du référentiel D4B ;
-- ou d'un archétype par famille de composant ;
-- puis d'une annualisation au niveau de l'équipement ou du service qui l'utilise.
+- la **surface de die** ($S_{die}$, en cm²) — variable la plus structurante ;
+- le **noeud technologique** ($N$) — détermine l'intensité du procédé (nombre d'étapes, énergie, eau) ;
+- le **type de packaging** — packaging avancé (2.5D, HBM) augmente significativement l'impact back-end.
 
-Le modèle peut donc être :
+La formule d'impact intrinsèque est :
 
-- `variable`, quand il dépend de caractéristiques comme le type, la génération, la mémoire associée ou la surface ;
-- `forfaitaire`, quand seul un facteur d'impact par composant ou par famille est disponible.
+$$
+\begin{aligned}
+&I_{emb} = S_{die} \times (GWP_{fe} + GWP_{be} \times F_{pkg}) \times F_{node} \times N_{units} \\
+\text{avec} \\
+&S_{die} = \text{Surface de die} \htmlClass{unit}{[cm²]} \\
+&GWP_{fe} = 0{,}82 \text{ kgCO₂e/cm² (front-end, base 28nm)} \\
+&GWP_{be} = 0{,}16 \text{ kgCO₂e/cm² (back-end, base 28nm)} \\
+&F_{pkg} = \text{Facteur de packaging (1,0 standard ; 1,5 GPU datacenter ; 2,0 HBM)} \\
+&F_{node} = \text{Facteur de noeud technologique} \\
+&N_{units} = \text{Nombre d'unités}
+\end{aligned}
+$$
+
+Sources : Green Cloud Computing (UBA 2021) pour les valeurs de base par cm², IMEC NetZero pour le scaling par noeud.
+
+### Facteurs de noeud technologique
+
+| Noeud | $F_{node}$ | Justification |
+|---|---|---|
+| 28 nm | 1,0 | Référence |
+| 22 nm | 1,05 | Légère augmentation du nombre d'étapes |
+| 14 nm | 1,2 | Introduction du FinFET |
+| 10 nm | 1,4 | Multi-patterning intensif |
+| 7 nm | 1,8 | Introduction de l'EUV partiel |
+| 5 nm | 2,2 | EUV généralisé |
+| 4 nm | 2,5 | EUV + high-NA en préparation |
+| 3 nm | 2,8 | GAA transistors, complexité maximale |
+
+:::note[Lecture des facteurs]
+Un GPU datacenter (die 800 mm², 5 nm, packaging 2.5D) aura un impact intrinsèque environ **2,2 × 1,5 = 3,3 fois** plus élevé par cm² qu'un CPU 28 nm standard. Combiné à une surface 4 fois plus grande, l'impact total est ~13 fois plus élevé.
+:::
+
+### Ordres de grandeur
+
+| Composant | Surface de die | Noeud | Impact intrinsèque total (GWP) |
+|---|---|---|---|
+| CPU serveur standard (Xeon) | ~200 mm² | 10 nm | ~3,9 kg CO₂ eq. |
+| CPU AMD EPYC (chiplets) | ~8 × 74 mm² | 7 nm | ~11,5 kg CO₂ eq. |
+| GPU NVIDIA H100 | 814 mm² | 5 nm | ~25 kg CO₂ eq. |
+| GPU NVIDIA B200 | ~1 000 mm² | 4 nm | ~38 kg CO₂ eq. |
+| CPU laptop (mobile) | ~100 mm² | 7 nm | ~2,1 kg CO₂ eq. |
 
 ### Complétion automatique
 
@@ -58,11 +97,11 @@ Quand certaines caractéristiques manquent, la méthode recommande de compléter
 3. archétype générique par type de composant ;
 4. valeur médiane ou règle de prudence explicitement documentée.
 
-La complétion doit rester visible : un accélérateur haut de gamme ne doit pas être ramené à un `CPU` standard par simple commodité.
+La complétion doit rester visible : un accélérateur haut de gamme ne doit pas être ramené à un CPU standard par simple commodité.
 
 ### Fin de vie
 
-La fin de vie n'est généralement pas modélisée séparément au niveau du processeur seul. Quand elle est prise en compte, elle est le plus souvent déjà intégrée dans le facteur d'impact intrinsèque utilisé. Si ce n'est pas le cas, l'absence de modélisation spécifique doit être explicitée.
+La fin de vie n'est généralement pas modélisée séparément au niveau du processeur seul. Quand elle est prise en compte, elle est le plus souvent déjà intégrée dans le facteur d'impact intrinsèque utilisé.
 
 ## Impact opérationnel (usage)
 
@@ -101,11 +140,9 @@ Les règles générales d'allocation sont décrites dans [Allocation et partage 
 
 ## Simulateur
 
-L'impact d'un processeur ou accélérateur se lit au niveau de l'équipement ou du serveur qui l'embarque. Le simulateur ci-dessous permet d'évaluer l'impact d'un serveur virtualisé (VM) en faisant varier la taille, le PUE et le mix électrique.
+import { CpuPlayGround } from '@site/src/components/cpu-playground';
 
-import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
-
-<EquipmentPlayGround lang="fr" filter={["vm_small", "vm_medium", "vm_large"]} />
+<CpuPlayGround lang="fr" />
 
 ## Hypothèses & limites
 

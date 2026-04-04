@@ -90,11 +90,9 @@ L'annualisation se fait au niveau du composant ou de l'équipement selon la qual
 
 ## Simulateur
 
-L'impact de la mémoire vive se lit au niveau de l'équipement qui l'embarque :
+import { RamPlayGround } from '@site/src/components/ram-playground';
 
-import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
-
-<EquipmentPlayGround lang="fr" filter={["laptop", "desktop_professional", "vm_small", "vm_medium", "vm_large"]} />
+<RamPlayGround lang="fr" />
 
 ## Hypothèses & limites
 
