@@ -80,7 +80,7 @@ const TEXT = {
       TW: "Taïwan",
       KR: "Corée du Sud",
     },
-    note: "Modèle paramétrique basé sur Boavizta + IMEC NetZero. Front-end: 0,82 kgCO₂e/cm², back-end: 0,16 kgCO₂e/cm² (base 28nm). Facteurs de noeud dérivés des données IMEC sur l'intensité énergétique par étape de procédé.",
+    note: "Modèle Boavizta : GWP = die_size × 0,0197 kgCO₂e/mm² + 9,14 kgCO₂e (base), × facteur de noeud × facteur de packaging. Facteurs de noeud dérivés des données IMEC sur l'intensité énergétique par étape de procédé.",
   },
   en: {
     fields: {
@@ -135,16 +135,18 @@ const TEXT = {
   },
 } as const;
 
-// GWP per cm² of die at 28nm baseline (Green Cloud Computing UBA 2021)
-const GWP_FRONTEND_PER_CM2 = 0.82; // kgCO2e/cm²
-const GWP_BACKEND_PER_CM2 = 0.16; // kgCO2e/cm²
+// Boavizta model: GWP = die_size_mm2 * die_coeff + base
+// die_coeff: impact per mm² of die (includes front-end + back-end at reference node)
+// base: PCB, packaging, connectors, assembly (fixed per unit)
+const CPU_DIE_GWP = 1.97e-2;    // kgCO2e/mm² (Boavizta)
+const CPU_BASE_GWP = 9.14;      // kgCO2e (Boavizta)
+const CPU_DIE_ADPE = 5.87e-9;   // kgSbeq/mm² (Boavizta)
+const CPU_BASE_ADPE = 2.04e-2;  // kgSbeq (Boavizta)
+const CPU_DIE_PE = 0.265;       // MJ/mm² (Boavizta)
+const CPU_BASE_PE = 156.0;      // MJ (Boavizta)
 
-// Water per cm² of die at 28nm baseline
-const WU_FRONTEND_PER_CM2 = 0.014; // m³/cm² (14 L/cm²)
-const WU_BACKEND_PER_CM2 = 0.001; // m³/cm²
-
-// ADPe per cm² of die at 28nm baseline (estimated from d4b ratios)
-const ADPE_PER_CM2 = 3e-6; // kgSb eq./cm²
+// Water per mm² of die (derived from Wang et al. 2023: 8.22 L/cm² = 0.0822 L/mm²)
+const CPU_DIE_WU = 8.22e-5;     // m³/mm²
 
 // Node scaling factors (relative to 28nm = 1.0)
 // Based on IMEC publications: process step count and energy intensity scaling
@@ -249,18 +251,16 @@ export const CpuPlayGround = ({ lang: langProp }: { lang?: string }) => {
   const lifetimeYears = Math.max(1, parseFloat(lifetime) || 5);
   const pueVal = Math.max(1, parseFloat(pue) || 1.58);
 
-  // Embodied impact per unit
-  const gwpFrontend = dieCm2 * GWP_FRONTEND_PER_CM2 * nodeFactor;
-  const gwpBackend = dieCm2 * GWP_BACKEND_PER_CM2 * packagingFactor * nodeFactor;
-  const gwpEmbTotal = (gwpFrontend + gwpBackend) * numUnits;
+  // Embodied impact per unit (Boavizta model: die_size * die_coeff + base, × node_factor × packaging_factor)
+  const gwpEmbUnit = (dieMm2 * CPU_DIE_GWP + CPU_BASE_GWP) * nodeFactor * packagingFactor;
+  const gwpEmbTotal = gwpEmbUnit * numUnits;
   const gwpEmbPerYear = gwpEmbTotal / lifetimeYears;
 
-  const wuFrontend = dieCm2 * WU_FRONTEND_PER_CM2 * nodeFactor;
-  const wuBackend = dieCm2 * WU_BACKEND_PER_CM2 * packagingFactor;
-  const wuEmbTotal = (wuFrontend + wuBackend) * numUnits;
-  const wuEmbPerYear = wuEmbTotal / lifetimeYears;
+  const wuEmbUnit = (dieMm2 * CPU_DIE_WU) * nodeFactor * numUnits;
+  const wuEmbPerYear = wuEmbUnit / lifetimeYears;
 
-  const adpeEmbTotal = dieCm2 * ADPE_PER_CM2 * nodeFactor * numUnits;
+  const adpeEmbUnit = (dieMm2 * CPU_DIE_ADPE + CPU_BASE_ADPE) * nodeFactor * packagingFactor;
+  const adpeEmbTotal = adpeEmbUnit * numUnits;
   const adpeEmbPerYear = adpeEmbTotal / lifetimeYears;
 
   // Operational impact per year

@@ -48,18 +48,26 @@ La formule d'impact intrinsèque est :
 
 $$
 \begin{aligned}
-&I_{emb} = S_{die} \times (GWP_{fe} + GWP_{be} \times F_{pkg}) \times F_{node} \times N_{units} \\
+&I_{emb} = (S_{die} \times C_{die} + C_{base}) \times F_{node} \times F_{pkg} \times N_{units} \\
 \text{avec} \\
-&S_{die} = \text{Surface de die} \htmlClass{unit}{[cm²]} \\
-&GWP_{fe} = 0{,}82 \text{ kgCO₂e/cm² (front-end, base 28nm)} \\
-&GWP_{be} = 0{,}16 \text{ kgCO₂e/cm² (back-end, base 28nm)} \\
-&F_{pkg} = \text{Facteur de packaging (1,0 standard ; 1,5 GPU datacenter ; 2,0 HBM)} \\
-&F_{node} = \text{Facteur de noeud technologique} \\
+&S_{die} = \text{Surface de die} \htmlClass{unit}{[mm²]} \\
+&C_{die} = 1{,}97 \times 10^{-2} \text{ kgCO₂e/mm² (coefficient par mm² de die)} \\
+&C_{base} = 9{,}14 \text{ kgCO₂e (base : PCB, connecteurs, assemblage)} \\
+&F_{node} = \text{Facteur de noeud technologique (voir tableau ci-dessous)} \\
+&F_{pkg} = \text{Facteur de packaging (1,0 standard ; 1,5 GPU datacenter)} \\
 &N_{units} = \text{Nombre d'unités}
 \end{aligned}
 $$
 
-Sources : Green Cloud Computing (UBA 2021) pour les valeurs de base par cm², IMEC NetZero pour le scaling par noeud.
+Pour les autres indicateurs, les coefficients sont :
+
+| Indicateur | $C_{die}$ | $C_{base}$ | Unité |
+|---|---|---|---|
+| **GWP** | 1,97E-02 | 9,14 | kgCO₂ eq. |
+| **ADPe** | 5,87E-09 | 2,04E-02 | kg Sb eq. |
+| **PE** | 0,265 | 156,0 | MJ |
+
+Source : [Boavizta](https://doc.api.boavizta.org/Explanations/components/cpu/), coefficients dérivés de Green Cloud Computing (UBA 2021). Facteurs de noeud dérivés d'IMEC NetZero.
 
 ### Facteurs de noeud technologique
 

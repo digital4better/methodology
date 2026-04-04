@@ -86,32 +86,32 @@ const TEXT = {
   },
 } as const;
 
-// GWP per GB (base DDR4)
-const GWP_PER_GB: Record<string, number> = {
-  ddr4: 0.163,   // 5.22 kgCO2e / 32 GB (Boavizta)
-  ddr5: 0.187,   // ~15% more than DDR4 (newer process)
-  hbm2e: 0.8,    // TSV packaging + advanced DRAM process + interposer
-  hbm3: 1.0,     // Latest generation, most complex packaging
+// Boavizta model: GWP = (capacity / density) * die_coeff + base
+// die_coeff: 2.20 kgCO2e/cm² of DRAM die
+// base: 5.22 kgCO2e per module (PCB, connectors, packaging)
+const RAM_DIE_GWP = 2.20;     // kgCO2e/cm² (Boavizta)
+const RAM_BASE_GWP = 5.22;    // kgCO2e per module (Boavizta)
+const RAM_DIE_ADPE = 6.30e-5; // kgSbeq/cm² (Boavizta)
+const RAM_BASE_ADPE = 1.69e-3; // kgSbeq per module (Boavizta)
+
+// Density: GB per cm² of DRAM die (depends on technology)
+const DENSITY_GB_CM2: Record<string, number> = {
+  ddr4: 0.625,    // ~32 GB on ~51 cm² of die (typical 8Gbit dies)
+  ddr5: 1.0,      // Higher density process
+  hbm2e: 0.5,     // Stacked dies but smaller per layer
+  hbm3: 0.8,      // Higher density stacking
 };
 
-// Water per GB (m³)
-const WU_PER_GB: Record<string, number> = {
-  ddr4: 0.0044,
-  ddr5: 0.005,
-  hbm2e: 0.025,
-  hbm3: 0.032,
+// Packaging multiplier (HBM has TSV + interposer)
+const RAM_PKG_FACTOR: Record<string, number> = {
+  ddr4: 1.0,
+  ddr5: 1.1,
+  hbm2e: 3.0,  // TSV stacking + silicon interposer
+  hbm3: 3.5,
 };
 
-// ADPe per GB (kg Sb eq.)
-const ADPE_PER_GB: Record<string, number> = {
-  ddr4: 5e-7,
-  ddr5: 5.5e-7,
-  hbm2e: 2e-6,
-  hbm3: 2.5e-6,
-};
-
-// Power per GB (W)
-const POWER_PER_GB = 0.000392; // kW/GB = 0.392 W/GB
+// Power per GB (W) — Boavizta: 0.284 W/GB, Cloud Jewels: 0.392 W/GB
+const POWER_PER_GB = 0.000392; // kW/GB (using Cloud Jewels, more conservative)
 
 const COUNTRY_GWP: Record<string, number> = {
   FR: 0.0355, DE: 0.377, US: 0.353, CN: 0.537, TW: 0.509, KR: 0.415,
@@ -147,9 +147,16 @@ export const RamPlayGround = ({ lang: langProp }: { lang?: string }) => {
   const hours = Math.min(24, Math.max(0, parseFloat(usageHours) || 24));
   const pueVal = Math.max(1, parseFloat(pue) || 1.58);
 
-  const gwpEmb = totalGB * (GWP_PER_GB[memType] ?? 0.163) / lifetimeY;
-  const wuEmb = totalGB * (WU_PER_GB[memType] ?? 0.0044) / lifetimeY;
-  const adpeEmb = totalGB * (ADPE_PER_GB[memType] ?? 5e-7) / lifetimeY;
+  // Boavizta model: (capacity / density) * die_coeff + base, per module × pkg_factor
+  const density = DENSITY_GB_CM2[memType] ?? 0.625;
+  const pkgFactor = RAM_PKG_FACTOR[memType] ?? 1.0;
+  const dieAreaCm2 = capGB / density; // per module
+  const gwpEmbPerModule = (dieAreaCm2 * RAM_DIE_GWP + RAM_BASE_GWP) * pkgFactor;
+  const gwpEmb = gwpEmbPerModule * numModules / lifetimeY;
+  const adpeEmbPerModule = (dieAreaCm2 * RAM_DIE_ADPE + RAM_BASE_ADPE) * pkgFactor;
+  const adpeEmb = adpeEmbPerModule * numModules / lifetimeY;
+  // Water: estimated from die area × 8.22 L/cm² (Wang et al. 2023)
+  const wuEmb = dieAreaCm2 * 0.00822 * numModules / lifetimeY;
 
   const energyKwh = POWER_PER_GB * totalGB * hours * 365.25 * pueVal;
   const gwpOpe = energyKwh * (COUNTRY_GWP[country] ?? 0.4);

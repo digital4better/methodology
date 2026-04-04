@@ -47,7 +47,7 @@ const TEXT = {
       hdd: "HDD",
     },
     countries: { FR: "France", DE: "Allemagne", US: "États-Unis", CN: "Chine", SE: "Suède" },
-    note: "SSD intrinsèque : ~0,16 kgCO₂e/Go (Boavizta). HDD : ~0,025 kgCO₂e/Go. Puissance SSD : 1,2 W/To, HDD : 0,65 W/To (Cloud Jewels).",
+    note: "SSD : modèle Boavizta (capacité/densité × 2,20 kgCO₂e/cm² + 6,34 kgCO₂e base). HDD : 31,11 kgCO₂e forfaitaire. Puissance SSD : 1,2 W/To, HDD : 0,65 W/To (Cloud Jewels).",
   },
   en: {
     fields: {
@@ -73,15 +73,27 @@ const TEXT = {
       hdd: "HDD",
     },
     countries: { FR: "France", DE: "Germany", US: "United States", CN: "China", SE: "Sweden" },
-    note: "SSD embodied: ~0.16 kgCO₂e/GB (Boavizta). HDD: ~0.025 kgCO₂e/GB. Power SSD: 1.2 W/TB, HDD: 0.65 W/TB (Cloud Jewels).",
+    note: "SSD: Boavizta model (capacity/density × 2.20 kgCO₂e/cm² + 6.34 kgCO₂e base). HDD: 31.11 kgCO₂e flat. Power SSD: 1.2 W/TB, HDD: 0.65 W/TB (Cloud Jewels).",
   },
 } as const;
 
-// GWP per TB embodied
-const GWP_PER_TB: Record<string, number> = {
-  ssd_sata: 160,   // 0.16 kgCO2e/GB × 1000
-  ssd_nvme: 160,
-  hdd: 25,          // 0.025 kgCO2e/GB × 1000
+// Boavizta SSD model: (capacity_GB / density) * die_coeff + base
+// die_coeff: 2.20 kgCO2e/cm² (same NAND die coefficient as RAM)
+// base: 6.34 kgCO2e (controller, PCB, connectors)
+const SSD_DIE_GWP = 2.20;     // kgCO2e/cm² (Boavizta)
+const SSD_BASE_GWP = 6.34;    // kgCO2e (Boavizta)
+const SSD_DIE_ADPE = 6.30e-5; // kgSbeq/cm² (Boavizta)
+const SSD_BASE_ADPE = 5.63e-4; // kgSbeq (Boavizta)
+
+// HDD: flat embodied (no die model, mechanical)
+const HDD_GWP = 31.11;        // kgCO2e (Boavizta)
+const HDD_ADPE = 2.50e-4;     // kgSbeq (Boavizta)
+
+// SSD NAND density (GB per cm² of die) — depends on layers
+const SSD_DENSITY: Record<string, number> = {
+  ssd_sata: 48.5,   // ~96-layer TLC NAND, average
+  ssd_nvme: 48.5,
+  hdd: 1,            // not used
 };
 
 // Power per TB (W)
@@ -128,7 +140,17 @@ export const StoragePlayGround = ({ lang: langProp }: { lang?: string }) => {
   const hours = Math.min(24, Math.max(0, parseFloat(usageHours) || 24));
   const pueVal = Math.max(1, parseFloat(pue) || 1.58);
 
-  const gwpEmb = totalTB * (GWP_PER_TB[storageType] ?? 160) / lifetimeY;
+  // SSD: Boavizta die model; HDD: flat
+  const isHdd = storageType === "hdd";
+  const capGB = totalTB * 1000;
+  let gwpEmb: number;
+  if (isHdd) {
+    gwpEmb = HDD_GWP * numUnits / lifetimeY;
+  } else {
+    const density = SSD_DENSITY[storageType] ?? 48.5;
+    const dieArea = capGB / density; // cm² per unit
+    gwpEmb = ((dieArea / numUnits) * SSD_DIE_GWP + SSD_BASE_GWP) * numUnits / lifetimeY;
+  }
   const energyKwh = (POWER_PER_TB[storageType] ?? 1.2) * totalTB / 1000 * hours * 365.25 * pueVal;
   const gwpOpe = energyKwh * (COUNTRY_GWP[country] ?? 0.4);
 
