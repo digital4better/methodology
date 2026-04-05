@@ -2,93 +2,114 @@
 
 ## Résumé
 
-Cette section couvre les batteries embarquées, blocs d'alimentation et sous-ensembles de conversion électrique qui participent directement au fonctionnement des équipements numériques. Elle modélise :
+La batterie est le composant dont l'impact environnemental est le plus directement lié aux **matériaux critiques** : cobalt, lithium, nickel, graphite. Pour un smartphone, la batterie peut représenter 10 à 20 % de l'impact GWP et une part bien plus élevée des indicateurs ADPe et WU. La chimie de la cathode (LCO, NMC, LFP) est le premier déterminant de l'impact.
 
-- l'impact intrinsèque de fabrication de ces sous-ensembles ;
-- leur rôle dans l'impact opérationnel via le rendement, l'autonomie ou les pertes de conversion ;
-- leurs règles de rattachement à un équipement complet.
+## D'où vient l'impact
 
-Le niveau de détail varie selon que l'on connaît la capacité de batterie, le type de cellule, le rendement du bloc d'alimentation ou seulement l'archétype de l'équipement.
+### Structure d'une batterie Li-ion
 
-## Caractéristiques
+```mermaid
+flowchart LR
+    subgraph "Cellule Li-ion"
+        C[Cathode<br>LCO, NMC ou LFP] --- E[Électrolyte<br>sels de lithium]
+        E --- A[Anode<br>graphite]
+    end
+    subgraph "Pack batterie"
+        CELL[Cellules] --> BMS[BMS<br>gestion électronique]
+        BMS --> PACK[Boîtier, connecteurs,<br>protection thermique]
+    end
 
-| Caractéristique | Unité | Valeur par défaut | Plage ou cas typiques | Description |
-| --- | --- | --- | --- | --- |
-| Type de sous-ensemble | - | archétype générique | batterie embarquée, batterie externe, PSU, bloc secteur | Détermine la logique principale de modélisation |
-| Capacité batterie | Wh | selon l'archétype | faible à très élevée | Variable principale pour la fabrication des batteries |
-| Technologie de batterie | - | lithium-ion | variantes lithium et assimilées | Influence l'impact matériaux et la durée de vie |
-| Rendement de conversion | % | valeur d'archétype | dépend de la qualité du bloc | Agit sur l'énergie réellement nécessaire en usage |
-| Nombre de cycles ou durée de vie propre | cycles ou années | valeur documentée | variable selon l'équipement | Sert à juger le remplacement éventuel |
-| Nombre d'unités par équipement | - | `1` | 1 à plusieurs | Utile dans les architectures particulières |
+    style C fill:#e76f51,color:#fff
+    style A fill:#264653,color:#fff
+    style E fill:#e9c46a,color:#000
+```
 
-## Principe de modélisation
+| Composant | Matériaux clés | Indicateur le plus impacté |
+|---|---|---|
+| **Cathode** | Cobalt (LCO), nickel + manganèse (NMC), fer + phosphate (LFP) | ADPe, CTUe, GWP |
+| **Anode** | Graphite (naturel ou synthétique) | GWP (graphitisation énergivore) |
+| **Électrolyte** | Sels de lithium (LiPF₆) | WU (extraction du lithium) |
+| **Collecteurs de courant** | Cuivre (anode), aluminium (cathode) | ADPe |
+| **BMS + boîtier** | Électronique, plastique, aluminium | GWP |
 
-La méthode distingue deux objets proches mais différents :
+## Modèle paramétrique
 
-- la `batterie`, qui porte surtout des impacts de fabrication et des enjeux de durée de vie ;
-- l'`alimentation`, qui porte surtout des enjeux de rendement et de conversion électrique.
+### Formule d'impact intrinsèque
 
-Quand les données sont connues, la méthode privilégie une approche par caractéristiques, en particulier la capacité de batterie et le rendement. Sinon, elle s'appuie sur des archétypes cohérents avec le type de terminal ou d'équipement.
+L'impact est proportionnel à la capacité, avec un coefficient qui dépend de la chimie :
 
-## Impact intrinsèque (fabrication)
+$$
+\begin{aligned}
+&I_{emb} = \frac{C_{batterie}}{1000} \times F_{chimie} \\
+\text{avec} \\
+&C_{batterie} = \text{Capacité de la batterie} \htmlClass{unit}{[Wh]} \\
+&F_{chimie} = \text{Facteur d'impact par kWh selon la chimie}
+\end{aligned}
+$$
 
-### Méthode de calcul
+### Facteurs par chimie et par indicateur
 
-L'impact intrinsèque peut être estimé :
+| Chimie | Usage typique | GWP (kgCO₂e/kWh) | ADPe (kgSbeq/kWh) | WU (m³/kWh) | Source |
+|---|---|---|---|---|---|
+| **LCO** | Smartphone, montre | 75 | 0,005 | 3,0 | Kelly et al. 2021[^1], Peters et al. 2017[^2] |
+| **NMC 622** | Laptop, tablette, VE | 65 | 0,003 | 2,5 | Kelly et al. 2021[^1], Ellingsen et al. 2014[^3] |
+| **NMC 811** | VE dernière génération | 60 | 0,0025 | 2,2 | Estimations industrie |
+| **LFP** | Serveurs UPS, stockage stationnaire | 50 | 0,001 | 2,0 | Kelly et al. 2021[^1] |
 
-- à partir d'un facteur par `Wh` ou par famille de batterie ;
-- à partir d'un facteur par type de bloc d'alimentation ou d'archétype de `PSU` ;
-- ou comme sous-partie de l'équipement complet quand la décomposition détaillée n'est pas disponible.
+[^1]: Kelly et al., 2021. Energy, greenhouse gas, and water life cycle analysis of lithium carbonate and lithium hydroxide monohydrate. Resources, Conservation and Recycling, 175.
+[^2]: Peters et al., 2017. The environmental impact of Li-Ion batteries and the role of key parameters. Renewable and Sustainable Energy Reviews, 67.
+[^3]: Ellingsen et al., 2014. Life Cycle Assessment of a Lithium-Ion Battery Vehicle Pack. Journal of Industrial Ecology, 18(1).
 
-Le modèle est généralement :
+:::note[Variabilité des facteurs]
+Les facteurs GWP par kWh varient fortement dans la littérature (de 40 à 120 kgCO₂e/kWh selon les études). Cette variabilité vient des hypothèses sur le mix électrique des usines, les rendements de fabrication, le périmètre ACV (cellule seule vs pack complet) et la chimie exacte. Les valeurs retenues ici sont des médianes de méta-analyses récentes.
+:::
 
-- `variable` pour les batteries, en fonction de la capacité et parfois de la technologie ;
-- plus `forfaitaire` pour les alimentations, en fonction de la catégorie d'équipement.
+### Matériaux critiques par chimie
 
-### Complétion automatique
+| Chimie | Cobalt (g/kWh) | Lithium (g/kWh) | Nickel (g/kWh) | Source |
+|---|---|---|---|---|
+| **LCO** | ~600 | ~110 | 0 | UNEP 2013, données constructeurs |
+| **NMC 622** | ~200 | ~90 | ~350 | Olivetti et al. 2017[^4] |
+| **NMC 811** | ~60 | ~80 | ~470 | Estimations industrie |
+| **LFP** | 0 | ~80 | 0 | Pas de cobalt ni nickel |
 
-Quand les caractéristiques manquent, la méthode recommande de compléter dans cet ordre :
+[^4]: Olivetti et al., 2017. Lithium-Ion Battery Supply Chain Considerations: Analysis of Potential Bottlenecks in Critical Metals. Joule, 1(2).
 
-1. capacité ou référence observée ;
-2. fiche technique du produit ou d'un modèle équivalent ;
-3. archétype par famille d'équipement ;
-4. valeur médiane documentée dans le registre d'hypothèses.
+:::note[L'enjeu du cobalt]
+Le cobalt est le matériau le plus critique pour les batteries numériques. 70 % de la production mondiale vient de la RDC. La tendance industrielle est à la réduction du cobalt (passage de NMC 111 → 622 → 811) et au LFP pour les applications où la densité énergétique n'est pas critique. Chaque changement de chimie modifie le profil d'impact multicritère.
+:::
 
-Quand la batterie ou le bloc d'alimentation ne sont pas isolés, leur impact peut être inclus dans l'équipement, à condition de l'expliciter.
+### Ordres de grandeur par équipement
 
-### Fin de vie
+| Équipement | Capacité typique | Chimie | GWP fabrication batterie | Part dans le GWP total |
+|---|---|---|---|---|
+| Smartphone | 15-20 Wh | LCO | ~1,3 kg CO₂ eq. | ~10-15 % |
+| Laptop | 50-60 Wh | NMC | ~3,6 kg CO₂ eq. | ~5-10 % |
+| Tablette | 25-35 Wh | NMC | ~2,0 kg CO₂ eq. | ~8-12 % |
+| UPS serveur | 500-2000 Wh | LFP | ~50 kg CO₂ eq. | Variable |
 
-La fin de vie est rarement modélisée séparément pour ces sous-ensembles. Quand des remplacements sont probables sur la durée de vie de l'équipement, cela doit être traité comme hypothèse explicite plutôt que laissé implicite.
+## Alimentation (PSU / chargeur)
 
-## Impact opérationnel (usage)
+Le bloc d'alimentation (PSU) ne contribue pas autant en fabrication que la batterie, mais il influence l'impact opérationnel via son **rendement de conversion** :
 
-### Profil de consommation
+$$
+\begin{aligned}
+&E_{réelle} = \frac{E_{utile}}{\eta} \\
+\text{avec} \\
+&\eta = \text{Rendement de conversion (typiquement 80 à 95 \%)}
+\end{aligned}
+$$
 
-Ces sous-ensembles ne génèrent pas à eux seuls l'usage, mais ils modifient la consommation du système :
+| Type de PSU | Rendement typique | Impact sur l'opérationnel |
+|---|---|---|
+| Chargeur smartphone | 80-85 % | +15-20 % d'énergie soutirée |
+| PSU laptop | 85-90 % | +10-15 % |
+| PSU serveur (80+ Gold) | 90-94 % | +6-10 % |
+| PSU serveur (80+ Titanium) | 94-96 % | +4-6 % |
 
-- une batterie influence le nombre de cycles, le besoin de recharge et parfois les pertes associées ;
-- une alimentation influe sur le rendement entre énergie soutirée et énergie utile fournie à l'équipement.
-
-Le profil de consommation est donc modélisé comme un correcteur appliqué à la consommation utile de l'équipement, plus que comme un poste indépendant.
-
-### Facteurs d'ajustement
-
-Les principaux facteurs d'ajustement sont :
-
-- le rendement du bloc d'alimentation ;
-- le nombre de cycles de charge et de décharge ;
-- le remplacement éventuel de la batterie au cours de la vie de l'équipement ;
-- le contexte d'usage, par exemple mobilité forte ou poste fixe.
-
-## Allocation et annualisation
-
-L'impact de l'alimentation et de la batterie est généralement annualisé avec celui de l'équipement. Il peut être alloué :
-
-- selon la durée de vie de l'équipement ;
-- selon les usages qui se partagent ce même équipement ;
-- avec une hypothèse spécifique de remplacement si la batterie a une durée de vie plus courte.
-
-Les règles générales sont décrites dans [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts).
+:::note[Pertes de conversion]
+Les pertes de conversion sont souvent omises dans les évaluations, mais elles représentent 5 à 20 % d'énergie supplémentaire. Pour un datacenter, cette perte s'ajoute au PUE et à la charge IT.
+:::
 
 ## Simulateur
 
@@ -96,44 +117,26 @@ import { BatteryPlayGround } from '@site/src/components/battery-playground';
 
 <BatteryPlayGround lang="fr" />
 
-## Hypothèses & limites
+## Hypothèses et limites
 
-### Hypothèses retenues
+- Les facteurs GWP par kWh sont des médianes de méta-analyses. La variabilité réelle est importante (±30 à 50 %).
+- Le modèle ne distingue pas encore cellule et pack (BMS, boîtier, refroidissement). Le facteur inclut le pack complet.
+- Les facteurs ADPe et WU sont moins stabilisés que le GWP dans la littérature batterie.
+- Le rendement du PSU n'est pas toujours documenté ; les valeurs retenues sont des moyennes par gamme.
+- Le remplacement de la batterie en cours de vie de l'équipement (fréquent pour les smartphones) doit être traité comme hypothèse explicite.
 
-- la capacité de batterie est une variable plus robuste que les seules allégations marketing d'autonomie ;
-- le rendement d'alimentation peut être approché par archétype quand aucune donnée mesurée n'existe ;
-- les batteries sont généralement portées au niveau de l'équipement, sauf cas d'étude spécifique.
+## Données mobilisées
 
-### Limitations connues
+- Coefficients par chimie issus de la littérature (Kelly, Ellingsen, Peters, Olivetti)
+- `digital4better/data` → `data/equipment/*`
+- Données constructeurs (Apple Environmental Reports, Dell PCF)
 
-- les données sur les blocs d'alimentation sont souvent plus pauvres que sur les composants de calcul ;
-- les effets de vieillissement réel de batterie sont difficiles à représenter sans données d'usage ;
-- certaines batteries ou alimentations sont intégrées sans détail public suffisant pour un calcul fin.
+## Sources
 
-### Perspectives
-
-- enrichir les données D4B sur les batteries et sous-ensembles d'alimentation ;
-- mieux documenter les cas de remplacement sur la durée de vie ;
-- proposer un simulateur quand les paramètres utiles seront suffisamment stabilisés.
-
-## Application
-
-Les applications les plus utiles de ce chapitre apparaissent aujourd'hui dans :
-
-- [Terminaux](../equipements/terminaux), pour les batteries embarquées et l'autonomie ;
-- [Mobile](../../cas-d-usage/services/mobile), quand le partage entre phases d'usage et de recharge devient structurant ;
-- [Serveurs](../equipements/serveurs), pour les blocs d'alimentation et rendements côté infrastructure.
-
-## Références
-
-### Données mobilisées
-
-- `digital4better/data/data/hardware/devices.*`
-- `digital4better/data/data/hardware/laptops.*`
-- `digital4better/data/data/hardware/mobiles.*`
-- gap explicite sur certaines données structurées de `PSU`
-
-### Sources
-
-- corpus `inputs/md`
-- documentation Boavizta sur les composants d'alimentation quand elle est pertinente
+- Kelly et al., 2021. Energy, greenhouse gas, and water LCA of lithium carbonate and hydroxide.
+- Ellingsen et al., 2014. [LCA of a Li-Ion Battery Vehicle Pack](https://doi.org/10.1111/jiec.12072). Journal of Industrial Ecology.
+- Peters et al., 2017. [Environmental impact of Li-Ion batteries](https://doi.org/10.1016/j.rser.2016.08.039). RSER.
+- Olivetti et al., 2017. [Li-Ion Battery Supply Chain](https://doi.org/10.1016/j.joule.2017.08.019). Joule.
+- `inputs/md/les-impacts-environnementaux-des-equipements-informatiques.md`
+- [digital4better/data](https://github.com/digital4better/data)
+- Voir aussi [Matériaux critiques](../materiaux/materiaux-critiques) pour le contexte cobalt, lithium, terres rares.

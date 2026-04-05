@@ -2,91 +2,125 @@
 
 ## Résumé
 
-Cette section couvre la mémoire vive système et les mémoires utilisées pour le calcul intensif, notamment `RAM`, `VRAM` et `HBM`. Elle modélise :
+La mémoire vive (RAM) est un composant dont l'impact intrinsèque dépend principalement de la surface de silicium nécessaire pour atteindre la capacité installée. Un module DDR4 de 32 Go représente environ 5,2 kg CO₂ eq. de fabrication. La mémoire HBM, utilisée dans les accélérateurs IA, a un impact 3 à 4 fois plus élevé par Go en raison de son packaging TSV avancé.
 
-- l'impact intrinsèque de fabrication ;
-- la consommation électrique en usage ;
-- les règles de rattachement à un équipement ou à un serveur.
+## D'où vient l'impact
 
-Le niveau de granularité dépend du type de mémoire connu et de la capacité installée. Dans la plupart des cas, la capacité reste la variable structurante la plus robuste.
+La fabrication d'une puce mémoire DRAM suit les mêmes procédés que les semi-conducteurs (voir [Semi-conducteurs](../materiaux/semi-conducteurs)) : salle blanche, photolithographie, gravure, métallisation. La capacité totale dépend du nombre de couches DRAM empilées et de la densité par couche.
 
-## Caractéristiques
+Pour la mémoire HBM (High Bandwidth Memory), des dies DRAM sont empilés verticalement avec des interconnexions TSV (Through-Silicon Via) sur un interposeur en silicium, ce qui multiplie les étapes de fabrication et l'impact.
 
-| Caractéristique | Unité | Valeur par défaut | Plage ou cas typiques | Description |
-| --- | --- | --- | --- | --- |
-| Type de mémoire | - | archétype générique | `RAM`, `VRAM`, `HBM`, autres variantes | Détermine la famille technique et le profil d'usage |
-| Capacité installée | Go | capacité d'archétype | quelques Go à plusieurs To | Variable principale de modélisation |
-| Nombre de modules ou puces | - | selon l'archétype | dépend de l'équipement | Utile pour passer de la capacité à la structure physique |
-| Bande passante ou performance mémoire | Go/s | non renseignée si absente | dépend du type | Sert surtout dans les cas intensifs |
-| Mémoire dédiée à un accélérateur | Go | selon le modèle | nulle à plusieurs dizaines de Go | Important pour les cas IA et GPU |
-| Nombre d'unités par équipement | - | selon l'archétype | 1 à plusieurs dizaines | Sert au rattachement à l'équipement |
+```mermaid
+flowchart LR
+    subgraph DDR4/DDR5
+        W1[Wafer DRAM] --> D1[Dies DRAM<br>gravure + test]
+        D1 --> M1[Module<br>PCB + soudure]
+    end
+    subgraph HBM
+        W2[Wafer DRAM] --> D2[Dies DRAM<br>amincis]
+        D2 --> S[Empilement TSV<br>4 à 12 couches]
+        S --> I[Interposeur<br>silicium]
+        I --> P[Package 2.5D<br>avec GPU]
+    end
 
-## Principe de modélisation
+    style W1 fill:#264653,color:#fff
+    style W2 fill:#264653,color:#fff
+    style S fill:#e76f51,color:#fff
+    style I fill:#e76f51,color:#fff
+```
 
-La méthode privilégie une modélisation par capacité, car c'est la donnée la plus souvent disponible et la plus exploitable. Elle devient plus fine quand le type exact de mémoire est connu, notamment pour distinguer :
+## Modèle paramétrique
 
-- une mémoire système standard ;
-- une mémoire graphique ou dédiée ;
-- une mémoire hautes performances de type `HBM`.
+### Formule d'impact intrinsèque
 
-Quand le détail manque, la mémoire est reconstruite à partir de l'archétype de l'équipement ou du serveur.
+Le modèle repose sur la surface de die DRAM nécessaire, qui dépend de la capacité et de la densité :
 
-## Impact intrinsèque (fabrication)
+$$
+\begin{aligned}
+&I_{emb} = \left(\frac{C}{D} \times C_{die} + C_{base}\right) \times F_{pkg} \times N_{modules} \\
+\text{avec} \\
+&C = \text{Capacité par module} \htmlClass{unit}{[Go]} \\
+&D = \text{Densité DRAM} \htmlClass{unit}{[Go/cm²]} \\
+&C_{die} = \text{Coefficient par cm² de die} \\
+&C_{base} = \text{Base fixe par module (PCB, connecteurs)} \\
+&F_{pkg} = \text{Facteur de packaging} \\
+&N_{modules} = \text{Nombre de modules}
+\end{aligned}
+$$
 
-### Méthode de calcul
+### Coefficients (Boavizta)
 
-L'impact intrinsèque est généralement estimé à partir :
+| Indicateur | $C_{die}$ (par cm²) | $C_{base}$ (par module) | Unité | Source |
+|---|---|---|---|---|
+| **GWP** | 2,20 | 5,22 | kgCO₂ eq. | Boavizta[^1] |
+| **ADPe** | 6,30E-05 | 1,69E-03 | kg Sb eq. | Boavizta[^1] |
+| **PE** | 27,30 | 74,00 | MJ | Boavizta[^1] |
 
-- d'un facteur par Go de mémoire ;
-- ou d'un facteur par module quand cette information est plus robuste ;
-- puis d'une annualisation sur la durée de vie de l'équipement qui embarque cette mémoire.
+[^1]: [Boavizta RAM methodology](https://doc.api.boavizta.org/Explanations/components/ram/), coefficients dérivés de Green Cloud Computing (UBA, 2021).
 
-La capacité reste donc la variable principale, mais le type de mémoire peut justifier des facteurs différents.
+### Familles de mémoire
 
-### Complétion automatique
+La mémoire se décline en plusieurs familles avec des procédés et des impacts très différents :
 
-Quand les caractéristiques manquent, la méthode recommande :
+| Famille | Usage | Capacités typiques | Spécificité procédé |
+|---|---|---|---|
+| **DDR4 / LPDDR4** | RAM système (serveur, laptop, smartphone) | 4 à 128 Go par module | Module DIMM standard, wire bonding |
+| **DDR5 / LPDDR5** | RAM système (dernière génération) | 8 à 128 Go par module | Process plus dense, on-die ECC |
+| **GDDR6 / GDDR6X** | Mémoire graphique (GPU consumer et pro) | 4 à 24 Go par GPU | Bande passante élevée, soudée sur le PCB du GPU |
+| **HBM2e** | Mémoire GPU datacenter (H100, A100) | 16 à 80 Go par GPU | Empilement TSV 4-8 couches + interposeur silicium |
+| **HBM3 / HBM3e** | Mémoire GPU datacenter (H200, B200) | 96 à 288 Go par GPU | TSV haute densité, 8-12 couches |
 
-1. d'utiliser la capacité observée si elle est connue ;
-2. d'inférer le type de mémoire à partir de l'équipement ou de l'accélérateur associé ;
-3. de recourir à un archétype de capacité et de type documenté ;
-4. de signaler explicitement les cas où la mémoire n'est connue qu'indirectement.
+### Densité et packaging par type
 
-### Fin de vie
+| Type | Densité $D$ (Go/cm²) | Facteur packaging $F_{pkg}$ | Justification |
+|---|---|---|---|
+| **DDR4 / LPDDR4** | 0,625 | 1,0 | Module standard, wire bonding |
+| **DDR5 / LPDDR5** | 1,0 | 1,1 | Process plus dense, légère surcharge |
+| **GDDR6** | 0,8 | 1,3 | Soudée sur PCB GPU, bande passante élevée |
+| **HBM2e** | 0,5 | 3,0 | Empilement TSV + interposeur silicium |
+| **HBM3** | 0,8 | 3,5 | TSV haute densité, plus de couches |
 
-Comme pour beaucoup de composants, la fin de vie est rarement isolée au niveau de la mémoire seule. Elle est généralement incluse dans le facteur embarqué utilisé, ou sinon laissée implicite avec mention de cette limite.
+:::note[GDDR vs DDR]
+La GDDR (Graphics DDR) est optimisée pour la bande passante plutôt que la latence. Elle est soudée directement sur le PCB du GPU, ce qui simplifie le packaging mais rend la mémoire non remplaçable. Son impact par Go est légèrement supérieur à la DDR standard en raison de procédés de fabrication plus exigeants.
+:::
 
-## Impact opérationnel (usage)
+### Ordres de grandeur
 
-### Profil de consommation
+| Configuration | GWP intrinsèque | ADPe | Contexte |
+|---|---|---|---|
+| 1 module DDR4 32 Go | **~118 kg CO₂ eq.** | 5,0E-03 kg Sb eq. | Serveur standard |
+| 16 modules DDR5 32 Go (512 Go) | **~1 290 kg CO₂ eq.** | 5,5E-02 kg Sb eq. | Serveur 2U |
+| 6× HBM2e 16 Go (96 Go) | **~600 kg CO₂ eq.** | — | GPU H100 (mémoire seule) |
 
-La consommation de la mémoire dépend en premier lieu :
+:::note[Poids de la RAM dans un serveur]
+Pour un serveur 2U avec 512 Go de DDR5, la RAM peut représenter 30 à 50 % de l'impact intrinsèque total du serveur. C'est souvent le premier poste devant le CPU.
+:::
 
-- de la capacité installée ;
-- du type de mémoire ;
-- du niveau d'activité et de sollicitation ;
-- du contexte d'intégration, par exemple terminal, serveur ou accélérateur.
+## Impact opérationnel
 
-La mémoire présente souvent un profil moins directement corrélé à la charge que le calcul pur. Une partie de sa consommation reste liée à la simple présence de capacité active, même hors pic de calcul.
+### Consommation électrique
 
-### Facteurs d'ajustement
+La consommation de la mémoire est quasi proportionnelle à la capacité installée, avec une faible sensibilité à la charge :
 
-Les ajustements les plus utiles sont :
+$$
+\begin{aligned}
+&P_{ram} = C_{totale} \times p \\
+\text{avec} \\
+&p = 0{,}392 \text{ W/Go (Cloud Jewels)} \\
+&\text{ou } p = 0{,}284 \text{ W/Go (Boavizta)}
+\end{aligned}
+$$
 
-- le temps réel d'activation ou d'utilisation ;
-- la part de mémoire effectivement mobilisée par l'usage étudié ;
-- la mutualisation dans un serveur ou un équipement partagé ;
-- les facteurs de site comme le `PUE`, appliqués au bon niveau système.
+| Configuration | Puissance (Cloud Jewels) | Puissance (Boavizta) |
+|---|---|---|
+| 16 Go (laptop) | 6,3 W | 4,5 W |
+| 128 Go (serveur 1U) | 50 W | 36 W |
+| 512 Go (serveur 2U) | 201 W | 145 W |
+| 2 048 Go (DGX) | 803 W | 582 W |
 
-## Allocation et annualisation
-
-La mémoire est souvent allouée :
-
-- au prorata de la capacité effectivement mobilisée ;
-- ou au prorata du temps d'utilisation de l'équipement qui la porte ;
-- ou via une unité technique comme le `Go.h` dans certains contextes d'infrastructure.
-
-L'annualisation se fait au niveau du composant ou de l'équipement selon la qualité des données disponibles.
+:::note[Profil de charge]
+Contrairement au CPU, la consommation de la RAM est peu sensible à la charge de travail. Une grande partie de l'énergie est consommée par le simple maintien des données en mémoire (refresh DRAM), même au repos.
+:::
 
 ## Simulateur
 
@@ -94,46 +128,23 @@ import { RamPlayGround } from '@site/src/components/ram-playground';
 
 <RamPlayGround lang="fr" />
 
-## Hypothèses & limites
+## Hypothèses et limites
 
-### Hypothèses retenues
+- La capacité est la variable la plus robuste. Le type de mémoire affine le calcul quand il est connu.
+- Les facteurs HBM sont des estimations basées sur la complexité du packaging TSV ; ils seront affinés quand des données constructeurs plus détaillées seront disponibles.
+- La frontière entre mémoire embarquée dans un accélérateur et mémoire système n'est pas toujours triviale.
+- Le coefficient de puissance retenu (0,392 W/Go) est une valeur moyenne ; la consommation réelle varie selon la technologie et la fréquence.
 
-- la capacité est la variable la plus robuste pour modéliser la mémoire ;
-- le type de mémoire affine le calcul quand il est connu ;
-- les facteurs d'impact peuvent différer entre mémoire standard et mémoire dédiée aux accélérateurs ;
-- la mémoire est le plus souvent évaluée dans le cadre d'un équipement ou d'un serveur complet.
+## Données mobilisées
 
-### Limitations connues
+- `digital4better/data` → `data/cloud/cpus.*`, `data/cloud/accelerators.*`
+- Coefficients Boavizta (GWP, ADPe, PE par cm² de die DRAM)
 
-- les données publiques restent hétérogènes selon les technologies mémoire ;
-- les cas de haute performance sont mieux documentés que les cas bureautiques intermédiaires ;
-- l'usage réel de la mémoire est rarement observé avec assez de finesse pour une allocation parfaite ;
-- la frontière entre mémoire embarquée dans un accélérateur et mémoire système n'est pas toujours triviale.
+## Sources
 
-### Perspectives
-
-- enrichir les données D4B sur `VRAM` et `HBM` ;
-- mieux distinguer la capacité installée de la capacité réellement mobilisée ;
-- relier plus finement mémoire et accélérateurs dans les cas IA ;
-- proposer un simulateur lorsque les paramètres d'entrée seront stabilisés.
-
-## Application
-
-Les usages les plus représentatifs de ce chapitre se retrouvent aujourd'hui dans :
-
-- [IA générative](../../cas-d-usage/services/ia-generative), pour la mémoire des serveurs et des accélérateurs ;
-- [Serveurs](../equipements/serveurs), quand la mémoire fait partie d'une composition complète ;
-- [Cloud](../../cas-d-usage/environnements/cloud), quand la mémoire est ramenée à des unités de type `Go RAM.h`.
-
-## Références
-
-### Données mobilisées
-
-- `digital4better/data/data/hardware/memories.*`
-- `digital4better/data/data/hardware/accelerators.*`
-- `digital4better/data/data/hardware/servers.*`
-
-### Sources
-
-- `inputs/md/green-cloud-computing-uba-2021.md`
-- corpus `inputs/md`
+- [Boavizta RAM methodology](https://doc.api.boavizta.org/Explanations/components/ram/)
+- Green Cloud Computing, UBA, 2021 (`inputs/md/green-cloud-computing-uba-2021.md`)
+- [Cloud Carbon Footprint — Methodology](https://www.cloudcarbonfootprint.org/docs/methodology/)
+- `inputs/md/les-impacts-environnementaux-des-equipements-informatiques.md` (Resilio/Aguaro, décomposition par composant)
+- `inputs/md/more-than-carbon-cradle-to-grave-environmental-impacts-of-genai-training-on-the-nvidia-a100-gpu.md` (données HBM)
+- [digital4better/data](https://github.com/digital4better/data)

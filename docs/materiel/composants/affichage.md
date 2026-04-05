@@ -2,100 +2,95 @@
 
 ## Résumé
 
-Cette section couvre les écrans et sous-ensembles d'affichage utilisés dans les terminaux numériques, qu'ils soient intégrés ou externes. Elle modélise principalement :
+L'écran est un composant souvent sous-estimé dans les évaluations, alors qu'il peut représenter 20 à 40 % de l'impact intrinsèque d'un terminal et la majorité de sa consommation opérationnelle. Son impact dépend principalement de la **surface** (qui croît avec le carré de la diagonale), de la **technologie** (LCD, OLED, E-ink) et des **matériaux critiques** qu'il mobilise (indium pour le LCD, composés organiques pour l'OLED).
 
-- l'impact intrinsèque lié à la fabrication des dalles et de leurs sous-ensembles ;
-- l'impact opérationnel lié à la consommation électrique en usage ;
-- le niveau de granularité réellement atteignable selon la technologie connue.
+## D'où vient l'impact
 
-L'affichage est un composant souvent sous-estimé alors qu'il combine des effets matériaux importants et des consommations qui varient fortement avec la taille, la technologie et les conditions d'usage.
+### Structure d'un écran
 
-## Caractéristiques
+```mermaid
+flowchart TD
+    subgraph LCD
+        BL[Rétroéclairage LED] --> LC[Dalle à cristaux liquides<br>couche ITO + filtres]
+        LC --> G1[Verre de protection]
+    end
+    subgraph OLED
+        O[Couche organique émissive<br>pixels auto-éclairés] --> G2[Verre ou plastique<br>flexible]
+    end
 
-| Caractéristique | Unité | Valeur par défaut | Plage ou cas typiques | Description |
-| --- | --- | --- | --- | --- |
-| Technologie d'affichage | - | archétype générique | `LCD`, `LED`, `OLED`, variantes proches | Détermine les matériaux dominants et le profil de consommation |
-| Taille d'écran | pouces ou cm | valeur d'archétype | smartphone à grand moniteur | Variable structurante pour la fabrication et l'usage |
-| Résolution | pixels | résolution standard de gamme | HD à très haute résolution | Sert à qualifier la densité et le niveau de performance |
-| Luminosité d'usage | % ou nits | usage moyen | faible à très élevé | Influence directement la consommation réelle |
-| Taux de rafraîchissement | Hz | valeur standard | 60 Hz à plus de 120 Hz | Peut influencer la consommation en usage |
-| Nombre d'écrans par équipement | - | `1` | 1 à plusieurs | Utile pour les postes multi-écrans ou les écrans externes |
+    style BL fill:#264653,color:#fff
+    style LC fill:#2a9d8f,color:#fff
+    style O fill:#e76f51,color:#fff
+```
 
-## Principe de modélisation
+| Élément | LCD | OLED | Impact principal |
+|---|---|---|---|
+| **Substrat verre** | Oui (2 plaques) | Oui (1 plaque ou plastique) | GWP (énergie de fusion) |
+| **ITO (oxyde d'indium-étain)** | Oui (couche conductrice) | Oui | ADPe (indium = métal critique) |
+| **Rétroéclairage** | Oui (LEDs) | Non (pixels auto-émissifs) | Consommation opérationnelle |
+| **Couche organique** | Non | Oui (composés organiques) | Procédés chimiques, CTUe |
+| **Polariseurs, filtres** | Oui | Oui | GWP, chimie |
 
-La méthode retient une approche mixte :
+## Modèle paramétrique
 
-- `bottom-up` quand la technologie, la taille ou la référence d'écran sont connues ;
-- plus forfaitaire quand seul un type de terminal ou une gamme d'équipement est connue.
+### Formule d'impact intrinsèque
 
-Dans la pratique, l'impact intrinsèque est souvent corrélé à la surface, à la technologie de dalle et au niveau de performance visuelle. L'impact opérationnel dépend ensuite fortement des conditions d'usage : luminosité, durée d'allumage, fréquence de rafraîchissement et type d'équipement hôte.
+L'impact est proportionnel à la surface d'écran, avec un coefficient par technologie :
 
-Quand l'écran n'est pas documenté séparément, il est rattaché à l'archétype du terminal ou du poste de travail.
+$$
+\begin{aligned}
+&I_{emb} = S_{ecran} \times C_{techno} + C_{base} \\
+\text{avec} \\
+&S_{ecran} = d^2 \times 2{,}896 \htmlClass{unit}{[cm²]} \text{ (pour un ratio 16:9)} \\
+&d = \text{Diagonale de l'écran} \htmlClass{unit}{[pouces]} \\
+&C_{techno} = \text{Coefficient par cm² selon la technologie} \\
+&C_{base} = \text{Base fixe (driver, connecteurs, cadre)}
+\end{aligned}
+$$
 
-## Impact intrinsèque (fabrication)
+:::note[Surface vs diagonale]
+La surface d'un écran 16:9 est $S = d^2 \times \frac{16 \times 9}{16^2 + 9^2} \times 2{,}54^2 \approx d^2 \times 2{,}896$ cm². Un écran de 27" a une surface 7 fois plus grande qu'un écran de 6,5" — et un impact intrinsèque proportionnel.
+:::
 
-### Méthode de calcul
+### Coefficients par technologie
 
-L'impact intrinsèque de l'affichage peut être estimé :
+| Technologie | $C_{techno}$ (kgCO₂e/cm²) | $C_{base}$ (kgCO₂e) | Puissance typique (W/cm²) | Sources |
+|---|---|---|---|---|
+| **LCD / IPS** | 0,07 | 3,0 | 0,003 | Base Empreinte, données constructeurs Dell/HP[^1] |
+| **OLED / AMOLED** | 0,12 | 2,5 | 0,002 | Estimations industrielles, packaging plus complexe[^2] |
+| **E-ink** | 0,03 | 1,5 | ~0 en statique | Procédé plus simple, pas de rétroéclairage |
 
-- à partir d'un facteur constructeur ou d'un facteur de référence par type de dalle ;
-- à partir d'un archétype combinant taille, technologie et catégorie d'équipement ;
-- ou comme sous-partie de l'impact intrinsèque global du terminal quand la décomposition détaillée n'est pas disponible.
+[^1]: Estimations dérivées de la décomposition des rapports PCF constructeurs (Dell Latitude, HP EliteBook) via Resilio/Aguaro (`inputs/md/les-impacts-environnementaux-des-equipements-informatiques.md`).
+[^2]: L'OLED a un impact de fabrication plus élevé (dépôt sous vide de couches organiques) mais consomme moins à l'usage car les pixels noirs n'émettent rien.
 
-Le modèle peut donc être :
+### Ordres de grandeur
 
-- `variable`, quand la taille, la technologie et éventuellement la résolution sont connues ;
-- `forfaitaire`, quand seul un type de terminal ou d'écran est disponible.
+| Écran | Diagonale | Surface | GWP fabrication | Puissance (LCD) |
+|---|---|---|---|---|
+| Smartphone | 6,5" | 122 cm² | ~12 kg CO₂ eq. | 0,4 W |
+| Tablette | 11" | 350 cm² | ~27 kg CO₂ eq. | 1,1 W |
+| Laptop | 14" | 567 cm² | ~43 kg CO₂ eq. | 1,7 W |
+| Moniteur bureau | 27" | 2 112 cm² | ~151 kg CO₂ eq. | 6,3 W |
 
-### Complétion automatique
+:::note[Le moniteur, un poste majeur]
+Un moniteur 27" a un impact de fabrication comparable à celui d'un laptop complet. Pour un poste fixe multi-écrans, les écrans peuvent représenter plus de 50 % de l'impact intrinsèque total.
+:::
 
-Quand certaines caractéristiques manquent, la méthode recommande de compléter dans cet ordre :
+## Impact opérationnel
 
-1. référence d'écran ou caractéristiques observées ;
-2. écran voisin de même technologie et même taille ;
-3. archétype de dalle cohérent avec le type d'équipement ;
-4. valeur médiane documentée dans le registre d'hypothèses.
+### Consommation électrique
 
-La complétion doit rester prudente, notamment quand la technologie exacte de dalle n'est pas connue.
+$$
+\begin{aligned}
+&P_{ecran} = S_{ecran} \times p_{techno} \\
+\text{avec} \\
+&p_{LCD} = 0{,}003 \text{ W/cm²} \\
+&p_{OLED} = 0{,}002 \text{ W/cm² (moyenne, dépend du contenu affiché)} \\
+&p_{E\text{-}ink} \approx 0 \text{ en affichage statique}
+\end{aligned}
+$$
 
-### Fin de vie
-
-La fin de vie est rarement modélisée isolément au niveau du seul écran. Elle est le plus souvent intégrée dans les facteurs de fabrication agrégés. Quand ce n'est pas le cas, l'absence de modélisation spécifique doit être signalée.
-
-## Impact opérationnel (usage)
-
-### Profil de consommation
-
-La consommation d'usage dépend surtout :
-
-- de la taille d'écran ;
-- de la technologie de dalle ;
-- de la luminosité réelle ;
-- de la durée d'activation ;
-- du taux de rafraîchissement quand il est élevé.
-
-Pour un usage courant, la méthode recommande au minimum de distinguer :
-
-- un profil sobre ou faible luminosité ;
-- un profil moyen ;
-- un profil soutenu, par exemple pleine luminosité ou usage vidéo prolongé.
-
-### Facteurs d'ajustement
-
-Les principaux facteurs d'ajustement sont :
-
-- le temps réel d'allumage ;
-- la luminosité moyenne observée ou supposée ;
-- le partage entre usages quand le terminal sert à plusieurs services ;
-- l'environnement d'usage, par exemple bureau fixe, mobilité ou affichage prolongé.
-
-## Allocation et annualisation
-
-L'affichage est en général alloué via l'équipement qui le porte, sauf dans les cas d'écran externe distinctement inventorié. Son impact est :
-
-- annualisé sur la durée de vie de l'équipement ou de l'écran ;
-- réparti entre usages selon le temps d'utilisation ou la part d'usage du terminal ;
-- cohérent avec les règles d'allocation définies dans [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts).
+La consommation d'un écran OLED dépend fortement du contenu affiché (les pixels noirs ne consomment rien). Un mode sombre peut réduire la consommation de 30 à 60 % sur OLED, mais pas sur LCD (le rétroéclairage reste allumé).
 
 ## Simulateur
 
@@ -103,43 +98,22 @@ import { DisplayPlayGround } from '@site/src/components/display-playground';
 
 <DisplayPlayGround lang="fr" />
 
-## Hypothèses & limites
+## Hypothèses et limites
 
-### Hypothèses retenues
+- Le modèle par surface est une simplification. En réalité, la résolution, la densité de pixels et la technologie de rétroéclairage (LED edge, full array, mini-LED) influencent aussi l'impact.
+- Les coefficients OLED sont des estimations ; les données constructeurs détaillées sur les dalles OLED sont encore rares.
+- L'indium (ITO) est un matériau critique présent dans les deux technologies ; son impact sur l'ADPe n'est pas encore capturé par un coefficient dédié dans ce modèle.
+- La consommation OLED est très variable selon le contenu affiché ; la valeur par cm² est une moyenne.
 
-- la taille et la technologie sont les deux variables les plus structurantes quand la référence exacte n'est pas connue ;
-- l'affichage est souvent déjà partiellement embarqué dans les facteurs de certains terminaux ;
-- un archétype par gamme d'équipement est préférable à une estimation arbitraire.
+## Données mobilisées
 
-### Limitations connues
+- `digital4better/data` → `data/equipment/*` (facteurs par type de terminal incluant l'écran)
+- Décompositions constructeurs (Dell, HP, Apple) via rapports PCF
 
-- les données publiques détaillées restent inégales selon les technologies de dalle ;
-- l'impact des réglages dynamiques de luminosité ou de fréquence est rarement observé finement ;
-- l'affichage est souvent mal isolé dans les données constructeur des équipements complets.
+## Sources
 
-### Perspectives
-
-- mieux distinguer les technologies de dalle dans le référentiel D4B ;
-- affiner les profils d'usage selon les contextes visuels ;
-- proposer un simulateur quand les paramètres d'entrée les plus utiles seront stabilisés.
-
-## Application
-
-Les applications les plus naturelles de ce chapitre se trouvent aujourd'hui dans :
-
-- [Terminaux](../equipements/terminaux), quand l'écran fait partie intégrante de l'équipement ;
-- [Service web](../../cas-d-usage/services/service-web), quand la part terminal devient significative ;
-- [Mobile](../../cas-d-usage/services/mobile), où l'écran pèse à la fois sur l'impact intrinsèque et sur l'usage.
-
-## Références
-
-### Données mobilisées
-
-- `digital4better/data/data/hardware/screens.*`
-- `digital4better/data/data/hardware/laptops.*`
-- `digital4better/data/data/hardware/mobiles.*`
-
-### Sources
-
-- corpus `inputs/md`
-- littérature de référence sur les écrans et displays citée dans le corpus
+- Base Empreinte ADEME (facteurs écran)
+- `inputs/md/les-impacts-environnementaux-des-equipements-informatiques.md` (Resilio/Aguaro)
+- Rapports PCF constructeurs (Dell, HP, Apple)
+- [Boavizta Documentation](https://doc.api.boavizta.org/)
+- [digital4better/data](https://github.com/digital4better/data)

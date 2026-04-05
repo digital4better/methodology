@@ -2,90 +2,125 @@
 
 ## Résumé
 
-Cette section couvre les principales technologies de stockage mobilisées dans les équipements et infrastructures numériques : `SSD`, `NVMe`, `eMMC`, stockage flash embarqué et `HDD`. Elle modélise :
+Le stockage est l'un des composants où la technologie change le plus radicalement l'impact. Un SSD de 1 To représente environ 160 kg CO₂ eq. de fabrication, contre ~31 kg CO₂ eq. pour un HDD, soit un facteur 5. En revanche, le HDD consomme environ 2 fois moins d'énergie en fonctionnement mais occupe plus de volume et offre moins de performance.
 
-- l'impact intrinsèque lié à la fabrication et à la capacité ;
-- l'impact opérationnel lié à la consommation électrique ;
-- les règles de passage du composant à l'usage, notamment en contexte d'hébergement.
+## D'où vient l'impact
 
-Le niveau de granularité dépend de la technologie connue, de la capacité et du contexte d'usage.
+### SSD (Solid State Drive)
 
-## Caractéristiques
+Un SSD est composé de puces mémoire NAND Flash. L'impact de fabrication vient des mêmes procédés que les semi-conducteurs : salle blanche, photolithographie multi-couches, gravure. La capacité dépend du nombre de couches NAND empilées (96 à 256+ couches pour les générations actuelles) et de la densité par couche.
 
-| Caractéristique | Unité | Valeur par défaut | Plage ou cas typiques | Description |
-| --- | --- | --- | --- | --- |
-| Technologie de stockage | - | archétype générique | `SSD`, `NVMe`, `eMMC`, `HDD`, flash embarqué | Détermine la logique de modélisation principale |
-| Capacité installée | Go ou To | capacité d'archétype | quelques Go à plusieurs To | Variable centrale du calcul |
-| Type d'intégration | - | intégré à l'équipement | embarqué, remplaçable, stockage serveur | Sert à qualifier le contexte |
-| Nombre d'unités | - | `1` | 1 à plusieurs dizaines | Utile pour les serveurs ou baies |
-| Redondance ou réplication | - | non renseignée | aucune à multiple | Très importante en infrastructure |
-| Taux de remplissage | % | selon hypothèse documentée | 0 à 100 % | Influe sur l'allocation dans les services partagés |
+```mermaid
+flowchart LR
+    W[Wafer NAND] --> D[Dies NAND<br>96-256 couches]
+    D --> A[Assemblage<br>contrôleur + dies]
+    A --> S[SSD complet<br>PCB + boîtier]
 
-## Principe de modélisation
+    style W fill:#264653,color:#fff
+    style D fill:#2a9d8f,color:#fff
+    style A fill:#e9c46a,color:#000
+    style S fill:#f4a261,color:#000
+```
 
-La méthode distingue d'abord les technologies, car un `SSD` et un `HDD` n'ont ni les mêmes impacts de fabrication, ni les mêmes profils de consommation. Elle privilégie une approche par capacité et par technologie, puis affine selon le contexte :
+### HDD (Hard Disk Drive)
 
-- stockage embarqué d'un terminal ;
-- stockage d'un serveur ;
-- stockage mutualisé d'une infrastructure ou d'un service.
+Un HDD est un dispositif mécanique : plateaux magnétiques en rotation, têtes de lecture. L'impact de fabrication vient principalement des matériaux (aluminium, verre, métaux de précision) et de l'assemblage mécanique, pas des procédés semi-conducteurs. C'est pourquoi l'impact est quasi fixe par unité, peu dépendant de la capacité.
 
-Quand les données sont trop pauvres, elle recourt à des facteurs forfaitaires par Go et par technologie, en gardant visible le niveau d'incertitude.
+## Modèle paramétrique
 
-## Impact intrinsèque (fabrication)
+### SSD — modèle Boavizta (basé sur la surface de die NAND)
 
-### Méthode de calcul
+$$
+\begin{aligned}
+&I_{emb}^{SSD} = \left(\frac{C}{D_{NAND}} \times C_{die} + C_{base}\right) \times N_{drives} \\
+\text{avec} \\
+&C = \text{Capacité par drive} \htmlClass{unit}{[Go]} \\
+&D_{NAND} = \text{Densité NAND} \htmlClass{unit}{[Go/cm²]} \approx 48{,}5 \\
+&C_{die} = \text{Coefficient par cm² de die NAND} \\
+&C_{base} = \text{Base fixe (contrôleur, PCB, boîtier)} \\
+&N_{drives} = \text{Nombre de drives}
+\end{aligned}
+$$
 
-L'impact intrinsèque du stockage est généralement estimé en fonction :
+### Coefficients SSD (Boavizta)
 
-- de la technologie ;
-- de la capacité ;
-- éventuellement du type d'intégration ou de l'usage professionnel / serveur.
+| Indicateur | $C_{die}$ (par cm²) | $C_{base}$ (par drive) | Unité | Source |
+|---|---|---|---|---|
+| **GWP** | 2,20 | 6,34 | kgCO₂ eq. | Boavizta[^1] |
+| **ADPe** | 6,30E-05 | 5,63E-04 | kg Sb eq. | Boavizta[^1] |
+| **PE** | 27,30 | 73,98 | MJ | Boavizta[^1] |
 
-Dans les cas les plus simples, un facteur d'impact par Go est utilisé. Dans les cas plus détaillés, des archétypes ou facteurs spécifiques par type de stockage sont mobilisés.
+[^1]: [Boavizta SSD methodology](https://doc.api.boavizta.org/Explanations/components/ssd/), mêmes coefficients de die que la RAM (NAND et DRAM partagent des procédés proches).
 
-### Complétion automatique
+:::note[Densité NAND]
+La densité de 48,5 Go/cm² est une moyenne pour des NAND 96-128 couches TLC. Les générations plus récentes (176-256 couches) ont une densité plus élevée, ce qui réduit l'impact par Go. Ce paramètre est ajustable dans le simulateur.
+:::
 
-Quand toutes les caractéristiques ne sont pas connues, la méthode recommande :
+### HDD — modèle forfaitaire (Boavizta)
 
-1. de conserver la technologie observée si elle est connue ;
-2. d'inférer la capacité ou l'archétype depuis l'équipement support ;
-3. d'utiliser un facteur générique par Go pour la bonne technologie ;
-4. de documenter explicitement les hypothèses de redondance quand le stockage est mutualisé.
+Le HDD est modélisé avec un impact forfaitaire par unité, indépendant de la capacité :
 
-### Fin de vie
+| Indicateur | Valeur par drive | Unité | Source |
+|---|---|---|---|
+| **GWP** | 31,11 | kgCO₂ eq. | Boavizta[^2] |
+| **ADPe** | 2,50E-04 | kg Sb eq. | Boavizta[^2] |
+| **PE** | 276,00 | MJ | Boavizta[^2] |
 
-La fin de vie est généralement incluse dans les facteurs intrinsèques disponibles. Quand ce n'est pas le cas, elle reste rarement modélisée séparément au niveau du composant seul.
+[^2]: [Boavizta HDD methodology](https://doc.api.boavizta.org/Explanations/components/hdd/). Impact quasi fixe car dominé par les composants mécaniques, pas par la surface de silicium.
 
-## Impact opérationnel (usage)
+### Storage Embodied Factor (SEF)
 
-### Profil de consommation
+Tannu & Nair (2023) ont analysé 94 rapports ACV constructeurs (Apple, Dell, HP, Seagate, Fujitsu) et proposent le concept de **Storage Embodied Factor** (SEF) — le ratio entre l'empreinte carbone et la capacité[^3] :
 
-Le profil de consommation dépend fortement de la technologie :
+| Technologie | SEF moyen | Unité | Source |
+|---|---|---|---|
+| **SSD** | 0,16 | kg CO₂ eq. / Go | Tannu & Nair 2023 (94 LCA reports) |
+| **HDD** | ~0,02 | kg CO₂ eq. / Go | Tannu & Nair 2023 (24 LCA reports) |
 
-- les stockages flash et `SSD` ont souvent une consommation plus faible mais non nulle, liée à la capacité et à l'activité ;
-- les `HDD` présentent des profils différents, avec une sensibilité plus visible aux régimes d'activité mécanique ;
-- en contexte mutualisé, le temps d'activation et le niveau de réplication influencent fortement le résultat.
+[^3]: Tannu & Nair, 2023. [The Dirty Secret of SSDs: Embodied Carbon](https://arxiv.org/abs/2207.10793).
 
-Quand aucune télémétrie précise n'existe, le modèle s'appuie sur une consommation moyenne liée à la capacité, à la durée d'utilisation et au contexte d'hébergement.
+### Comparaison SSD vs HDD sur 5 ans
+
+Données issues de Tannu & Nair 2023, Table 1, pour 1 To (facteur d'émission US : 0,7 kgCO₂/kWh) :
+
+| Paramètre | SSD 1 To | HDD 1 To | Ratio SSD/HDD |
+|---|---|---|---|
+| **CAPEX (fabrication)** | 160 kg CO₂ eq. | 20 kg CO₂ eq. | ×8 |
+| **Énergie sur 5 ans** | 56,9 kWh | 183,9 kWh | ×0,3 |
+| **OPEX (usage, 5 ans)** | 24,6 kg CO₂ eq. | 79,6 kg CO₂ eq. | ×0,3 |
+| **Total 5 ans** | **184 kg CO₂ eq.** | **99,6 kg CO₂ eq.** | ×1,8 |
+| **Puissance moyenne** | 1,3 W | 4,2 W | ×0,3 |
+
+:::note[Le paradoxe du SSD]
+Le SSD est plus performant et moins énergivore que le HDD en fonctionnement, mais son impact de fabrication est **8 fois plus élevé**. Sur 5 ans avec un mix US carboné, le total SSD reste **1,8 fois plus élevé** que le HDD. En France (mix bas carbone), cet écart se creuse encore car l'avantage opérationnel du SSD pèse moins.
+:::
+
+## Impact opérationnel
+
+### Consommation électrique
+
+$$
+\begin{aligned}
+&P_{storage} = \begin{cases}
+1{,}2 \times 10^{-3} \times V_{storage} & \text{si SSD} \\
+0{,}65 \times 10^{-3} \times V_{storage} & \text{si HDD}
+\end{cases} \htmlClass{unit}{[kW]}
+\end{aligned}
+$$
+
+Où $V_{storage}$ est le volume de stockage en To. Source : Cloud Jewels / Cloud Carbon Footprint.
+
+| Configuration | Puissance SSD | Puissance HDD |
+|---|---|---|
+| 1 To | 1,2 W | 0,65 W |
+| 4 To | 4,8 W | 2,6 W |
+| 16 To | 19,2 W | 10,4 W |
 
 ### Facteurs d'ajustement
 
-Les ajustements les plus fréquents sont :
-
-- la durée d'occupation ou de stockage ;
-- le taux de remplissage ;
-- la redondance, la réplication ou les sauvegardes ;
-- le `PUE` du site d'hébergement si le stockage est en datacenter.
-
-## Allocation et annualisation
-
-Le stockage se prête bien à une allocation par capacité et par durée. Selon les cas, l'impact peut être réparti :
-
-- au prorata de la capacité occupée ;
-- au prorata de la durée de conservation ;
-- ou au prorata d'un volume répliqué quand des copies sont maintenues.
-
-L'annualisation reste indispensable pour éviter de comparer un stockage persistant de long terme à un usage ponctuel sans base commune.
+- **Redondance** : un stockage RAID-1 double l'impact intrinsèque et opérationnel. Un RAID-5 sur N disques ajoute ~1/N d'overhead.
+- **Réplication** : le stockage cloud répliqué 3 fois multiplie l'impact par 3.
+- **PUE** : en datacenter, multiplier la consommation par le PUE du site.
 
 ## Simulateur
 
@@ -93,47 +128,22 @@ import { StoragePlayGround } from '@site/src/components/storage-playground';
 
 <StoragePlayGround lang="fr" />
 
-## Hypothèses & limites
+## Hypothèses et limites
 
-### Hypothèses retenues
+- Le modèle SSD Boavizta utilise les mêmes coefficients de die que la DRAM, car NAND Flash et DRAM partagent des procédés semi-conducteurs proches. Les différences de couches et de packaging sont captées par la densité.
+- Le modèle HDD est forfaitaire par unité. Un HDD de 1 To et un HDD de 16 To ont le même impact intrinsèque, ce qui est une simplification (le nombre de plateaux varie).
+- Les stratégies de redondance et réplication peuvent multiplier l'impact réel par 2 à 3 ; elles doivent être documentées dans les évaluations.
+- La densité NAND évolue rapidement ; le paramètre doit être mis à jour régulièrement.
 
-- la technologie et la capacité sont les variables les plus structurantes ;
-- les facteurs forfaitaires par Go restent utiles quand la granularité est faible ;
-- le contexte d'usage, notamment la redondance, peut modifier fortement le résultat ;
-- un stockage mutualisé ne doit pas être alloué comme un disque dédié si ce n'est pas le cas.
+## Données mobilisées
 
-### Limitations connues
+- Coefficients Boavizta (SSD die model, HDD flat)
+- `digital4better/data` → `data/equipment/*`
 
-- les forfaits par Go ne capturent pas toutes les différences de génération ou de gamme ;
-- les stratégies de réplication et de sauvegarde sont souvent mal documentées ;
-- le lien entre capacité installée et capacité réellement utile peut être incertain ;
-- certaines infrastructures masquent les caractéristiques réelles du stockage sous-jacent.
+## Sources
 
-### Perspectives
-
-- enrichir les données D4B selon les technologies de stockage ;
-- mieux traiter les cas de stockage mutualisé et multi-répliqué ;
-- préciser les profils d'usage pour les contextes cloud et datacenter ;
-- proposer un simulateur lorsque les paramètres d'entrée les plus utiles auront été stabilisés.
-
-## Application
-
-Les applications les plus immédiates de ce chapitre se trouvent dans :
-
-- [Cloud](../../cas-d-usage/environnements/cloud), pour les unités de type `Go SSD.h` ou `Go HDD.h` ;
-- [Serveurs](../equipements/serveurs), quand le stockage fait partie d'une composition serveur ;
-- [Mail](../../cas-d-usage/services/mail), quand le stockage persistant des messages devient significatif.
-
-## Références
-
-### Données mobilisées
-
-- `digital4better/data/data/hardware/storages.*`
-- `digital4better/data/data/hardware/servers.*`
-- `digital4better/data/data/equipment/*`
-
-### Sources
-
-- `inputs/md/the-dirty-secret-of-ssds-embodied-carbon.md`
-- `inputs/md/green-cloud-computing-uba-2021.md`
-- corpus `inputs/md`
+- [Boavizta SSD methodology](https://doc.api.boavizta.org/Explanations/components/ssd/)
+- [Boavizta HDD methodology](https://doc.api.boavizta.org/Explanations/components/hdd/)
+- [Cloud Carbon Footprint — Methodology](https://www.cloudcarbonfootprint.org/docs/methodology/)
+- Tannu & Nair, 2023. [The Dirty Secret of SSDs: Embodied Carbon](https://arxiv.org/abs/2207.10793)
+- Green Cloud Computing, UBA, 2021
