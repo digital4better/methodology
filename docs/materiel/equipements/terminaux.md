@@ -138,9 +138,11 @@ Pour les terminaux mobiles (smartphone, tablette), l'impact intrinsèque domine 
 
 ## Simulateur
 
-import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+Le simulateur ci-dessous assemble les modeles parametriques de chaque composant (CPU, RAM, stockage, ecran, batterie, structure) pour calculer l'impact total d'un terminal. Les predefinis (smartphone, laptop, desktop...) chargent des configurations types modifiables.
 
-<EquipmentPlayGround lang="fr" filter={["smartphone", "tablet", "laptop", "desktop_personal", "desktop_professional", "screen", "computer"]} />
+import { TerminalPlayGround } from '@site/src/components/terminal-playground';
+
+<TerminalPlayGround lang="fr" />
 
 ## Hypothèses & limites
 

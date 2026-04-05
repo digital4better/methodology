@@ -143,9 +143,11 @@ L'impact opérationnel des VM doit intégrer le PUE du datacenter (1,58 par déf
 
 ## Simulateur
 
-import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+Le simulateur ci-dessous assemble les modeles parametriques de chaque composant pour calculer l'impact total d'un serveur. Les predefinis incluent des serveurs standards et des serveurs GPU (DGX H100).
 
-<EquipmentPlayGround lang="fr" filter={["vm_small", "vm_medium", "vm_large"]} />
+import { ServerPlayGround } from '@site/src/components/server-playground';
+
+<ServerPlayGround lang="fr" />
 
 ## Application
 

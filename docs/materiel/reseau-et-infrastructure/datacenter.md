@@ -173,9 +173,9 @@ L'annualisation s'appuie sur la durée de vie des équipements et sur la périod
 
 Le simulateur ci-dessous permet d'évaluer l'impact d'une ressource serveur virtualisée dans un datacenter, en faisant varier le PUE et le mix électrique du pays d'hébergement.
 
-import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+import { ServerPlayGround } from '@site/src/components/server-playground';
 
-<EquipmentPlayGround lang="fr" filter={["vm_small", "vm_medium", "vm_large"]} />
+<ServerPlayGround lang="fr" />
 
 ## Application
 

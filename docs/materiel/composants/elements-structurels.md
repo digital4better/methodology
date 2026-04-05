@@ -87,11 +87,11 @@ Les éléments structurels sont annualisés avec l'équipement auquel ils appart
 
 ## Simulateur
 
-L'impact des éléments structurels se lit au niveau de l'équipement complet :
+L'impact des elements structurels se lit au niveau de l'equipement complet. Le simulateur ci-dessous montre la part de chaque composant, y compris la structure :
 
-import { EquipmentPlayGround } from '@site/src/components/equipment-playground';
+import { TerminalPlayGround } from '@site/src/components/terminal-playground';
 
-<EquipmentPlayGround lang="fr" filter={["laptop", "desktop_professional", "smartphone"]} />
+<TerminalPlayGround lang="fr" />
 
 ## Hypothèses & limites
 
