@@ -122,7 +122,7 @@ Les règles générales sont décrites dans [Allocation et partage des impacts](
 
 Cette section est mobilisée directement dans :
 
-- [Réseau LAN](../reseau-et-infrastructure/reseau-lan), quand le réseau local est modélisé par inventaire ;
+- [Réseau LAN](../reseau-et-infrastructure/reseau), quand le réseau local est modélisé par inventaire ;
 - [Infrastructure d’hébergement](../../cas-d-usage/environnements/infrastructure-d-hebergement), quand les équipements réseau du site sont connus ;
 - [Service web](../../cas-d-usage/services/service-web), quand une part réseau locale ou d'entreprise est évaluée explicitement.
 

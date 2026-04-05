@@ -918,7 +918,7 @@ $$
 
 On dispose ici de la consommation électrique globale de l’utilisation du réseau, ce qui correspond à l’indicateur de flux attendu conformément à [Indicateurs environnementaux](../../fondations/indicateurs-environnementaux.md#indicateurs-pris-en-compte-dans-l-evaluation).
 
-On calcule l'énergie des 3 segments $SE_{elec_n}$ conformément aux dispositions vues dans [Réseau WAN](../../materiel/reseau-et-infrastructure/reseau-wan). Les mêmes valeurs par défaut sont appliquées que pour l’impact intrinsèque lorsqu’on ne connaît pas les ratios d’usages mobiles/fixes et mobile/desktop.
+On calcule l'énergie des 3 segments $SE_{elec_n}$ conformément aux dispositions vues dans [Réseau WAN](../../materiel/reseau-et-infrastructure/reseau). Les mêmes valeurs par défaut sont appliquées que pour l’impact intrinsèque lorsqu’on ne connaît pas les ratios d’usages mobiles/fixes et mobile/desktop.
 
 Sur les 3 segments, le réseau peut traverser potentiellement plusieurs pays différents et donc avec des mix électriques qui leur sont propres. La conversion de la consommation électrique en impact doit ainsi se faire de manière individuelle par segment, conformément à la formule fournie dans [Impacts de la consommation d’énergie](../../fondations/impacts-de-la-consommation-d-energie.md#conversion-consommation-electricite-impact-operationnel).
 

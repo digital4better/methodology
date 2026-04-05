@@ -96,7 +96,7 @@ Cette stratégie est pertinente quand :
 - les ressources individuelles ne sont pas observables ;
 - un facteur de système est plus fiable qu'une décomposition spéculative.
 
-Exemples : [Réseau WAN](../materiel/reseau-et-infrastructure/reseau-wan), [RAN](../materiel/reseau-et-infrastructure/reseau-d-acces-mobile-ran), certains [Datacenter](../materiel/reseau-et-infrastructure/datacenter).
+Exemples : [Réseau](../materiel/reseau-et-infrastructure/reseau) (LAN, WAN, RAN, CDN), certains [Datacenter](../materiel/reseau-et-infrastructure/datacenter).
 
 ### Inférence depuis l'usage
 

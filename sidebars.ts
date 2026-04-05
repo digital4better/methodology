@@ -79,10 +79,7 @@ const sidebars: SidebarsConfig = {
           type: 'category',
           label: 'Réseau et infrastructure',
           items: [
-            'materiel/reseau-et-infrastructure/reseau-d-acces-mobile-ran',
-            'materiel/reseau-et-infrastructure/reseau-lan',
-            'materiel/reseau-et-infrastructure/reseau-wan',
-            'materiel/reseau-et-infrastructure/cdn-et-caches',
+            'materiel/reseau-et-infrastructure/reseau',
             'materiel/reseau-et-infrastructure/datacenter',
           ],
         },
