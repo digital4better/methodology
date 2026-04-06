@@ -111,6 +111,18 @@ $$
 Les pertes de conversion sont souvent omises dans les évaluations, mais elles représentent 5 à 20 % d'énergie supplémentaire. Pour un datacenter, cette perte s'ajoute au PUE et à la charge IT.
 :::
 
+## Couverture des indicateurs
+
+| Indicateur | Pertinence pour la batterie | Couverture actuelle |
+|---|---|---|
+| **GWP** | Forte — énergie de fabrication des cellules et du pack | Modélisé (coefficient par kWh par chimie) |
+| **ADPe** | Très forte — cobalt, lithium, nickel = premiers contributeurs ADPe du numérique | Modélisé (coefficient par kWh par chimie) |
+| **WU** | Très forte — extraction du lithium par évaporation de saumures (~2 000 m³/t) | Modélisé (coefficient par kWh par chimie) |
+| **AP** | Forte — procédés de raffinage du nickel et du cobalt | Couvert via les facteurs d'équipement D4B |
+| **PM** | Modérée — extraction minière et transport | Couvert via les facteurs d'équipement D4B |
+| **CTUe, CTUh** | Forte — résidus miniers (cobalt, nickel), procédés chimiques | Pertinent mais pas encore isolé au niveau composant ; couvert via D4B |
+| **IR** | Faible à ce niveau — la batterie ne consomme pas d'électricité directement | Non pertinent pour le composant (pertinent pour la recharge) |
+
 ## Simulateur
 
 import { BatteryPlayGround } from '@site/src/components/battery-playground';

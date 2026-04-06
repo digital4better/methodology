@@ -28,7 +28,7 @@ Un HDD est un dispositif mécanique : plateaux magnétiques en rotation, têtes 
 
 ## Modèle paramétrique
 
-### SSD — modèle Boavizta (basé sur la surface de die NAND)
+### SSD — modèle par surface de die NAND
 
 $$
 \begin{aligned}
@@ -42,31 +42,31 @@ $$
 \end{aligned}
 $$
 
-### Coefficients SSD (Boavizta)
+### Coefficients SSD
 
 | Indicateur | $C_{die}$ (par cm²) | $C_{base}$ (par drive) | Unité | Source |
 |---|---|---|---|---|
-| **GWP** | 2,20 | 6,34 | kgCO₂ eq. | Boavizta[^1] |
-| **ADPe** | 6,30E-05 | 5,63E-04 | kg Sb eq. | Boavizta[^1] |
-| **PE** | 27,30 | 73,98 | MJ | Boavizta[^1] |
+| **GWP** | 2,20 | 6,34 | kgCO₂ eq. | Green Cloud Computing (UBA 2021)[^1] |
+| **ADPe** | 6,30E-05 | 5,63E-04 | kg Sb eq. | Green Cloud Computing (UBA 2021)[^1] |
+| **PE** | 27,30 | 73,98 | MJ | Green Cloud Computing (UBA 2021)[^1] |
 
-[^1]: [Boavizta SSD methodology](https://doc.api.boavizta.org/Explanations/components/ssd/), mêmes coefficients de die que la RAM (NAND et DRAM partagent des procédés proches).
+[^1]: Green Cloud Computing, UBA, 2021 — mêmes coefficients de die que la DRAM (NAND et DRAM partagent des procédés semi-conducteurs proches). Implémentés dans [Boavizta SSD](https://doc.api.boavizta.org/Explanations/components/ssd/) et [Boavizta HDD](https://doc.api.boavizta.org/Explanations/components/hdd/).
 
 :::note[Densité NAND]
 La densité de 48,5 Go/cm² est une moyenne pour des NAND 96-128 couches TLC. Les générations plus récentes (176-256 couches) ont une densité plus élevée, ce qui réduit l'impact par Go. Ce paramètre est ajustable dans le simulateur.
 :::
 
-### HDD — modèle forfaitaire (Boavizta)
+### HDD — modèle forfaitaire
 
 Le HDD est modélisé avec un impact forfaitaire par unité, indépendant de la capacité :
 
 | Indicateur | Valeur par drive | Unité | Source |
 |---|---|---|---|
-| **GWP** | 31,11 | kgCO₂ eq. | Boavizta[^2] |
-| **ADPe** | 2,50E-04 | kg Sb eq. | Boavizta[^2] |
-| **PE** | 276,00 | MJ | Boavizta[^2] |
+| **GWP** | 31,11 | kgCO₂ eq. | Green Cloud Computing (UBA 2021)[^1] |
+| **ADPe** | 2,50E-04 | kg Sb eq. | Green Cloud Computing (UBA 2021)[^1] |
+| **PE** | 276,00 | MJ | Green Cloud Computing (UBA 2021)[^1] |
 
-[^2]: [Boavizta HDD methodology](https://doc.api.boavizta.org/Explanations/components/hdd/). Impact quasi fixe car dominé par les composants mécaniques, pas par la surface de silicium.
+Impact quasi fixe par unité car dominé par les composants mécaniques (plateaux, moteur, tête de lecture), pas par la surface de silicium.
 
 ### Storage Embodied Factor (SEF)
 
@@ -122,6 +122,18 @@ Où $V_{storage}$ est le volume de stockage en To. Source : Cloud Jewels / Cloud
 - **Réplication** : le stockage cloud répliqué 3 fois multiplie l'impact par 3.
 - **PUE** : en datacenter, multiplier la consommation par le PUE du site.
 
+## Couverture des indicateurs
+
+| Indicateur | SSD | HDD | Note |
+|---|---|---|---|
+| **GWP** | Forte (fabrication NAND énergivore) | Modérée (assemblage mécanique) | Le SSD a un GWP/Go **8x** plus élevé que le HDD (Tannu & Nair 2023) |
+| **ADPe** | Modérée (matériaux de la puce) | Faible | Couvert par les coefficients par composant |
+| **PE** | Forte (énergie primaire cumulée de fabrication) | Modérée | Coefficient documenté |
+| **WU** | Forte (eau ultrapure pour la fabrication NAND) | Faible | Estimable via les données semi-conducteurs |
+| **AP, PM** | Modéré (procédés de gravure) | Faible | Couvert via les facteurs d'équipement D4B |
+| **IR** | Faible à ce niveau | Faible | Dominé par le mix électrique d'usage |
+| **CTUe, CTUh** | Pertinent (chimie de procédé) mais peu stabilisé | Faible | Couvert dans les facteurs d'équipement D4B |
+
 ## Simulateur
 
 import { StoragePlayGround } from '@site/src/components/storage-playground';
@@ -142,8 +154,8 @@ import { StoragePlayGround } from '@site/src/components/storage-playground';
 
 ## Sources
 
-- [Boavizta SSD methodology](https://doc.api.boavizta.org/Explanations/components/ssd/)
-- [Boavizta HDD methodology](https://doc.api.boavizta.org/Explanations/components/hdd/)
-- [Cloud Carbon Footprint — Methodology](https://www.cloudcarbonfootprint.org/docs/methodology/)
-- Tannu & Nair, 2023. [The Dirty Secret of SSDs: Embodied Carbon](https://arxiv.org/abs/2207.10793)
-- Green Cloud Computing, UBA, 2021
+- Green Cloud Computing, UBA, 2021 (coefficients par cm² de die, modèle forfaitaire HDD)
+- Tannu & Nair, 2023. [The Dirty Secret of SSDs: Embodied Carbon](https://arxiv.org/abs/2207.10793) (SEF : 0,16 kgCO₂e/Go SSD, analyse de 94 LCA)
+- [Cloud Carbon Footprint — Methodology](https://www.cloudcarbonfootprint.org/docs/methodology/) (coefficients de puissance par To)
+- [Boavizta Documentation](https://doc.api.boavizta.org/) (implémentation des coefficients Green Cloud Computing)
+- [digital4better/data](https://github.com/digital4better/data)

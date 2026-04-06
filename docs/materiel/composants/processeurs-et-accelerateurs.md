@@ -67,7 +67,7 @@ Pour les autres indicateurs, les coefficients sont :
 | **ADPe** | 5,87E-09 | 2,04E-02 | kg Sb eq. |
 | **PE** | 0,265 | 156,0 | MJ |
 
-Source : [Boavizta](https://doc.api.boavizta.org/Explanations/components/cpu/), coefficients dérivés de Green Cloud Computing (UBA 2021). Facteurs de noeud dérivés d'IMEC NetZero.
+Source : Green Cloud Computing (UBA 2021), implémentés dans [Boavizta CPU](https://doc.api.boavizta.org/Explanations/components/cpu/). Facteurs de noeud dérivés des publications IMEC NetZero sur l'intensité énergétique par étape de procédé.
 
 ### Facteurs de noeud technologique
 
@@ -95,6 +95,19 @@ Un GPU datacenter (die 800 mm², 5 nm, packaging 2.5D) aura un impact intrinsèq
 | GPU NVIDIA H100 | 814 mm² | 5 nm | ~25 kg CO₂ eq. |
 | GPU NVIDIA B200 | ~1 000 mm² | 4 nm | ~38 kg CO₂ eq. |
 | CPU laptop (mobile) | ~100 mm² | 7 nm | ~2,1 kg CO₂ eq. |
+
+### Couverture des indicateurs
+
+| Indicateur | Pertinence pour CPU/GPU | Couverture actuelle |
+|---|---|---|
+| **GWP** | Très forte — gaz de procédé (SF₆, NF₃) + énergie salle blanche | Modélisé (coefficient par mm² + node factor) |
+| **ADPe** | Forte — matériaux de spécialité (gallium, germanium) et substrats | Modélisé (coefficient par mm²) |
+| **PE** | Forte — énergie primaire cumulée des procédés | Modélisé (coefficient par mm²) |
+| **WU** | Très forte — eau ultrapure (5 000 à 10 000 L/wafer) | Estimable via Wang et al. 2023 (~8,22 L/cm²) |
+| **AP** | Modérée — gaz acides des procédés de gravure et nettoyage | Couvert via les facteurs d'équipement `digital4better/data` |
+| **PM** | Modérée — procédés de combustion et abattement | Couvert via les facteurs d'équipement D4B |
+| **IR** | Faible à ce niveau — dominé par le mix électrique du pays de fabrication | Couvert via les facteurs pays |
+| **CTUe, CTUh** | Pertinent (chimie de procédé intensive) mais peu stabilisé | Les études récentes (Kuo et al. 2022) confirment la pertinence ; les données restent hétérogènes |
 
 ### Complétion automatique
 

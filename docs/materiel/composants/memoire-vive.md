@@ -48,15 +48,15 @@ $$
 \end{aligned}
 $$
 
-### Coefficients (Boavizta)
+### Coefficients
 
 | Indicateur | $C_{die}$ (par cm²) | $C_{base}$ (par module) | Unité | Source |
 |---|---|---|---|---|
-| **GWP** | 2,20 | 5,22 | kgCO₂ eq. | Boavizta[^1] |
-| **ADPe** | 6,30E-05 | 1,69E-03 | kg Sb eq. | Boavizta[^1] |
-| **PE** | 27,30 | 74,00 | MJ | Boavizta[^1] |
+| **GWP** | 2,20 | 5,22 | kgCO₂ eq. | Green Cloud Computing (UBA 2021)[^1] |
+| **ADPe** | 6,30E-05 | 1,69E-03 | kg Sb eq. | Green Cloud Computing (UBA 2021)[^1] |
+| **PE** | 27,30 | 74,00 | MJ | Green Cloud Computing (UBA 2021)[^1] |
 
-[^1]: [Boavizta RAM methodology](https://doc.api.boavizta.org/Explanations/components/ram/), coefficients dérivés de Green Cloud Computing (UBA, 2021).
+[^1]: Green Cloud Computing, UBA, 2021 — coefficients par cm² de die DRAM. Implémentés dans [Boavizta RAM methodology](https://doc.api.boavizta.org/Explanations/components/ram/).
 
 ### Familles de mémoire
 
@@ -106,8 +106,8 @@ $$
 \begin{aligned}
 &P_{ram} = C_{totale} \times p \\
 \text{avec} \\
-&p = 0{,}392 \text{ W/Go (Cloud Jewels)} \\
-&\text{ou } p = 0{,}284 \text{ W/Go (Boavizta)}
+&p = 0{,}392 \text{ W/Go (Cloud Jewels / Cloud Carbon Footprint)} \\
+&\text{ou } p = 0{,}284 \text{ W/Go (Green Cloud Computing, UBA 2021)}
 \end{aligned}
 $$
 
@@ -121,6 +121,18 @@ $$
 :::note[Profil de charge]
 Contrairement au CPU, la consommation de la RAM est peu sensible à la charge de travail. Une grande partie de l'énergie est consommée par le simple maintien des données en mémoire (refresh DRAM), même au repos.
 :::
+
+## Couverture des indicateurs
+
+| Indicateur | Pertinence pour la RAM | Couverture actuelle |
+|---|---|---|
+| **GWP** | Forte — énergie de fabrication des puces DRAM | Modélisé (coefficient par cm² de die) |
+| **ADPe** | Modérée — matériaux de la puce et du module | Modélisé (coefficient par cm² de die) |
+| **PE** | Modérée — énergie primaire cumulée | Modélisé (coefficient par cm² de die) |
+| **WU** | Forte — eau ultrapure pour la fabrication DRAM | Estimable (via les données semi-conducteurs : ~8 L/cm²) |
+| **AP, PM** | Modérée — procédés de gravure et gaz acides | Couvert via les facteurs d'équipement `digital4better/data` |
+| **IR** | Faible à ce niveau — dominé par le mix électrique d'usage | Couvert via les facteurs pays |
+| **CTUe, CTUh** | Pertinent (chimie de procédé DRAM) mais peu stabilisé | Couvert dans les facteurs d'équipement D4B, pas au niveau composant |
 
 ## Simulateur
 

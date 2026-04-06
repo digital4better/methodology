@@ -92,6 +92,17 @@ $$
 
 La consommation d'un écran OLED dépend fortement du contenu affiché (les pixels noirs ne consomment rien). Un mode sombre peut réduire la consommation de 30 à 60 % sur OLED, mais pas sur LCD (le rétroéclairage reste allumé).
 
+## Couverture des indicateurs
+
+| Indicateur | Pertinence pour l'affichage | Couverture actuelle |
+|---|---|---|
+| **GWP** | Forte — énergie de fabrication des dalles (fusion du verre, dépôt sous vide OLED) | Modélisé (coefficient par cm² par techno) |
+| **ADPe** | Forte — indium (ITO) dans les deux technologies, composés organiques rares (OLED) | Non encore modélisé au niveau composant ; couvert via les facteurs d'équipement D4B |
+| **WU** | Modérée — procédés de nettoyage et de fabrication | Couvert via les facteurs d'équipement D4B |
+| **AP, PM** | Modérée — procédés chimiques de fabrication | Couvert via les facteurs d'équipement D4B |
+| **IR** | Faible à ce niveau | Couvert via les facteurs pays (phase d'usage) |
+| **CTUe, CTUh** | Pertinent (solvants, résines photosensibles) mais peu documenté au niveau dalle | Couvert via les facteurs d'équipement D4B |
+
 ## Simulateur
 
 import { DisplayPlayGround } from '@site/src/components/display-playground';
