@@ -69,7 +69,7 @@ Pour les autres indicateurs, les coefficients par mm² de die et par unité (bas
 | **AP** | 1,40E-05 | — | mol H+ eq. | Reconstruction depuis LCI Green Cloud Computing[^2] |
 | **WU** | 1,32E-03 | — | m³ eq. | Reconstruction depuis LCI Green Cloud Computing[^2] (eau process + eau électricité) |
 | **PM** | 2,54E-07 | — | disease occ. | Reconstruction depuis LCI Green Cloud Computing[^2] (NOx process + électricité) |
-| **IR** | 1,66E-04 | — | kg U235 eq. | Via l'électricité de fabrication (dépend du mix du pays) |
+| **IR** | 1,66E-04 | — | kg U235 eq. | Via l'électricité de fabrication (dépend du mix du pays de fabrication, voir ci-dessous) |
 | **CTUe, CTUh** | Non stabilisé | — | — | Pertinent (chimie de procédé) mais les facteurs de caractérisation pour les émissions spécifiques semi-conducteurs (HF, solvants, photoresists) restent insuffisamment documentés |
 
 [^2]: Reconstruction à partir de l'inventaire du cycle de vie (LCI) publié dans Green Cloud Computing (UBA 2021, Tables 23 et 25), données Intel Irlande 14nm. Les émissions directes (NOx, HF, SF₆, NF₃, N₂O) sont converties en indicateurs mid-point avec les facteurs de caractérisation EF 3.1.
@@ -95,6 +95,23 @@ Source primaire des coefficients GWP, ADPe, PE : Green Cloud Computing (UBA 2021
 
 :::note[Lecture des facteurs]
 Un GPU datacenter (die 800 mm², 5 nm, packaging 2.5D) aura un impact intrinsèque environ **2,2 × 1,5 = 3,3 fois** plus élevé par cm² qu'un CPU 28 nm standard. Combiné à une surface 4 fois plus grande, l'impact total est ~13 fois plus élevé.
+:::
+
+### Pays de fabrication et impact de l'électricité
+
+Pour les indicateurs fortement portés par l'électricité de fabrication (IR, et en partie GWP, AP, PM), le **mix électrique du pays de fabrication** est déterminant. Les principaux fondeurs opèrent dans des pays au mix très différent :
+
+| Fondeur / étape | Pays principal | IR (kgU235eq/kWh) | GWP (kgCO₂e/kWh) | Note |
+|---|---|---|---|---|
+| **TSMC** (front-end) | Taïwan | 0,004 | 0,51 | Mix dominé par le gaz et le charbon |
+| **Samsung** (front-end) | Corée du Sud | 0,006 | 0,42 | Mix nucléaire + fossile |
+| **Intel** (front-end) | USA, Irlande | 0,009 | 0,35 | Mix varié (US) à bas carbone (Irlande) |
+| **Assemblage / back-end** | Chine, Vietnam, Malaisie | 0,004 | 0,54 | Mix carboné (Chine surtout) |
+
+Source : `digital4better/data/factor/country-yearly.csv`, dernière année disponible.
+
+:::note[Hypothèse par défaut]
+Quand le pays de fabrication n'est pas connu, la méthode utilise la **Chine** comme hypothèse par défaut pour l'assemblage et les composants passifs, et **Taïwan** pour les puces logiques et mémoire avancées. Ces hypothèses reflètent la réalité de la chaîne d'approvisionnement actuelle et doivent être documentées dans chaque évaluation.
 :::
 
 ### Ordres de grandeur

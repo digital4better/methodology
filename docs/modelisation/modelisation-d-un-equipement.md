@@ -79,6 +79,25 @@ Avec\\
 \end{align*}
 $$
 
+### Pays de fabrication
+
+Plusieurs indicateurs d'impact intrinsèque (en particulier IR, mais aussi GWP, AP et PM) dépendent du mix électrique du pays de fabrication du composant. Quand ce pays est connu, il doit être utilisé. Quand il ne l'est pas, la méthode applique les hypothèses suivantes :
+
+| Composant | Pays de fabrication par défaut | Justification |
+|---|---|---|
+| CPU/GPU (front-end) | Taïwan | TSMC fabrique la majorité des puces logiques avancées |
+| CPU/GPU (back-end) | Chine | Assemblage et test majoritairement en Asie |
+| RAM (DRAM/HBM) | Corée du Sud | Samsung et SK Hynix dominent |
+| SSD (NAND) | Corée du Sud | Samsung, SK Hynix, Kioxia |
+| Écran (LCD/OLED) | Chine | BOE est le premier producteur mondial |
+| Batterie | Chine | CATL, BYD dominent la production mondiale |
+| PCB / structurel | Chine | Assemblage final quasi exclusivement chinois |
+| HDD | Thaïlande | Seagate, Western Digital |
+
+:::note[Distinction fabrication vs usage]
+Le pays de fabrication détermine l'impact intrinsèque (via le mix électrique des usines). Le pays d'usage détermine l'impact opérationnel (via le mix électrique local). Ce sont deux paramètres distincts dans le modèle.
+:::
+
 ### Correction durée de vie
 
 Quand un facteur composant est fourni pour une durée de vie théorique $TL$ différente de la durée réelle $RL$, la correction $TL/RL$ s'applique (voir [Temporalité et vieillissement](../regles/temporalite-vieillissement-et-versionnement-des-donnees)).

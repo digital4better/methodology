@@ -73,6 +73,20 @@ Reconstruits à partir de l'inventaire du cycle de vie Green Cloud Computing (UB
 | IR | 1,66E-02 | kg U235 eq. | 0 % | 100 % (dépend du mix) |
 | ADPe | 1,56E-06 | kg Sb eq. | — | 100 % (via électricité) |
 
+### Pays de fabrication par défaut (impact intrinsèque)
+
+Quand le pays de fabrication d'un composant n'est pas connu, les hypothèses suivantes s'appliquent pour calculer la composante électrique de l'impact intrinsèque :
+
+| Composant | Pays par défaut | Source |
+|---|---|---|
+| Puces logiques avancées (CPU, GPU, NPU) — front-end | Taïwan | TSMC fabrique ~55 % des puces logiques mondiales |
+| Assemblage / back-end / test | Chine | Assemblage majoritairement en Chine et Asie du Sud-Est |
+| RAM (DRAM, HBM) | Corée du Sud | Samsung + SK Hynix = ~70 % du marché DRAM |
+| NAND Flash (SSD) | Corée du Sud | Samsung + SK Hynix + Kioxia |
+| Écran (LCD, OLED) | Chine | BOE = premier producteur mondial de dalles LCD |
+| Batterie Li-ion | Chine | CATL + BYD = ~55 % du marché mondial |
+| PCB, structurel, assemblage final | Chine | Assemblage final quasi exclusivement chinois |
+
 ### Facteurs de noeud technologique CPU/GPU ($F_{node}$)
 
 | Noeud | $F_{node}$ | Source |
