@@ -55,6 +55,11 @@ $$
 | **GWP** | 2,20 | 5,22 | kgCO₂ eq. | Green Cloud Computing (UBA 2021)[^1] |
 | **ADPe** | 6,30E-05 | 1,69E-03 | kg Sb eq. | Green Cloud Computing (UBA 2021)[^1] |
 | **PE** | 27,30 | 74,00 | MJ | Green Cloud Computing (UBA 2021)[^1] |
+| **AP** | 1,40E-03 | — | mol H+ eq. | Reconstruction LCI Green Cloud Computing (UBA 2021) + EF 3.1[^2] |
+| **WU** | 1,32E-01 | — | m³ eq. | Reconstruction LCI Green Cloud Computing (eau process + électricité)[^2] |
+| **PM** | 2,54E-05 | — | disease occ. | Reconstruction LCI Green Cloud Computing[^2] |
+
+[^2]: Les procédés DRAM partagent les mêmes caractéristiques fondamentales que la fabrication logique (même type de salle blanche, mêmes utilités). Les coefficients par cm² de die sont dérivés de l'inventaire Intel 14nm publié dans Green Cloud Computing (UBA 2021, Tables 23-25), avec facteurs de caractérisation EF 3.1.
 
 [^1]: Green Cloud Computing, UBA, 2021 — coefficients par cm² de die DRAM. Implémentés dans [Boavizta RAM methodology](https://doc.api.boavizta.org/Explanations/components/ram/).
 

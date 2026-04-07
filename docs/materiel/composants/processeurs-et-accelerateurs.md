@@ -59,15 +59,26 @@ $$
 \end{aligned}
 $$
 
-Pour les autres indicateurs, les coefficients sont :
+Pour les autres indicateurs, les coefficients par mm² de die et par unité (base) sont :
 
-| Indicateur | $C_{die}$ | $C_{base}$ | Unité |
-|---|---|---|---|
-| **GWP** | 1,97E-02 | 9,14 | kgCO₂ eq. |
-| **ADPe** | 5,87E-09 | 2,04E-02 | kg Sb eq. |
-| **PE** | 0,265 | 156,0 | MJ |
+| Indicateur | $C_{die}$ (/mm²) | $C_{base}$ | Unité | Source |
+|---|---|---|---|---|
+| **GWP** | 1,97E-02 | 9,14 | kgCO₂ eq. | Green Cloud Computing (UBA 2021) |
+| **ADPe** | 5,87E-09 | 2,04E-02 | kg Sb eq. | Green Cloud Computing (UBA 2021) |
+| **PE** | 0,265 | 156,0 | MJ | Green Cloud Computing (UBA 2021) |
+| **AP** | 1,40E-05 | — | mol H+ eq. | Reconstruction depuis LCI Green Cloud Computing[^2] |
+| **WU** | 1,32E-03 | — | m³ eq. | Reconstruction depuis LCI Green Cloud Computing[^2] (eau process + eau électricité) |
+| **PM** | 2,54E-07 | — | disease occ. | Reconstruction depuis LCI Green Cloud Computing[^2] (NOx process + électricité) |
+| **IR** | 1,66E-04 | — | kg U235 eq. | Via l'électricité de fabrication (dépend du mix du pays) |
+| **CTUe, CTUh** | Non stabilisé | — | — | Pertinent (chimie de procédé) mais les facteurs de caractérisation pour les émissions spécifiques semi-conducteurs (HF, solvants, photoresists) restent insuffisamment documentés |
 
-Source : Green Cloud Computing (UBA 2021), implémentés dans [Boavizta CPU](https://doc.api.boavizta.org/Explanations/components/cpu/). Facteurs de noeud dérivés des publications IMEC NetZero sur l'intensité énergétique par étape de procédé.
+[^2]: Reconstruction à partir de l'inventaire du cycle de vie (LCI) publié dans Green Cloud Computing (UBA 2021, Tables 23 et 25), données Intel Irlande 14nm. Les émissions directes (NOx, HF, SF₆, NF₃, N₂O) sont converties en indicateurs mid-point avec les facteurs de caractérisation EF 3.1.
+
+:::note[Indicateurs reconstructibles vs non reconstructibles]
+Les indicateurs GWP, AP, WU, PM et IR sont reconstructibles à partir de l'inventaire Green Cloud Computing car les flux physiques (émissions de gaz, consommation d'eau et d'électricité) sont documentés. Les indicateurs CTUe et CTUh nécessiteraient des données sur les flux de solvants et de produits chimiques vers l'environnement, qui ne sont pas suffisamment publiés à ce niveau de détail.
+:::
+
+Source primaire des coefficients GWP, ADPe, PE : Green Cloud Computing (UBA 2021), implémentés dans [Boavizta CPU](https://doc.api.boavizta.org/Explanations/components/cpu/). Facteurs de noeud dérivés des publications IMEC NetZero.
 
 ### Facteurs de noeud technologique
 

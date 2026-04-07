@@ -49,9 +49,9 @@ Cette page centralise les hypothèses numériques et conventions transverses uti
 | Volumétrie box | 220 Go/mois par box | Rapport ICT 2020, ADEME/ARCEP 2022 | Intégration de l'impact box dans le facteur réseau fixe |
 | Taux de cache CDN | 70 % à 90 % | Méthodologie D4B | Réduction du trafic après le CDN |
 
-### Modèles paramétriques composants (impact intrinsèque GWP)
+### Modèles paramétriques composants (impact intrinsèque)
 
-| Composant | Formule | Coefficients | Source primaire |
+| Composant | Formule | Coefficients GWP | Source primaire |
 |---|---|---|---|
 | CPU/GPU | $I = (die_{mm^2} \times C_{die} + C_{base}) \times F_{node} \times F_{pkg}$ | $C_{die}$ = 0,0197 kgCO₂e/mm², $C_{base}$ = 9,14 kgCO₂e | Green Cloud Computing (UBA 2021) |
 | RAM | $I = (cap_{Go} / densité) \times C_{die} + C_{base}$ par module | $C_{die}$ = 2,20 kgCO₂e/cm², $C_{base}$ = 5,22 kgCO₂e, densité DDR4 = 0,625 Go/cm² | Green Cloud Computing (UBA 2021) |
@@ -59,6 +59,19 @@ Cette page centralise les hypothèses numériques et conventions transverses uti
 | HDD | $I = 31{,}11$ kgCO₂e par drive (forfaitaire) | — | Green Cloud Computing (UBA 2021) |
 | Écran | $I = surface_{cm^2} \times C_{techno} + C_{base}$ | LCD: 0,07 kgCO₂e/cm², OLED: 0,12, base: 3,0 | Base Empreinte, rapports PCF constructeurs |
 | Batterie | $I = cap_{kWh} \times F_{chimie}$ | LCO: 75, NMC: 65, LFP: 50 kgCO₂e/kWh | Kelly et al. 2021, Ellingsen et al. 2014 |
+
+### Coefficients multi-indicateurs par cm² de die semi-conducteur
+
+Reconstruits à partir de l'inventaire du cycle de vie Green Cloud Computing (UBA 2021, données Intel Irlande 14nm, Tables 23+25), avec facteurs de caractérisation EF 3.1 :
+
+| Indicateur | Valeur par cm² de die | Unité | Dont direct | Dont électricité |
+|---|---|---|---|---|
+| GWP | 1,20 | kgCO₂ eq. | 28 % (gaz de procédé) | 65 % |
+| AP | 1,40E-03 | mol H+ eq. | 14 % (NOx, HF) | 83 % |
+| WU | 1,32E-01 | m³ eq. | 11 % (eau process) | 89 % |
+| PM | 2,54E-05 | disease occ. | 7 % (NOx) | 93 % |
+| IR | 1,66E-02 | kg U235 eq. | 0 % | 100 % (dépend du mix) |
+| ADPe | 1,56E-06 | kg Sb eq. | — | 100 % (via électricité) |
 
 ### Facteurs de noeud technologique CPU/GPU ($F_{node}$)
 

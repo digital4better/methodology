@@ -49,6 +49,9 @@ $$
 | **GWP** | 2,20 | 6,34 | kgCO₂ eq. | Green Cloud Computing (UBA 2021)[^1] |
 | **ADPe** | 6,30E-05 | 5,63E-04 | kg Sb eq. | Green Cloud Computing (UBA 2021)[^1] |
 | **PE** | 27,30 | 73,98 | MJ | Green Cloud Computing (UBA 2021)[^1] |
+| **AP** | 1,40E-03 | — | mol H+ eq. | Reconstruction LCI Green Cloud Computing (UBA 2021) + EF 3.1 |
+| **WU** | 1,32E-01 | — | m³ eq. | Reconstruction LCI Green Cloud Computing (eau process + électricité) |
+| **PM** | 2,54E-05 | — | disease occ. | Reconstruction LCI Green Cloud Computing |
 
 [^1]: Green Cloud Computing, UBA, 2021 — mêmes coefficients de die que la DRAM (NAND et DRAM partagent des procédés semi-conducteurs proches). Implémentés dans [Boavizta SSD](https://doc.api.boavizta.org/Explanations/components/ssd/) et [Boavizta HDD](https://doc.api.boavizta.org/Explanations/components/hdd/).
 
@@ -65,6 +68,8 @@ Le HDD est modélisé avec un impact forfaitaire par unité, indépendant de la 
 | **GWP** | 31,11 | kgCO₂ eq. | Green Cloud Computing (UBA 2021)[^1] |
 | **ADPe** | 2,50E-04 | kg Sb eq. | Green Cloud Computing (UBA 2021)[^1] |
 | **PE** | 276,00 | MJ | Green Cloud Computing (UBA 2021)[^1] |
+| **AP** | 0,185 | mol H+ eq. | Green Cloud Computing (UBA 2021), via l'énergie de fabrication mécanique |
+| **PM** | 1,03E-06 | disease occ. | Green Cloud Computing (UBA 2021), via l'énergie de fabrication |
 
 Impact quasi fixe par unité car dominé par les composants mécaniques (plateaux, moteur, tête de lecture), pas par la surface de silicium.
 
