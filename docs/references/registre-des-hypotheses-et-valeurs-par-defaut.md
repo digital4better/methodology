@@ -49,10 +49,34 @@ Cette page centralise les hypothèses numériques et conventions transverses uti
 | Volumétrie box | 220 Go/mois par box | Rapport ICT 2020, ADEME/ARCEP 2022 | Intégration de l'impact box dans le facteur réseau fixe |
 | Taux de cache CDN | 70 % à 90 % | Méthodologie D4B | Réduction du trafic après le CDN |
 
+### Modèles paramétriques composants (impact intrinsèque GWP)
+
+| Composant | Formule | Coefficients | Source primaire |
+|---|---|---|---|
+| CPU/GPU | $I = (die_{mm^2} \times C_{die} + C_{base}) \times F_{node} \times F_{pkg}$ | $C_{die}$ = 0,0197 kgCO₂e/mm², $C_{base}$ = 9,14 kgCO₂e | Green Cloud Computing (UBA 2021) |
+| RAM | $I = (cap_{Go} / densité) \times C_{die} + C_{base}$ par module | $C_{die}$ = 2,20 kgCO₂e/cm², $C_{base}$ = 5,22 kgCO₂e, densité DDR4 = 0,625 Go/cm² | Green Cloud Computing (UBA 2021) |
+| SSD | $I = (cap_{Go} / densité_{NAND}) \times C_{die} + C_{base}$ par drive | $C_{die}$ = 2,20 kgCO₂e/cm², $C_{base}$ = 6,34 kgCO₂e, densité = 48,5 Go/cm² | Green Cloud Computing (UBA 2021) |
+| HDD | $I = 31{,}11$ kgCO₂e par drive (forfaitaire) | — | Green Cloud Computing (UBA 2021) |
+| Écran | $I = surface_{cm^2} \times C_{techno} + C_{base}$ | LCD: 0,07 kgCO₂e/cm², OLED: 0,12, base: 3,0 | Base Empreinte, rapports PCF constructeurs |
+| Batterie | $I = cap_{kWh} \times F_{chimie}$ | LCO: 75, NMC: 65, LFP: 50 kgCO₂e/kWh | Kelly et al. 2021, Ellingsen et al. 2014 |
+
+### Facteurs de noeud technologique CPU/GPU ($F_{node}$)
+
+| Noeud | $F_{node}$ | Source |
+|---|---|---|
+| 28 nm | 1,0 (référence) | IMEC NetZero |
+| 14 nm | 1,2 | IMEC NetZero |
+| 10 nm | 1,4 | IMEC NetZero |
+| 7 nm | 1,8 | IMEC NetZero |
+| 5 nm | 2,2 | IMEC NetZero |
+| 4 nm | 2,5 | IMEC NetZero |
+| 3 nm | 2,8 | IMEC NetZero |
+
 ### Équipements et durées de vie
 
 | Hypothèse | Valeur / Convention | Source | Contexte d'application |
 |---|---|---|---|
+| Approche privilégiée | Bottom-up par composant (somme des modèles paramétriques) | Méthodologie D4B | Toutes les évaluations ; facteurs forfaitaires en dernier recours |
 | Données manquantes | Priorité mesure → primaire → fournisseur → littérature → forfait | [Hypothèses et hiérarchie](../regles/hypotheses-valeurs-par-defaut-et-hierarchie-des-sources) | Toute donnée absente |
 | Correction durée de vie | $IF_{emb} = TIF_{emb} \times TL / RL$ | Méthodologie D4B | Quand la durée de vie réelle diffère de la durée théorique du référentiel |
 | vCPU | 1 vCPU = 1 thread d'un CPU physique | Convention D4B | Calcul d'allocation par composant |

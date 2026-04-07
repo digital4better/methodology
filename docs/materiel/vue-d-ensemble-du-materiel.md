@@ -4,6 +4,18 @@
 
 Le numérique semble immatériel, mais il repose sur une chaîne physique très concrète : des mines de cobalt en RDC aux salles blanches de Taïwan, des usines d'assemblage en Chine aux datacenters en Irlande, chaque service numérique mobilise des ressources physiques réparties sur toute la planète. Cette section rend cette réalité visible et calculable.
 
+## Approche bottom-up
+
+La méthode reconstruit l'impact d'un équipement **à partir de ses composants**, chacun calculé avec un modèle paramétrique sourcé. Cette approche bottom-up est préférée aux facteurs forfaitaires par type d'équipement car elle est transparente, paramétrique et modulaire. L'impact d'un équipement est la somme de ses composants :
+
+$$
+\begin{align*}
+&I_{equipement} = I_{cpu} + I_{ram} + I_{stockage} + I_{ecran} + I_{batterie} + I_{structurel}
+\end{align*}
+$$
+
+Les facteurs forfaitaires (Base Empreinte, NegaOctet) ne sont utilisés qu'en dernier recours quand aucune information sur la composition n'est disponible. Voir [Modélisation d'un équipement](../modelisation/modelisation-d-un-equipement) pour le détail.
+
 ## De la mine au service
 
 ```mermaid

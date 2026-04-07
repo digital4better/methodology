@@ -2,136 +2,132 @@
 
 ## Résumé
 
-Modéliser un équipement consiste à décrire sa composition avec un niveau de détail proportionné au besoin : composants explicites quand ils sont connus, éléments structurels et forfaits quand ils ne le sont pas.
+Modéliser un équipement consiste à reconstruire son impact environnemental à partir de ses composants. La méthode privilégie une **approche bottom-up** : l'impact de l'équipement est la somme des impacts de ses composants, chacun calculé avec un modèle paramétrique sourcé. Les facteurs forfaitaires par type d'équipement ne sont utilisés qu'en dernier recours.
 
-Cette page explique comment choisir entre composition détaillée, archétype et facteur forfaitaire, comment calculer l'impact intrinsèque et opérationnel, et comment gérer les données manquantes sans perdre la traçabilité.
+## Principe : bottom-up par composant
 
-## Principe
+### Philosophie
 
-Un équipement peut être modélisé à quatre niveaux de détail :
+Un équipement numérique est un assemblage physique. Son impact environnemental provient de ses composants — processeur, mémoire, stockage, écran, batterie, éléments structurels. Plutôt que d'utiliser un facteur forfaitaire opaque par type d'équipement, la méthode reconstruit l'impact à partir de la composition réelle ou estimée :
+
+$$
+\begin{align*}
+&I_{equipement_{i}} = I_{cpu_{i}} + I_{ram_{i}} + I_{stockage_{i}} + I_{ecran_{i}} + I_{batterie_{i}} + I_{structurel_{i}}
+\end{align*}
+$$
+
+Cette approche est :
+- **transparente** : chaque composant est traçable avec sa source ;
+- **paramétrique** : l'impact varie avec les caractéristiques réelles de l'équipement ;
+- **modulaire** : on peut affiner un composant sans recalculer tout le modèle ;
+- **comparable** : deux équipements différents peuvent être comparés composant par composant.
+
+### Hiérarchie des approches
 
 ```mermaid
-flowchart LR
-    A[Composition<br>détaillée] --> B[Modèle<br>hybride]
-    B --> C[Archétype]
-    C --> D[Facteur<br>forfaitaire]
+flowchart TD
+    A{Composition<br>connue ?} -- oui --> B[Bottom-up composant<br>somme des modèles paramétriques]
+    A -- partiellement --> C[Modèle hybride<br>composants connus + forfait résiduel]
+    A -- non --> D{Famille<br>d'équipement<br>connue ?}
+    D -- oui --> E[Archétype paramétrique<br>config type par famille]
+    D -- non --> F[Facteur forfaitaire<br>dernier recours]
 
-    style A fill:#264653,color:#fff
-    style B fill:#2a9d8f,color:#fff
-    style C fill:#e9c46a,color:#000
-    style D fill:#f4a261,color:#000
+    style B fill:#2d6a4f,color:#fff
+    style C fill:#40916c,color:#fff
+    style E fill:#95d5b2,color:#000
+    style F fill:#d8f3dc,color:#000
 ```
 
-| Niveau | Principe | Données nécessaires | Quand l'utiliser |
+| Niveau | Quand l'utiliser | Précision | Traçabilité |
 |---|---|---|---|
-| **Composition détaillée** | Chaque composant est identifié et caractérisé | Marque, modèle, specs de chaque composant | Équipement critique, données disponibles |
-| **Modèle hybride** | Composants connus + forfait résiduel | Composants principaux + estimation du reste | Composition partiellement connue |
-| **Archétype** | Profil type représentatif d'une famille | Famille d'équipement, quelques caractéristiques | Parc volumineux, équipements standards |
-| **Facteur forfaitaire** | Facteur unique par type d'équipement | Type d'équipement uniquement | Données minimales, impact secondaire |
-
-Le bon niveau dépend de : la disponibilité des données, le poids de l'équipement dans le résultat, et la capacité à conserver un modèle lisible et vérifiable.
-
-## Paramètres d'entrée
-
-| Paramètre | Obligatoire | Source typique |
-|---|---|---|
-| Type d'équipement | Oui | Inventaire |
-| Marque / modèle | Recommandé | Inventaire, CMDB |
-| Durée de vie (réelle ou nominale) | Oui | Inventaire ou hypothèse |
-| Composants principaux (CPU, RAM, stockage, écran) | Selon la stratégie | Fiche technique, constructeur |
-| Puissance électrique ou consommation annuelle | Oui pour l'opérationnel | Mesure, fiche technique, forfait |
-| Durée d'usage attribuable à l'objet étudié | Oui | Données d'usage, hypothèse |
+| **Bottom-up composant** | Composition connue ou reconstruisable | Élevée | Chaque composant sourcé |
+| **Modèle hybride** | Composition partielle | Moyenne à élevée | Composants connus + résiduel documenté |
+| **Archétype paramétrique** | Famille connue, pas la config exacte | Moyenne | Config type documentée |
+| **Facteur forfaitaire** | Aucune information sur la composition | Faible | Facteur agrégé, source unique |
 
 ## Évaluation des impacts {#impacts-equipement}
 
-## Choix du facteur d'impact
+## Modèles paramétriques par composant
 
-Le facteur à prendre en compte est déterminé par l'arbre de décision suivant, qui privilégie les facteurs les plus proches du contexte :
+Chaque composant dispose d'un modèle paramétrique dont les coefficients proviennent de sources primaires documentées :
 
-```mermaid
-flowchart LR
-    A{"La marque et le modèle\nde l'équipement\nsont-ils connus ?"} -- oui --> B{"Le constructeur\na-t-il réalisé une ACV\nde son produit ?"}
-    A -- non --> C("Utilisation du\nfacteur d'impact\nde référence")
-    B -- oui --> D("Utilisation du\nfacteur d'impact\ndu constructeur")
-    B -- non --> C
-```
+| Composant | Formule (GWP) | Paramètres | Source primaire |
+|---|---|---|---|
+| **CPU/GPU** | $(die_{mm^2} \times 0{,}0197 + 9{,}14) \times F_{node} \times F_{pkg}$ | Die size (mm²), noeud techno, packaging | Green Cloud Computing (UBA 2021) |
+| **RAM** | $(cap_{Go} / densité) \times 2{,}20 + 5{,}22$ par module | Capacité, type (DDR4/5, HBM) | Green Cloud Computing (UBA 2021) |
+| **SSD** | $(cap_{Go} / densité_{NAND}) \times 2{,}20 + 6{,}34$ par drive | Capacité, densité NAND | Green Cloud Computing (UBA 2021), Tannu & Nair 2023 |
+| **HDD** | $31{,}11$ par drive (forfaitaire) | Nombre de drives | Green Cloud Computing (UBA 2021) |
+| **Écran** | $surface_{cm^2} \times C_{techno} + base$ | Diagonale, techno (LCD/OLED) | Base Empreinte, rapports PCF constructeurs |
+| **Batterie** | $cap_{kWh} \times F_{chimie}$ | Capacité (Wh), chimie (LCO/NMC/LFP) | Kelly et al. 2021, Ellingsen et al. 2014 |
+| **Structurel** | Forfait par type d'équipement | Type (smartphone, laptop, serveur) | PCF constructeurs, estimations |
 
-:::note
-Cette arborescence vaut autant pour les facteurs d'impact intrinsèques que pour les consommations électriques. Les données constructeurs, bien que peu comparables entre elles, fournissent généralement une estimation plus proche du périmètre réel qu'un facteur générique. Voir [Qualité des données](../regles/qualite-des-donnees-et-matrice-de-robustesse) pour l'évaluation de la robustesse des sources.
-:::
+Le détail de chaque modèle est dans les pages [Composants](../materiel/composants/processeurs-et-accelerateurs).
 
-## Calcul de l'impact intrinsèque {#impact-intrinseque-d-un-equipement}
+## Impact intrinsèque {#impact-intrinseque-d-un-equipement}
 
-L'impact intrinsèque d'un équipement s'exprime à partir d'un facteur ramené à une durée d'usage :
+### Formule générale
+
+L'impact intrinsèque annualisé d'un équipement est :
 
 $$
 \begin{align*}
-&I_{embodied_{i}} = D_{usage} \times IF_{embodied_{i}}\htmlClass{unit}{[U_i]}\\
+&I_{emb_{i}} = \frac{\sum_{c} I_{c,emb_{i}} + I_{structurel_{i}}}{RL}\htmlClass{unit}{[U_i/an]}\\
 Avec\\
-&I_{embodied_{i}} = \text{Impact intrinsèque de l'équipement pour l'indicateur}\textit{ i }\htmlClass{unit}{[U_i]}\\
-&D_{usage} = \text{Durée d'usage dédiée à l'utilisation étudiée}\htmlClass{unit}{[s]}\\
-&IF_{embodied_{i}} = \text{Facteur d'impact intrinsèque pour l'indicateur}\textit{ i }\htmlClass{unit}{[U_i/s]}\\
+&I_{c,emb_{i}} = \text{Impact intrinsèque du composant } c \text{ pour l'indicateur } i\\
+&I_{structurel_{i}} = \text{Impact des éléments structurels}\\
+&RL = \text{Durée de vie réelle de l'équipement}\htmlClass{unit}{[an]}\\
 \end{align*}
 $$
 
-### Correction durée de vie théorique / réelle
+### Correction durée de vie
 
-Certains facteurs sont fournis pour une durée de vie théorique $TL$ qui peut différer de la durée de vie réelle $RL$ :
+Quand un facteur composant est fourni pour une durée de vie théorique $TL$ différente de la durée réelle $RL$, la correction $TL/RL$ s'applique (voir [Temporalité et vieillissement](../regles/temporalite-vieillissement-et-versionnement-des-donnees)).
 
-$$
-\begin{align*}
-&IF_{embodied_{i}} = TIF_{embodied_{i}} \times \frac{TL}{RL}\htmlClass{unit}{[U_i/s]}\\
-Avec\\
-&TIF_{embodied_{i}} = \text{Facteur d'impact intrinsèque théorique}\htmlClass{unit}{[U_i/s]}\\
-&TL = \text{Durée de vie théorique du référentiel}\htmlClass{unit}{[s]}\\
-&RL = \text{Durée de vie réelle de l'équipement}\htmlClass{unit}{[s]}\\
-\end{align*}
-$$
+## Impact opérationnel {#impact-operationnel-d-un-equipement}
 
-Voir [Temporalité et vieillissement](../regles/temporalite-vieillissement-et-versionnement-des-donnees) pour le calcul de la durée de vie réelle.
-
-### Cas bottom-up composant
-
-Quand la composition est connue, l'impact intrinsèque est la somme des impacts de chaque composant :
+L'impact opérationnel est la somme des consommations des composants :
 
 $$
 \begin{align*}
-&I_{embodied_{i}} = \sum_{c \in composants} I_{c,embodied_{i}} + I_{structural_{i}}\htmlClass{unit}{[U_i]}
-\end{align*}
-$$
-
-Où $I_{structural_{i}}$ représente l'impact des [Éléments structurels](../materiel/composants/elements-structurels) (carte mère, boîtier, assemblage, pièces résiduelles).
-
-## Calcul de l'impact opérationnel {#impact-operationnel-d-un-equipement}
-
-$$
-\begin{align*}
-&E_{elec} = D_{usage} \times P_{elec}\htmlClass{unit}{[kWh]}\\
-Avec\\
-&E_{elec} = \text{Consommation d'électricité de l'équipement}\htmlClass{unit}{[kWh]}\\
-&D_{usage} = \text{Durée d'usage}\htmlClass{unit}{[h]}\\
-&P_{elec} = \text{Puissance moyenne sur la durée d'utilisation}\htmlClass{unit}{[kW]}\\
+&P_{total} = P_{cpu} + P_{ram} + P_{stockage} + P_{ecran} + P_{autres}\\
+&E_{elec} = P_{total} \times D_{usage}\htmlClass{unit}{[kWh]}\\
 \end{align*}
 $$
 
 La conversion en impact opérationnel se fait via [Impacts de la consommation d'énergie](../fondations/impacts-de-la-consommation-d-energie#conversion-consommation-electricite-impact-operationnel).
 
-## Application concrète
+## Application concrète : reconstruction bottom-up d'un laptop
 
-**Cas : modéliser un serveur Dell PowerEdge R750 dans un datacenter**
+**Config : laptop 14", CPU 7nm 150mm², 16 Go DDR5, 512 Go SSD, écran LCD, batterie NMC 56 Wh**
 
-| Composant | Données disponibles | Source | Impact GWP (kg CO₂ eq. / an) |
+| Composant | Modèle appliqué | GWP fabrication (kgCO₂e) | Part |
 |---|---|---|---|
-| 2× CPU Intel Xeon Gold 6330 | TDP 205 W chacun | Fiche technique Intel | Inclus dans le facteur constructeur |
-| 512 Go RAM DDR4 | 16 barrettes × 32 Go | Fiche technique | Inclus dans le facteur constructeur |
-| 2× SSD 960 Go | NVMe | Fiche technique | Inclus dans le facteur constructeur |
-| **Facteur intrinsèque total** | ACV constructeur Dell | Dell Product Carbon Footprint Report 2023 | **~320 kg CO₂ eq. / 5 ans = 64 /an** |
-| **Consommation électrique** | ~800 W moyen (mesuré) | Monitoring datacenter | — |
-| **Impact opérationnel** | 800 W × 8 760 h × PUE 1,3 × 60 g/kWh (France) | d4b/data | **~547 kWh/an → 33 kg CO₂ eq. /an** |
-| **Impact total annuel (GWP)** | | | **~97 kg CO₂ eq. /an** |
+| CPU | $(150 \times 0{,}0197 + 9{,}14) \times 1{,}8$ | 21,8 | 15 % |
+| RAM | $(16 / 1{,}0) \times 2{,}20 + 5{,}22$ | 40,4 | 28 % |
+| SSD 512 Go | $(512 / 48{,}5) \times 2{,}20 + 6{,}34$ | 29,6 | 20 % |
+| Écran 14" LCD | $567 \times 0{,}07 + 3{,}0$ | 42,7 | 29 % |
+| Batterie 56 Wh NMC | $0{,}056 \times 65$ | 3,6 | 3 % |
+| Structurel | Forfait laptop | 8,0 | 5 % |
+| **Total** | | **146,1** | **100 %** |
+| **Annualisé (5 ans)** | | **29,2 kgCO₂e/an** | |
 
-:::note[Lecture du résultat]
-Dans cet exemple en France (mix bas carbone), l'impact intrinsèque domine (66 %). Dans un pays à mix carboné (ex. Pologne, ~700 g/kWh), l'impact opérationnel serait de ~490 kg CO₂ eq./an et dominerait largement. Le contexte géographique change fondamentalement la lecture.
+:::note[Lecture]
+La RAM et l'écran sont les premiers contributeurs (28 % et 29 %). Le CPU ne représente que 15 % malgré son procédé de fabrication complexe, car sa surface de die (150 mm²) reste modeste. La batterie est marginale (3 %). Cette décomposition permet d'identifier les leviers : un écran plus petit ou une capacité RAM moindre aurait plus d'effet qu'un changement de processeur.
+:::
+
+## Validation croisée avec les facteurs forfaitaires
+
+Le tableau ci-dessous compare les résultats bottom-up avec les facteurs forfaitaires historiques pour vérifier la cohérence :
+
+| Équipement | Config bottom-up | GWP bottom-up (kgCO₂e/an) | GWP forfaitaire D4B (kgCO₂e/an) | Écart |
+|---|---|---|---|---|
+| **Smartphone** | CPU 4nm 100mm², 8 Go DDR5, 128 Go SSD, OLED 6.5", LCO 18 Wh | 28,4 | 31,9 | -11 % |
+| **Tablette** | CPU 4nm 100mm², 8 Go DDR5, 256 Go SSD, LCD 11", NMC 30 Wh | 25,8 | 28,1 | -8 % |
+| **Laptop** | CPU 7nm 150mm², 16 Go DDR5, 512 Go SSD, LCD 14", NMC 56 Wh | 29,2 | 37,2 | -22 % |
+| **Desktop (sans écran)** | CPU 10nm 200mm², 32 Go DDR4, 1 To SSD | 33,3 | 44,8 | -26 % |
+
+:::note[Interprétation des écarts]
+Les écarts de -8 % à -26 % sont cohérents : les facteurs forfaitaires historiques (Base Empreinte / NegaOctet ~2020) sont calibrés sur des configs moyennes de l'époque, qui incluent parfois des composants additionnels (GPU dédié pour le desktop, configs plus lourdes). L'approche bottom-up permet de s'adapter à la configuration réelle plutôt qu'à un archétype fixe.
 :::
 
 ## Modèle hybride : composants connus + résiduel
@@ -156,7 +152,18 @@ flowchart TD
     style RES fill:#e9c46a,color:#000
 ```
 
-Le forfait résiduel couvre les éléments non décomposés (carte mère, boîtier, alimentation, câblage, assemblage). Il doit être explicite et documenté — voir [Éléments structurels](../materiel/composants/elements-structurels).
+Le forfait résiduel couvre les éléments non décomposés (carte mère, boîtier, alimentation, câblage, assemblage) — voir [Éléments structurels](../materiel/composants/elements-structurels).
+
+## Choix du facteur quand le modèle bottom-up n'est pas applicable
+
+```mermaid
+flowchart LR
+    A{"Marque et modèle\nconnus ?"} -- oui --> B{"ACV constructeur\ndisponible ?"}
+    A -- non --> C[Archétype paramétrique<br>config type de la famille]
+    B -- oui --> D[Facteur constructeur<br>relecture critique]
+    B -- non --> C
+    C -.->|si aucune config estimable| F[Facteur forfaitaire<br>Base Empreinte]
+```
 
 ## Gestion des données manquantes
 
@@ -166,27 +173,26 @@ Le forfait résiduel couvre les éléments non décomposés (carte mère, boîti
 | Composant inconnu et type inconnu | Inclure dans le forfait résiduel |
 | Puissance électrique inconnue | Utiliser une valeur de référence pour la famille |
 | Durée de vie réelle inconnue | Utiliser la durée nominale, documenter l'hypothèse |
-| Aucune donnée sur l'équipement | Utiliser un facteur forfaitaire Base Empreinte |
-
-:::note[Principe directeur]
-Il vaut mieux conserver les composants connus et documenter les trous que remplacer tout le modèle par une valeur unique sans le signaler.
-:::
+| Aucune donnée sur l'équipement | Utiliser un facteur forfaitaire Base Empreinte (dernier recours) |
 
 ## Hypothèses et limites
 
-- La décomposition d'un équipement reste souvent partielle ; un archétype robuste vaut mieux qu'une composition fictive.
-- Le niveau de détail optimal dépend du poids de l'équipement dans le résultat global.
-- Les facteurs constructeurs restent hétérogènes et doivent toujours être relus de manière critique (voir [Qualité des données](../regles/qualite-des-donnees-et-matrice-de-robustesse)).
-- Les éléments structurels doivent être explicités quand ils servent de complétion.
+- L'approche bottom-up est plus transparente mais suppose de connaître au minimum la famille de composants. Quand aucune information n'est disponible, le facteur forfaitaire reste acceptable en dernier recours.
+- Les coefficients composants (die GWP/mm², RAM GWP/cm², etc.) proviennent principalement de Green Cloud Computing (UBA 2021). Ils seront mis à jour quand des données plus récentes seront disponibles.
+- La validation croisée montre des écarts de -8 % à -26 % avec les facteurs forfaitaires historiques, ce qui est cohérent et acceptable.
+- Les éléments structurels restent forfaitaires. Leur enrichissement est une perspective d'amélioration.
 
 ## Données mobilisées
 
-- `digital4better/data` → `data/hardware/*`, `data/equipment/*`
-- Données constructeurs quand elles sont critiquées et contextualisées
-- Base Empreinte ADEME (facteurs par famille)
+- Coefficients composants : Green Cloud Computing (UBA 2021), Kelly et al. 2021, Ellingsen et al. 2014, Tannu & Nair 2023
+- `digital4better/data` → `data/cloud/cpus.*`, `data/cloud/accelerators.*`
+- Rapports PCF constructeurs (Dell, HP, Apple) pour validation croisée
 
 ## Sources
 
-- ISO 14040 / ISO 14044
+- Green Cloud Computing, UBA, 2021 (coefficients par cm² de die pour CPU, RAM, SSD)
+- Tannu & Nair, 2023. [The Dirty Secret of SSDs: Embodied Carbon](https://arxiv.org/abs/2207.10793)
+- Kelly et al., 2021. LCA of lithium carbonate and hydroxide (coefficients batterie)
+- Ellingsen et al., 2014. [LCA of a Li-Ion Battery Vehicle Pack](https://doi.org/10.1111/jiec.12072)
+- Base Empreinte ADEME (facteurs forfaitaires, fallback)
 - [digital4better/data](https://github.com/digital4better/data)
-- Corpus `inputs/md`
