@@ -192,6 +192,15 @@ const resolveLang = (lang?: string): Lang => {
   return "en";
 };
 
+const formatCarbonIntensity = (value: number, locale: Lang) => {
+  const formatter = new Intl.NumberFormat(locale, {
+    style: "decimal",
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+  });
+  return `${formatter.format(value)} kgCO2e / kWh`;
+};
+
 const CURATED_MODELS: CuratedModel[] = [
   {
     label: "Anthropic - Claude Haiku 4.5",
@@ -904,7 +913,10 @@ export const AIPlayGround = ({
   const regionOptions = REGION_GROUPS.map((group) => ({
     label: text.groups[group.key],
     options: group.options.map((region) => ({
-      label: `${text.regions[region.key]} (${format(region.gwp, UNITS.gwp)})`,
+      label: `${text.regions[region.key]} (${formatCarbonIntensity(
+        region.gwp,
+        locale,
+      )})`,
       value: region.value,
     })),
   }));
