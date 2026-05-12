@@ -69,11 +69,11 @@ Le tableau ci‑dessous donne un repère rapide pour chaque modalité et une fa�
 
 ### Estimation de la charge de calcul
 
-Pour les générations image, audio et vidéo, le modèle qui interprète ou reformule le prompt peut être différent du modèle génératif. Dans ce cas, la méthodologie associe automatiquement un modèle de prompt au preset, sans demander ce choix à l'utilisateur :
+Pour les générations image, audio et vidéo, l'estimation peut distinguer le traitement du prompt textuel et la génération du média. Ces deux étapes peuvent être réalisées par des composants différents selon les systèmes considérés :
 
 $$$FLOP_\text{total} \approx FLOP_\text{prompt textuel} + FLOP_\text{génération média}$$$
 
-Pour l'audio, le downscale temporel utilisé pour convertir le sample rate en tokens latents est également une hypothèse interne du preset.
+Pour l'audio, le downscale temporel utilisé pour convertir le sample rate en tokens latents est une hypothèse de modélisation propre au système évalué.
 
 | Cas d'usage                                     | Formule de calcul                                                                                                                   | Variables                                                                                                                                                                                                                                                                                  | Explication                                                                                                                                                                                                                                                                                      |
 |-------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
