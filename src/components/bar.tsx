@@ -7,7 +7,10 @@ export const Bar: FC<{
   values: { label: string; value: number }[];
   colors: { color: string; bgcolor: string }[];
   units: string[];
-}> = ({ values, colors, units }) => {
+  lang?: string;
+}> = ({ values, colors, units, lang = "en" }) => {
+  const safeValues = values.map(item => ({ ...item, value: Number.isFinite(item.value) ? Math.max(0, item.value) : 0 }));
+  const total = safeValues.reduce((sum, item) => sum + item.value, 0);
   return (
     <Stack
       direction="row"
@@ -18,12 +21,12 @@ export const Bar: FC<{
         overflow: "hidden",
       }}
     >
-      {values.map(({ label, value }, i) => (
+      {safeValues.map(({ label, value }, i) => (
         <Box
           key={i}
-          title={`${label} ${format(value, units)}}`}
+          title={`${label} ${format(value, units, lang)}`}
           sx={{
-            flexBasis: `${(value * 100) / values.reduce((a, { value }) => a + value, 0)}%`,
+            flexBasis: `${total > 0 ? value * 100 / total : 0}%`,
             height: "100%",
             display: "flex",
             justifyContent: "center",

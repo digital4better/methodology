@@ -1,3 +1,6 @@
+import hardwareProfiles from "../data/ai-hardware-profiles.json";
+import { computeMediaInput, type MediaInputWork } from "./ai-media-input";
+import { ELECTRICITY_FACTORS } from "../electricity";
 export type ModelArchitecture =
   | "dense"
   | "moe"
@@ -12,7 +15,10 @@ export type UseCase =
   | "text-inference"
   | "image-inference"
   | "video-inference"
-  | "audio-inference";
+  | "audio-inference"
+  | "image-analysis"
+  | "video-analysis"
+  | "audio-analysis";
 
 export type ImageProfile = {
   spatialPatch: number;
@@ -76,6 +82,7 @@ export type Parts = {
 };
 
 export type AiImpactResult = {
+  mediaInput?: MediaInputWork;
   flops: number;
   duration: number;
   latency?: number;
@@ -103,7 +110,10 @@ export type AiImpactInput = {
   steps: number;
   duration?: number;
   sampleRate?: number;
+  inputFps?: number;
   cache: number;
+  mfu?: number;
+  lifetimeYears?: number;
 };
 
 export type RegionGroupKey = "europe" | "americas" | "asia" | "global";
@@ -132,11 +142,7 @@ export type RegionGroup = {
   options: RegionOption[];
 };
 
-const TEXT_USE_CASES: UseCase[] = [
-  "training",
-  "fine-tuning",
-  "text-inference",
-];
+const TEXT_USE_CASES: UseCase[] = ["training", "fine-tuning", "text-inference"];
 
 const useCasesForModel = (model: RawCuratedModel): UseCase[] => {
   if (model.useCases) {
@@ -155,6 +161,18 @@ const useCasesForModel = (model: RawCuratedModel): UseCase[] => {
 };
 
 const RAW_CURATED_MODELS: RawCuratedModel[] = [
+  {
+    label: "Qwen - Qwen2.5-VL 7B", value: "qwen2.5-vl-7b-input", provider: "qwen",
+    category: "multimodal", architecture: "dense", parameters: [8292166656, 8292166656],
+    estimated: false, source: "https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct",
+    useCases: ["image-analysis", "video-analysis"],
+  },
+  {
+    label: "OpenAI - Whisper base", value: "whisper-base-input", provider: "openai",
+    category: "audio", architecture: "audio", parameters: [72593920, 72593920],
+    estimated: false, source: "https://huggingface.co/openai/whisper-base",
+    useCases: ["audio-analysis"],
+  },
   {
     label: "Anthropic - Claude Haiku 4.5",
     value: "claude-haiku-4-5-20251001",
@@ -440,7 +458,8 @@ const RAW_CURATED_MODELS: RawCuratedModel[] = [
     architecture: "dit",
     parameters: [20e9, 20e9],
     estimated: false,
-    source: "https://huggingface.co/Qwen/Qwen-Image/blob/refs%2Fpr%2F42/transformer/config.json",
+    source:
+      "https://huggingface.co/Qwen/Qwen-Image/blob/refs%2Fpr%2F42/transformer/config.json",
     image: {
       spatialPatch: 2,
       hiddenSize: 3072,
@@ -503,7 +522,8 @@ const RAW_CURATED_MODELS: RawCuratedModel[] = [
     architecture: "dit",
     parameters: [30e9, 30e9],
     estimated: true,
-    source: "https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/imagen-api",
+    source:
+      "https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/imagen-api",
     promptModel: "gemini-3.1-pro-preview",
     image: {
       spatialPatch: 2,
@@ -857,169 +877,42 @@ export const USE_CASES = [
   { value: "image-inference" },
   { value: "video-inference" },
   { value: "audio-inference" },
+  { value: "image-analysis" },
+  { value: "video-analysis" },
+  { value: "audio-analysis" },
 ] as const satisfies ReadonlyArray<{ value: UseCase }>;
 
 export const isUseCase = (value: string): value is UseCase =>
   USE_CASES.some((useCase) => useCase.value === value);
 
-export const HARDWARES = [
-  {
-    label: "NVIDIA DGX H100 (8 GPU)",
-    value: "nvidia-dgx-h100-8",
-    cpu_count: 2,
-    cpu_power: 350,
-    cpu_embodied: 25e3,
-    gpu_count: 8,
-    gpu_flops: 989e12,
-    gpu_power: 700,
-    gpu_embodied: 250e3,
-    ram: 2e12,
-    ram_power: 392e-12,
-    ram_embodied: 533e3 / 384e9,
-    ssd: 30e12,
-    ssd_power: 1.2e-3 / 1e9,
-    ssd_embodied: 0.16e3 / 1e9,
-    enclosure_units: 8,
-    enclosure_power: 0,
-    enclosure_embodied: 250e3,
-    mfu: 0.4,
-  },
-  {
-    label: "NVIDIA DGX A100 (8 GPU)",
-    value: "nvidia-dgx-a100-8",
-    cpu_count: 2,
-    cpu_power: 225,
-    cpu_embodied: 25e3,
-    gpu_count: 8,
-    gpu_flops: 312e12,
-    gpu_power: 400,
-    gpu_embodied: 143e3,
-    ram: 1e12,
-    ram_power: 392e-12,
-    ram_embodied: 533e3 / 384e9,
-    ssd: 30e12,
-    ssd_power: 1.2e-3 / 1e9,
-    ssd_embodied: 0.16e3 / 1e9,
-    enclosure_units: 8,
-    enclosure_power: 0,
-    enclosure_embodied: 250e3,
-    mfu: 0.4,
-  },
-  {
-    label: "NVIDIA A100 SXM4 (1 GPU)",
-    value: "nvidia-a100-sxm4-1",
-    cpu_count: 1,
-    cpu_power: 250,
-    cpu_embodied: 25e3,
-    gpu_count: 1,
-    gpu_flops: 312e12,
-    gpu_power: 400,
-    gpu_embodied: 143e3,
-    ram: 128e9,
-    ram_power: 392e-12,
-    ram_embodied: 533e3 / 384e9,
-    ssd: 2e12,
-    ssd_power: 1.2e-3 / 1e9,
-    ssd_embodied: 0.16e3 / 1e9,
-    enclosure_units: 1,
-    enclosure_power: 0,
-    enclosure_embodied: 250e3,
-    mfu: 0.4,
-  },
-  {
-    label: "NVIDIA DGX H100 (4 GPU)",
-    value: "nvidia-dgx-h100-4",
-    cpu_count: 2,
-    cpu_power: 350,
-    cpu_embodied: 25e3,
-    gpu_count: 4,
-    gpu_flops: 989e12,
-    gpu_power: 700,
-    gpu_embodied: 250e3,
-    ram: 2e12,
-    ram_power: 392e-12,
-    ram_embodied: 533e3 / 384e9,
-    ssd: 30e12,
-    ssd_power: 1.2e-3 / 1e9,
-    ssd_embodied: 0.16e3 / 1e9,
-    enclosure_units: 8,
-    enclosure_power: 0,
-    enclosure_embodied: 250e3,
-    mfu: 0.4,
-  },
-  {
-    label: "NVIDIA DGX B300 (8 GPU)",
-    value: "nvidia-dgx-b300-8",
-    cpu_count: 2,
-    cpu_power: 350,
-    cpu_embodied: 25e3,
-    gpu_count: 8,
-    gpu_flops: 2.2e15,
-    gpu_power: 1200,
-    gpu_embodied: 750e3,
-    ram: 0,
-    ram_power: 392e-12,
-    ram_embodied: 533e3 / 384e9,
-    ssd: 30e12,
-    ssd_power: 1.2e-3 / 1e9,
-    ssd_embodied: 0.16e3 / 1e9,
-    enclosure_units: 10,
-    enclosure_power: 0,
-    enclosure_embodied: 250e3,
-    mfu: 0.4,
-  },
-  {
-    label: "NVIDIA BG300 NVL72 (72 GPU)",
-    value: "nvidia-gb300-nvl72",
-    cpu_count: 36,
-    cpu_power: 250,
-    cpu_embodied: 25e3,
-    gpu_count: 72,
-    gpu_flops: 2.2e15,
-    gpu_power: 1200,
-    gpu_embodied: 750e3,
-    ram: 18e12,
-    ram_power: 392e-12,
-    ram_embodied: 533e3 / 384e9,
-    ssd: 30e12,
-    ssd_power: 1.2e-3 / 1e9,
-    ssd_embodied: 0.16e3 / 1e9,
-    enclosure_units: 10,
-    enclosure_power: 0,
-    enclosure_embodied: 250e3,
-    mfu: 0.4,
-  },
-];
+export const HARDWARES = hardwareProfiles.profiles;
 
 export const REGION_GROUPS: RegionGroup[] = [
   {
     key: "europe",
-    options: [
-      { key: "eu", value: "eu", gwp: 0.25 },
-      { key: "de", value: "de", gwp: 0.3316 },
-      { key: "fr", value: "fr", gwp: 0.04179 },
-      { key: "ie", value: "ie", gwp: 0.3 },
-      { key: "no", value: "no", gwp: 0.0291 },
-      { key: "uk", value: "uk", gwp: 0.21709 },
-    ],
+    options: ["fr", "de", "ie", "no", "uk"].map((key) => ({
+      key: key as RegionKey,
+      value: key,
+      gwp: ELECTRICITY_FACTORS[key === "uk" ? "GB" : key.toUpperCase()].gwp,
+    })),
   },
   {
     key: "americas",
-    options: [
-      { key: "ca", value: "ca", gwp: 0.12 },
-      { key: "us", value: "us", gwp: 0.4 },
-    ],
+    options: ["us"].map((key) => ({
+      key: key as RegionKey,
+      value: key,
+      gwp: ELECTRICITY_FACTORS[key.toUpperCase()].gwp,
+    })),
   },
   {
     key: "asia",
-    options: [
-      { key: "cn", value: "cn", gwp: 0.5554 },
-      { key: "in", value: "in", gwp: 0.70745 },
-    ],
-  },
-  {
-    key: "global",
-    options: [{ key: "world", value: "world", gwp: 0.47184 }],
+    options: ["cn", "in"]
+      .filter((key) => ELECTRICITY_FACTORS[key.toUpperCase()])
+      .map((key) => ({
+        key: key as RegionKey,
+        value: key,
+        gwp: ELECTRICITY_FACTORS[key.toUpperCase()].gwp,
+      })),
   },
 ];
 
@@ -1071,7 +964,7 @@ const parametersForModel = (model: (typeof MODELS)[number]) => {
   return effectiveParameters(architecture, Pactive, Ptotal);
 };
 
-export const computeAiImpact = ({
+const computeRaw = ({
   model,
   useCase,
   hardware,
@@ -1087,8 +980,11 @@ export const computeAiImpact = ({
   steps,
   duration: audioDuration = 10,
   sampleRate,
+  inputFps,
+  mfu: requestedMfu,
+  lifetimeYears = 5,
 }: AiImpactInput): AiImpactResult => {
-  const lifespan = 5 * 365.25 * 24;
+  const lifespan = lifetimeYears * 365.25 * 24;
   const selectedRegion = FLAT_REGIONS.find(({ value }) => region === value) ??
     FLAT_REGIONS[0] ?? { key: "world", value: "world", gwp: 0.47184 };
   const { gwp } = selectedRegion;
@@ -1119,8 +1015,9 @@ export const computeAiImpact = ({
     ssd_embodied,
     enclosure_power,
     enclosure_embodied,
-    mfu,
+    mfu: defaultMfu,
   } = selectedHardware;
+  const mfu = requestedMfu ?? defaultMfu;
   const Pcompute = effectiveParameters(architecture, Pactive, Ptotal);
   const Pprompt = selectedPromptModel
     ? parametersForModel(selectedPromptModel)
@@ -1131,25 +1028,25 @@ export const computeAiImpact = ({
   let latency;
   let throughput;
   if (useCase === "training") {
-    flops = 6 * Ptotal * corpus * 1e9;
+    flops = 6 * Pcompute * corpus * 1e9;
   }
   if (useCase === "fine-tuning") {
-    const Ptunable = Pcompute * (0.1 / 100); // Hypothesis: 0.1% trainable parameters
-    flops = (2 * Ptotal + 4 * Ptunable) * corpus * 1e9;
+    // Conservative full-backprop proxy; trainable parameter share alone does not quantify PEFT savings.
+    flops = 6 * Pcompute * corpus * 1e9;
   }
   if (useCase === "text-inference") {
-    promptFlops = Pcompute * prompt;
+    promptFlops = 2 * Pcompute * prompt;
     flops = promptFlops + 2 * Pcompute * response;
     latency = promptFlops / (gpu_flops * mfu) / gpu_count;
     throughput =
-      response / ((2 * Pcompute * response) / (gpu_flops * mfu) / gpu_count);
+      response > 0 ? (gpu_flops * mfu * gpu_count) / (2 * Pcompute) : undefined;
   }
   if (useCase === "image-inference") {
     const downscaleFactor = 8;
     const latentWidth = Math.floor(width / downscaleFactor);
     const latentHeight = Math.floor(height / downscaleFactor);
     const latentSites = latentWidth * latentHeight;
-    promptFlops = Pprompt * prompt;
+    promptFlops = 2 * Pprompt * prompt;
     if (architecture === "dit" || architecture === "hybrid") {
       const imageProfile = selectedModel.image ?? DEFAULT_IMAGE_PROFILE;
       const spatialPatch = Math.max(imageProfile.spatialPatch, 1);
@@ -1177,16 +1074,13 @@ export const computeAiImpact = ({
     const latentSites = latentWidth * latentHeight;
     const videoProfile = selectedModel.video ?? DEFAULT_VIDEO_PROFILE;
     const frameBucket =
-      architecture === "hybrid" ? videoProfile.frameBucket ?? 49 : 1;
+      architecture === "hybrid" ? (videoProfile.frameBucket ?? 49) : 1;
     const effectiveFrames =
       frameBucket > 1 ? Math.ceil(images / frameBucket) * frameBucket : images;
-    promptFlops = Pprompt * prompt;
+    promptFlops = 2 * Pprompt * prompt;
     if (architecture === "dit" || architecture === "hybrid") {
       const spatialPatch = Math.max(videoProfile.spatialPatch, 1);
-      const temporalCompression = Math.max(
-        videoProfile.temporalCompression,
-        1,
-      );
+      const temporalCompression = Math.max(videoProfile.temporalCompression, 1);
       const latentFrames =
         Math.floor((effectiveFrames - 1) / temporalCompression) + 1;
       const videoTokens =
@@ -1203,8 +1097,7 @@ export const computeAiImpact = ({
               videoProfile.hiddenSize);
     } else {
       flops =
-        promptFlops +
-        effectiveFrames * steps * 2 * Pcompute * latentSites;
+        promptFlops + effectiveFrames * steps * 2 * Pcompute * latentSites;
     }
     latency = promptFlops / (gpu_flops * mfu) / gpu_count;
   }
@@ -1215,12 +1108,13 @@ export const computeAiImpact = ({
     const audioTokens = Math.ceil(
       (audioDuration * effectiveSampleRate) / temporalDownscale,
     );
-    promptFlops = Pprompt * prompt;
+    promptFlops = 2 * Pprompt * prompt;
     if (architecture === "audio") {
       const codebooks = Math.max(audioProfile.codebooks ?? 1, 1);
       flops = promptFlops + 2 * Pcompute * audioTokens * codebooks;
     } else {
-      const hiddenSize = audioProfile.hiddenSize ?? DEFAULT_AUDIO_PROFILE.hiddenSize;
+      const hiddenSize =
+        audioProfile.hiddenSize ?? DEFAULT_AUDIO_PROFILE.hiddenSize;
       const layers = audioProfile.layers ?? DEFAULT_AUDIO_PROFILE.layers;
       flops =
         promptFlops +
@@ -1229,6 +1123,20 @@ export const computeAiImpact = ({
             4 * layers * Math.pow(audioTokens, 2) * hiddenSize);
     }
     latency = promptFlops / (gpu_flops * mfu) / gpu_count;
+  }
+  // Prefix reuse changes work before time, electricity and allocated manufacturing.
+  if (cache > 0 && promptFlops > 0 && useCase.endsWith("inference")) {
+    const retained = 1 - (cache / 100) * (1 - CACHE_ALPHA);
+    flops -= promptFlops * (1 - retained);
+    if (latency !== undefined) latency *= retained;
+  }
+  const mediaInput = useCase === "image-analysis" || useCase === "video-analysis" || useCase === "audio-analysis"
+    ? computeMediaInput(useCase, {images, width, height, duration: audioDuration, inputFps, prompt, response, cache})
+    : undefined;
+  if (mediaInput) {
+    flops = mediaInput.encoder + mediaInput.conditioning + mediaInput.output;
+    latency = undefined;
+    throughput = undefined;
   }
   const gpu_seconds = flops / (gpu_flops * mfu);
   const duration = gpu_seconds / gpu_count;
@@ -1278,42 +1186,8 @@ export const computeAiImpact = ({
     embodied.storage +
     embodied.enclosure;
 
-  if (
-    cache > 0 &&
-    promptFlops > 0 &&
-    (useCase === "text-inference" ||
-      useCase === "image-inference" ||
-      useCase === "video-inference")
-  ) {
-    const reuseRate = cache / 100;
-    const promptShare = Math.min(promptFlops / flops, 1);
-    const promptImpactFactor = 1 - reuseRate + CACHE_ALPHA * reuseRate;
-    const totalImpactFactor =
-      1 - promptShare + promptShare * promptImpactFactor;
-
-    wh.cpu *= totalImpactFactor;
-    wh.gpu *= totalImpactFactor;
-    wh.ram *= totalImpactFactor;
-    wh.storage *= totalImpactFactor;
-    wh.enclosure *= totalImpactFactor;
-    wh.total *= totalImpactFactor;
-
-    energy.cpu *= totalImpactFactor;
-    energy.gpu *= totalImpactFactor;
-    energy.ram *= totalImpactFactor;
-    energy.storage *= totalImpactFactor;
-    energy.enclosure *= totalImpactFactor;
-    energy.total *= totalImpactFactor;
-
-    embodied.cpu *= totalImpactFactor;
-    embodied.gpu *= totalImpactFactor;
-    embodied.ram *= totalImpactFactor;
-    embodied.storage *= totalImpactFactor;
-    embodied.enclosure *= totalImpactFactor;
-    embodied.total *= totalImpactFactor;
-  }
-
   return {
+    mediaInput,
     flops,
     duration,
     latency,
@@ -1326,3 +1200,37 @@ export const computeAiImpact = ({
     },
   };
 };
+
+/** Finite, bounded inputs prevent negative workloads and numerical overflow. */
+export function computeAiImpact(input: AiImpactInput): AiImpactResult {
+  const clean = { ...input };
+  for (const key of [
+    "corpus",
+    "prompt",
+    "response",
+    "images",
+    "width",
+    "height",
+    "steps",
+    "duration",
+    "sampleRate",
+    "inputFps",
+    "cache",
+    "pue",
+  ] as const) {
+    const value = input[key];
+    if (value !== undefined)
+      clean[key] = Number.isFinite(value)
+        ? Math.min(Math.max(0, value), 1e9)
+        : 0;
+  }
+  clean.pue = Math.max(1, Math.min(5, clean.pue));
+  clean.cache = Math.min(100, clean.cache);
+  clean.mfu = Number.isFinite(input.mfu)
+    ? Math.max(0.01, Math.min(1, input.mfu))
+    : 0.4;
+  clean.lifetimeYears = Number.isFinite(input.lifetimeYears)
+    ? Math.max(0.1, Math.min(30, input.lifetimeYears))
+    : 5;
+  return computeRaw(clean);
+}

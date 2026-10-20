@@ -1,0 +1,47 @@
+.figure {
+  --map-edge: #8192a6;
+  --map-ocean: #f5f8fc;
+  --map-other: #edf0f4;
+  --map-blue: #d6e6f6;
+  --map-sand: #f5ddc9;
+  --map-rose: #f6cfc6;
+  --map-route: #526d93;
+  --map-distance: var(--d4b-viz-coral);
+}
+:global(html[data-theme='dark']) .figure {
+  --map-edge: #768da9;
+  --map-ocean: #101c2d;
+  --map-other: #26364b;
+  --map-blue: #314c6f;
+  --map-sand: #5a4739;
+  --map-rose: #64433d;
+  --map-route: var(--d4b-viz-blue);
+  --map-distance: var(--d4b-viz-rose);
+}
+.canvas { width: 100%; min-width: 0; }
+.map { display: block; width: 100%; }
+.ocean { fill: var(--map-ocean); }
+.country { fill: var(--map-other); stroke: var(--map-edge); stroke-width: 1; stroke-linejoin: round; }
+.spain { fill: var(--map-blue); }
+.france { fill: var(--map-sand); }
+.germany { fill: var(--map-rose); }
+.equivalentCircle { fill: var(--ifm-color-primary); fill-opacity: .045; stroke: var(--ifm-color-primary); stroke-opacity: .55; stroke-width: 1.2; }
+.radius { fill: none; stroke: var(--ifm-color-primary); stroke-opacity: .7; stroke-width: 1.2; }
+.halo { fill: none; stroke: var(--ifm-background-surface-color); stroke-width: 7; stroke-linejoin: round; }
+.route { fill: none; stroke: var(--map-route); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.node { fill: var(--ifm-background-surface-color); stroke: var(--map-route); stroke-width: 2; }
+.distance { fill: none; stroke: var(--map-distance); stroke-width: 3; stroke-dasharray: 7 5; }
+.barycentre { fill: var(--map-distance); stroke: var(--ifm-background-surface-color); stroke-width: 2; }
+.countryLabel, .label {
+  fill: var(--ifm-heading-color); font-family: inherit; font-size: 12px; font-weight: 500;
+  paint-order: stroke; stroke: var(--ifm-background-surface-color); stroke-width: 3; stroke-linejoin: round;
+}
+.countryLabel { font-size: 13px; font-weight: 600; }
+.leader { fill: none; stroke: var(--map-distance); stroke-width: 1; }
+.callout { fill: var(--ifm-background-surface-color); }
+.value { fill: var(--ifm-heading-color); font-family: inherit; font-size: 14px; font-weight: 600; }
+.valueLabel { fill: var(--ifm-font-color-base); font-family: inherit; font-size: 11px; }
+.routeKey { border-top: 3px solid var(--map-route); }
+.distanceKey { border-top: 3px dashed var(--map-distance); }
+.figure i.barycentreKey { width: 9px; height: 9px; margin: 0 3px; background: var(--map-distance); transform: rotate(45deg); }
+.figure i.circleKey { width: 13px; height: 13px; border: 1px solid var(--ifm-color-primary); border-radius: 50%; background: color-mix(in srgb, var(--ifm-color-primary) 5%, transparent); }

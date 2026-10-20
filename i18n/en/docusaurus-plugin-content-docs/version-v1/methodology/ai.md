@@ -1,0 +1,329 @@
+---
+sidebar_label: Generative AI
+sidebar_position: 6
+slug: /ai
+---
+
+# Methodology applied to generative AI
+
+## Summary
+
+This methodological note proposes a calculation framework to assess the environmental footprint of generative AI models by integrating training, fine-tuning, and inference. The approach is based on estimating the compute load (FLOPs) required by each usage, converting it into GPU usage time, then into energy consumption and greenhouse gas (GHG) emissions. It also includes the share of impact linked to equipment manufacturing and life cycle. This approach aims to provide a reproducible, transparent method adapted to different models and usage contexts, consistent with Green AI research recommendations.
+
+## Principle
+
+The methodology is based on a simple philosophy: directly link real uses of an AI model (training, fine-tuning, inference) to the hardware footprint necessary to perform them.
+
+```mermaid
+flowchart LR
+A[Model usage] --> B[FLOPs estimation]
+B --> C[Conversion to GPUh]
+C --> D[GPU energy consumption]
+D --> E[GPU operational impact]
+C --> F[GPU manufacturing impact]
+C --> C'[Server share determination]
+C' --> D'[Server energy consumption]
+D' --> E'[Server operational impact]
+C' --> F'[Server manufacturing impact]
+F --> G[Total impact]
+F' --> G
+E --> G
+E' --> G
+```
+
+Rather than starting from global electricity consumption measurements at the data center level, which are often inaccessible or proprietary (Google, 2025), it first evaluates the amount of computation required by the model according to:
+
+- its own characteristics (size, number of parameters, proportion of activated parameters, architecture),
+- the volume of tokens consumed or generated (text, images, etc.).
+
+This compute load is expressed in FLOPs, then converted to effective hardware usage time (GPUh) while accounting for real efficiency (Model FLOP Utilization, MFU).
+
+The next step translates this usage time into energy consumption and GHG emissions based on the physical characteristics of GPUs/servers and operating conditions (PUE, electricity emission factor).
+
+Finally, a share of the impact related to manufacturing and the equipment life cycle is added proportionally to usage time, following a life-cycle assessment (LCA) logic (ISO 14040 and 14044).
+
+:::note[Why use FLOPs as a metric?]
+According to the Green AI study, FLOPs are a relevant metric to measure the impact of generative AI because they express the compute load actually performed, directly correlated with energy consumption, and provide a hardware-agnostic basis to compare different models fairly.
+:::
+
+## Impact assessment
+
+### What is a token?
+
+A **token** is the discrete unit manipulated by the model to represent an input or an output. Depending on the modality, it can be a word fragment, a spatial position, or a coded temporal unit.
+
+The table below provides a quick reference for each modality and a simple way to estimate the variables used in the formulas.
+
+| Modality  | What a token is                                    | Formula (tokens / activations)                                                                                               | Example / estimation                                                                                                                                                                        |
+|-----------|----------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Text**  | Word fragment (often ~3–4 characters on average)   | $T_\text{text} = \text{number of words} \times \text{tokens per word}$                                                       | 100 words → $T_\text{text} \approx 130$–160 tokens depending on the tokenizer.                                                                                                                |
+| **Image** | Spatial / latent token (patch)                     | $T_\text{image} = (\text{width}/\text{patch}) \times (\text{height}/\text{patch})$                                           | 512×512 image, 16×16 patches → 512/16 = 32 tokens per axis → 32×32 = 1,024 tokens.                                                                                                              |
+| **Audio** | Temporal token produced by a codec (e.g., EnCodec) | $T_\text{audio} = \lceil \text{duration (s)} \times \text{sample rate} \div \text{temporal downscale} \rceil$         | 10 s clip, 24 kHz sample rate, temporal downscale 320 → $T_\text{audio} \approx 750$ temporal tokens.                                                                                           |
+| **Video** | Spatial token per frame + number of frames         | $T_\text{frame} = (\text{width}/\text{patch}) \times (\text{height}/\text{patch})$                                           | 4 s at 24 fps → $F=96$ frames. 512×512 frame, 16×16 patches → $T_\text{frame} \approx 32\times32=1{,}024$ tokens per frame and $T_\text{video} = 96 \times 1{,}024 = 98{,}304$ tokens.     |
+
+#### Explanation of technical terms
+
+- **Patch**: dividing an image or frame into square blocks processed as **tokens** by the model.
+- **Downscale / downsampling**: reducing spatial (images/video) or temporal (audio) resolution to move into a smaller latent space used for **activations**. Example: downscale 8 → width and height divided by 8.
+- **Latent channels**: number of dimensions in the latent space (feature depth) for image, video, or audio.
+
+### Estimating compute load
+
+For image, audio, and video generation, the estimate may distinguish text prompt processing from media generation. These two steps may be handled by different components depending on the system being assessed:
+
+$$$FLOP_\text{total} \approx FLOP_\text{text prompt} + FLOP_\text{media generation}$$$
+
+For audio, the temporal downscale used to convert the sample rate into latent tokens is a modeling assumption specific to the system being assessed.
+
+| Use case                                   | Calculation formula                                                                                                                 | Variables                                                                                                                                                                                                                                                                          | Explanation                                                                                                                                                                                                                                                  |
+|--------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Training**                               | $FLOP \approx 6 \times P_\text{total} \times T_\text{training}$                                                                     | $P_{total}$: total number of model parameters<br/>$T_{training}$: number of tokens processed during training (tokens × batch × steps)                                                                                                                                              | For each token and parameter, 6 FLOPs are needed: 2 FLOPs for the forward pass and 4 for gradient computation and propagation (Source: Scaling Law, Transformers FLOPs, Transformers Inference Arithmetic)                                                   |
+| **Fine-tuning**                            | $FLOP \approx (2 \times P_\text{total} + 4 \times P_\text{tunable}) \times T_\text{training}$                                       | $P_{total}$: total number of model parameters<br/>$P_{tunable}$: number of trainable parameters (depends on optimization: LoRA, …)<br/>$T_{training}$: number of tokens processed during training (tokens × batch × steps)                                                         | Same as full training, however the number of updated parameters is lower (Source: Scaling Law, Transformers FLOPs, Transformers Inference Arithmetic)                                                                                                        |
+| **Prompt processing**<br/>(text)           | $FLOP \approx 1 \times P_{active} \times T_{input}$                                                                                 | $P_{active}$: number of active parameters<br/>$T_{input}$: number of prompt tokens                                                                                                                                                                                                 | The prompt is encoded once by the model. During auto-regressive generation, the intermediate states that have already been computed are then reused to avoid recalculating the full context for each newly generated token. (Source: Scaling Law, Transformers FLOPs, Transformers Inference Arithmetic) |
+| **Prompt processing**<br/>(image)          | $FLOP \approx 1 \times P_{active} \times T_\text{image}$                                                                       | $P_{active}$: number of active parameters                                                                                                                                                       | Each prompt image is encoded once by the model. $T_\text{image}$ corresponds to encoded spatial positions, without multiplying again by the model's internal channels. (Sources: Latent Diffusion Models, DiT)                                                                                                                          |
+| **Prompt processing**<br/>(audio)          | $FLOP \approx 1 \times P_{active} \times T_\text{audio}$                                                                            | $P_{active}$: number of active parameters                                                                                                                                      | Each prompt audio clip is encoded once by the model. $T_\text{audio}$ corresponds to latent temporal positions, without multiplying again by the model's internal channels. (Sources: AudioLDM, Stable Audio Open)                                                                                                                   |
+| **Text generation**                        | $FLOP \approx 2 \times P_\text{active} \times T_\text{output}$                                                                      | $P_{active}$: number of active parameters<br/>$T_{output}$: number of generated tokens                                                                                                                                                                                             | For each token and parameter, 2 FLOPs are needed for the forward pass. The number of active parameters during inference depends on the model architecture (especially for MoE). (Source: Scaling Law, Transformers FLOPs, Transformers Inference Arithmetic) |
+| **Image generation**<br/>(U-Net)           | $FLOP \approx S \times \big(2 \times P_\text{active} \times N_\text{site}\big)$                                                                  | $N_{site}$: number of latent spatial sites = latent width x latent height<br/>$S$: number of denoising steps                                                                                                                                                                                                      | The dominant cost of U-Net latent image diffusion is repeated denoising over a latent spatial grid. Channels are already represented in model weights and are therefore not multiplied a second time. (Sources: Latent Diffusion Models, Clockwork Diffusion, Transformers Inference Arithmetic)                                                                                                                  |
+| **Image generation**<br/>(DiT)             | $FLOP \approx S \times \big(2 \times P_\text{active} \times T_\text{image} + 4 \times L \times T_\text{image}^2 \times d\big)$                  | $L$: number of Transformer layers<br/>$d$: hidden dimension<br/>$S$: number of denoising steps                                                                                                                       | Image DiT models process patchified latent tokens. The first term covers the model's linear pass, while the second covers quadratic attention across spatial tokens. (Sources: DiT, Latent Diffusion Models, Transformers Inference Arithmetic) |
+| **Video generation**<br/>(U-Net / local frame processing) | $FLOP \approx S \times \big( 2 \times P_\text{active} \times N_\text{site} \times F \big)$ | $N_{site}$: number of latent spatial sites = latent width x latent height<br/>$F$: number of frames to generate<br/>$S$: number of denoising steps | The order of magnitude is linear with the number of frames. It represents video U-Net architectures whose dominant cost remains local to frames or small temporal neighborhoods. (Sources: Clockwork Diffusion, Transformers Inference Arithmetic, Video Killed the Energy Budget) |
+| **Video generation**<br/>(DiT / global spatio-temporal attention) | $FLOP \approx S \times \big( 2 \times P_\text{active} \times T_\text{video} + 4 \times L \times T_\text{video}^2 \times d \big)$ | $F_{latent}=\lfloor(F-1)/c_t\rfloor+1$<br/>$c_t$: temporal compression<br/>$L$: number of Transformer layers<br/>$d$: hidden dimension<br/>$S$: number of denoising steps | The first term corresponds to the linear cost over patchified video tokens. The second models the quadratic cost of global spatio-temporal self-attention across these tokens. (Sources: DiT, Video Killed the Energy Budget, Wan 2.1 configuration) |
+| **Video generation**<br/>(Hybrid DiT + 3D VAE) | $FLOP \approx S \times \big( 2 \times P_\text{active} \times T_\text{video} + 4 \times L \times T_\text{video}^2 \times d \big)$ | $F_\text{effective} = \lceil F / B \rceil \times B$<br/>$B$: frame block size effectively computed<br/>$T_\text{video}$ is calculated as in the DiT case, using $F_{effective}$ instead of $F$ | Some hybrid architectures process video in fixed temporal blocks and use a 3D VAE. The cost is therefore estimated from the frames and tokens effectively computed, not only from the requested duration. (Sources: CogVideoX, Wan 2.1 configuration, Video Killed the Energy Budget) |
+| **Audio generation**<br/>(diffusion / temporal attention) | $FLOP \approx S \times \big( 2 \times P_\text{active} \times T_\text{audio} + 4 \times L \times T_\text{audio}^2 \times d \big)$ | $L$: number of Transformer layers<br/>$d$: hidden dimension<br/>$S$: number of denoising steps | Audio is generated by diffusion over a 1D sequence of latent tokens. Cost is linear for sequence processing and quadratic when the architecture applies global temporal attention. (Sources: AudioLDM, Stable Audio Open, Attention Is All You Need) |
+| **Audio generation**<br/>(codec / autoregressive) | $FLOP \approx 2 \times P_\text{active} \times T_\text{codec}$ | $T_\text{codec}=T_\text{audio}\times C$<br/>$C$: preset number of codebooks | Some audio generators directly produce a sequence of codec tokens. The main cost is then linear with the number of generated tokens. (Sources: MusicGen, Stable Audio Open) |
+
+### Conversion to GPU usage
+
+If the FLOP processing capacity of a GPU is known, it is then trivial to calculate the theoretical usage duration to satisfy one of the above use cases:
+
+$$$D_{gpu} = \frac{FLOP}{(C_{gpu}\times MFU)}$$$
+
+With $D_{gpu}$ the GPU usage duration in hours, and $C_{gpu}$ the theoretical computing capacity in FLOP/h of the GPU.
+
+The actually usable computing capacity of a GPU, taking into account model typology, GPU/TPU type, heavy parallelism, network exchanges, etc., would represent only 25 to 50% of the theoretical capacity (see NVIDIA Benchmarks).
+
+This utilization rate is called $MFU$ (Model FLOP Utilization).
+
+### Conversion to energy consumption
+
+If we assume that during GPU usage its energy consumption is at maximum, the calculation of its energy consumption is simple:
+
+$$$E_{gpu} = D_{gpu} \times P_{gpu}$$$
+
+With $P_{gpu}$ the GPU power in Watts.
+
+In a data center context, it is relevant to multiply this figure by its $PUE$ (Power Usage Efficiency) to account for energy efficiency.
+
+### Environmental impact of energy consumption
+
+To obtain the environmental impact (e.g., GHG emissions) of energy, simply apply electricity emission factors such as those available in the D4B Open Data reference:
+
+$$$I_{operational} = E_{gpu} \times F_{energy}$$$
+
+### Environmental impact of GPU manufacturing
+
+The impact linked to GPU manufacturing is calculated proportionally to usage duration relative to the estimated GPU lifetime:
+
+$$$I_{embodied} = I_{manufacturing} \times \frac{D_{usage}}{D_{lifespan}}$$$
+
+### Accounting for server impacts
+
+The impact of other components (CPU, RAM, storage, chassis) is also taken into account. Because durations are expressed in GPUh, the impact of these components is allocated in proportion to the number of GPUs per server. For example, in an 8-GPU server, one eighth of the operational and embodied impacts of non-GPU components is attributed to each calculated GPUh.
+
+$$$I_{total} = I_{gpu} + \frac{I_{server}}{N_{gpu/server}}$$$
+
+### Taking caches into account
+
+Two caching mechanisms can reduce the effective cost of inference.
+
+The first is an **inference cache**, used within the same request. Once a prompt has been processed once, the intermediate states associated with previously seen tokens can be reused during generation of subsequent tokens. This mechanism explains why generation does not require recalculating the full context at each step.
+
+The second is a **prefix cache**, used across multiple distinct requests that share the exact same beginning. In that case, part of the prompt can sometimes be reused from one request to another, which reduces the cost of processing input tokens.
+
+The base methodology first computes a raw impact for prompt processing, without cross-request reuse.
+
+When several requests reuse the same prefix, the reuse rate can be noted $r_{cache}$:
+
+$$$r_{cache} = \frac{T_{cached}}{T_{input}}$$$
+
+with:
+
+- $T_{input}$ the total number of input tokens
+- $T_{cached}$ the number of input tokens reused from the cache
+- $r_{cache} \in [0;1]$
+- $r_{cache} = 0$: no prompt reuse
+- $r_{cache} = 1$: prompt fully reused
+
+Tokens reused from a cache are not, however, assumed to be impact-free. A residual coefficient $\alpha$ is introduced to represent the impact of a token served from a cache relative to a recalculated token:
+
+- $\alpha \in [0;1]$
+- $\alpha = 0$: tokens served from a cache are assumed negligible compared with the avoided impact
+- $\alpha = 1$: a token served from a cache is assumed to have the same impact as a recalculated token
+
+The effective impact of the prompt can then be approximated by:
+
+$$$I_{prompt,effectif} = I_{prompt,brut} \times \big((1-r_{cache}) + \alpha \times r_{cache}\big)$$$
+
+This correction can be applied identically to the operational and embodied impact of the prompt. The cost of generating output tokens remains unchanged.
+
+:::note
+When operating data distinguishes input tokens that were effectively recalculated from input tokens reused from a cache, it can be used to estimate $r_{cache}$ empirically. The coefficient $\alpha$ remains a modeling assumption: it aims to represent the residual impact associated with the memory, fast storage, and services required to retain and serve cached states. This estimate therefore reflects a real usage and deployment context, rather than a general property of the model.
+:::
+
+## Assumptions & limits
+
+### Assumptions
+
+- During auto-regressive generation, an inference cache is generally used to reuse already computed intermediate states.
+- Cross-request reuse of a prompt prefix is not systematic. It depends on the deployment context and the effective stability of prompts.
+- In the absence of direct measurement, the reuse rate $r_{cache}$ is a usage assumption.
+- As a first approximation, three usages can be retained: a simple mode with $\alpha = 0$, a prudent mode with $\alpha = 0.1$, and an exploratory mode as a range between $0$ and $0.25$.
+
+### Limitations
+
+- Uncertainties in input data: actual training data, model characteristics often confidential, MFU, etc.
+- No accounting for whether models fit in memory on selected hardware.
+- No handling of TPU, FPGA, ASIC specificities.
+- No reliable LCA on equipment.
+- The method does not model in detail the activation, retention, and eviction conditions of caches.
+- Tokens served from a cache are not impact-free: the method simply assumes that the avoided computation dominates the memory and service overhead associated with the cache.
+- The actual reuse rate of a prompt depends strongly on usage structure, prefix repetition, and the technical deployment context.
+- The value of $\alpha$ remains uncertain in the absence of direct measurement of the memory and service overhead associated with the cache.
+- Billing or operating data that distinguishes recalculated tokens from reused tokens can serve as an operational proxy, but does not constitute a direct physical measurement of environmental impact.
+
+### Perspectives
+
+- Include public metrics such as tokens/s in addition to FLOPs.
+- Account for precision (FP32, FP16, ...).
+- Integrate overhead to account for parallelism impacts (network, replication, queuing, ...).
+- Integrate GPU memory as a bottleneck.
+- Integrate amortization of training across inference.
+- Adapt MFU according to server characteristics (number of GPUs per server, ...).
+- Adapt the methodology to multimodal models (text, image, video).
+- Integrate multi-criteria impact factors (primary energy, water, rare metals).
+- Integrate training of development versions attributable to the current model version.
+
+## Application
+
+This section aims to evaluate the model using public data from the open-source LLM Llama 3.1 (405B parameters).
+
+### Hardware assumptions
+
+The NVIDIA DGX H100 is a “classic” configuration on which the workloads are executed.
+
+| Characteristics        | Component                                                   | Power                | Life-cycle impact (approximate)           |
+|------------------------|-------------------------------------------------------------|----------------------|-------------------------------------------|
+| CPU                    | 2 x Intel Xeon Platinum 8480C processors (112 cores total) | 2 x 350 = 700 W      | 2 x 25 = 50 kgCO2e                         |
+| RAM                    | 2 TB                                                        | 2 x 1024 x 0.392 = 803 W  | 2 x 1024 x 533 / 384 = 2843 kgCO2e     |
+| Storage                | 30 TB SSD                                                   | 30 x 1024 x 0.0012 = 37 W | 30 x 1024 x 0.16 = 4915 kgCO2e         |
+| GPU                    | 8 x H100 80 GB (989 TFLOP/s per GPU)                        | 8 x 700 W            | 8 x 250 kgCO2e                             |
+| Chassis                |                                                             | -                    | 250 kgCO2e                                 |
+| Total (excluding GPU)  |                                                             | 1540 W               | 10058 kgCO2e                               |
+| Total (excluding GPU)/h|                                                             | 1540 W               | 10058 / (5 x 24 x 365.25) = 0.230 kgCO2e/h |
+
+### Training impact
+
+Llama 3.1 (405B parameters) was trained with approximately 15 trillion (15e12) tokens.
+According to Huggingface, it was trained with 24576 H100 GPUs:
+Training Time (GPU hours)    Power Consumption (W)    Emissions (tons CO2eq)
+Llama 3.1 8B    1.46M    700    420
+Llama 3.1 70B   7.0M     700    2,040
+Llama 3.1 405B  30.84M   700    8,930
+
+According to the model formulas and assuming an MFU of 40% (to be refined based on NVIDIA benchmarks, it could be closer to 35%) for training, a PUE of 1.2 and a GHG emission factor of 0.420 kgCO2e / kWh:
+
+$$$
+\begin{aligned}
+&FLOP_{training} = 6 \times P_{total} \times T_{training} = 6 \times 405e9 \times 15e12 = 3.65e25 FLOP \\
+&D_{training} = \frac{FLOP_{training}}{FLOP_{gpu} \times MFU} = \frac{FLOP_{training}}{989e12 * 3600 \times 0.40} = 25.6e6 GPU.h \\
+&E_{training} = 0.700 \times D_{training} \times PUE = 21.5e6 kWh \\
+&I^{gpu}_{training_{ope}} = 0.420 \times E_{training} = 9,030 tCO2e \\
+\end{aligned}
+$$$
+
+:::note
+The gap between Huggingface data and the calculation is < 2%, which remains very reasonable.
+:::
+
+For embodied impact, we assume a 5-year equipment lifetime:
+
+$I^{gpu}_{training_{emb}} = \frac{D_{training}}{D_{lifespan}} \times I_{total_{emb}} = \frac{25.6e6}{(5 \times 24 \times 365.25)} \times 250 = 146 tCO2e$
+
+:::note
+We observe that embodied impact is considerably lower than operational impact.
+:::
+
+To GPU impact we add server operational and embodied impact. There are 8 GPUs per server, so we add 1/8 of non-GPU components.
+
+$$$
+\begin{aligned}
+&I_{training_{ope}} = I^{gpu}_{training_{ope}} + \frac{I^{server}_{training_{ope}}}{8} = 9030 + \frac{25.6e6 \times 1.540 \times 0.420 \times 1.2 }{8} = 11,513 tCO2e \\
+&I_{training_{emb}} = I^{gpu}_{training_{emb}} + \frac{I^{server}_{training_{emb}}}{8} = 146 + \frac{25.6e6 \times 0.000230}{8} = 899 tCO2e
+\end{aligned}
+$$$
+
+### Impact of generating 1 million tokens
+
+In a completion-type use case, inference cost is split into two parts: initial prompt processing, then output token generation. During generation, intermediate states already computed for the context are reused, which avoids recalculating the full prompt for each new token. When multiple requests also share the same prefix, the cost of processing input tokens can be reduced further if that reuse is effectively exploited. The calculations below nevertheless correspond to a base case without an explicit correction by $r_{cache}$.
+
+$$$
+\begin{aligned}
+&I^{gpu}_{output_{ope}} = \frac{2 \times 405e9 \times 1e6}{989e12 \times 3600 \times 0.40} \times (0.700 + \frac{1.540}{8}) \times 1.2 \times 0.420 = 256gCO2e \\
+&I^{gpu}_{output_{emb}} = \frac{2 \times 405e9 \times 1e6}{989e12 \times 3600 \times 0.40} \times \frac{250 + \frac{10058}{8}}{5\times24\times365.25} = 20gCO2e
+\end{aligned}
+$$$
+
+If we consider an average prompt size of about 400 tokens, then the impact of a request is about 0.1 gCO2e.
+
+## Simulator
+
+import { AIPlayGround } from '@site/src/v1/components/ai-playground';
+
+<AIPlayGround lang="en" />
+
+## Comparison
+
+This section provides a comparison of available methodologies for evaluating the environmental impacts of generative AI models. It highlights their perimeters, strengths, and limitations, to position the D4B methodology relative to existing approaches.
+
+| Characteristic                                             | Full LCA (Google, 2025)                                                                                       | Ecologits                                                                        | D4B methodology                                                                   |
+|------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| Approach type                                              | Full-stack measurement: CPU/DRAM, idle machines, datacenter overhead, water, partial hardware LCA             | Bottom-up assessment applied to inference only (usage + manufacturing)           | FLOPs → GPUh → impacts modeling                                                   |
+| Perimeter                                                  | Manufacturing (partial), usage (all server components), datacenter infrastructure, water, Scope 2/3 emissions | Infra usage + manufacturing, inference only                                      | Training, fine-tuning, inference usage + GPU and server manufacturing             |
+| Granularity & measurement                                  | Very fine: real measurements on Gemini production, energy, water, emissions                                   | Medium-high, open data multi-criteria (GWP, PE, ADPe) aggregated per API call    | Moderate: depends on available data (FLOPs, TDP, ...)                             |
+| Accessibility                                              | Low: internal Google data not detailed                                                                        | High: open-source code, open API                                                 | High: publicly documented methods and assumptions                                 |
+| Reproducibility                                            | Low: proprietary instrumentation and internal data                                                            | High: public tool, transparent and reproducible calculations                     | Medium to high: if input data can be estimated                                    |
+| Transparency                                               | Medium: method published but data access limited                                                              | High: open-source code, assumptions, and model                                   | High: all formulas and sources are explained                                      |
+| Accuracy (inference)                                       | Very high: real measured deployment, includes full energy spectrum                                            | Medium: relies on simplified models and generalized assumptions                  | Medium to high depending on parameter accuracy                                    |
+| Applicability                                              | Limited: specific to Google infrastructure and inference                                                      | Medium: inference across various providers, but no training                      | Very broad: training, fine-tuning, inference based on public data                 |
+| Targeted uses                                              | Internal analysis, detailed reporting, communication                                                          | Public assessment, awareness, multi-provider comparison                          | Research, internal assessment, FinOps, Green AI                                   |
+| Quantified results<br/>(Average prompt, around 400 tokens) | ~0.03 gCO2e<br/>~0.24 Wh<br/>Gemini                                                                           | ~40 gCO2e<br/>~95 Wh<br/>Llama 3.1 405b                                          | ~0.12 gCO2e<br/>~0.27 Wh<br/>Llama 3.1 405b<br/>(see [Application](#application)) |
+| Key limitations                                            | Proprietary data, does not cover training, focuses on inference, bias on “median prompt”                      | Limited perimeter (inference only), possible overestimation due to extrapolation | Highly dependent on assumptions (MFU, lifetime)                                   |
+
+These results show that each approach has a specific positioning: Google prioritizes accuracy but remains closed and non-reproducible, Ecologits focuses on transparency and simplicity but at the cost of possible overestimation, while the D4B methodology offers a reproducible and adaptable compromise for different usage contexts but depends on the precision of input data.
+
+[^1]: J. Kaplan, S. McCandlish, ..., 2020. Scaling Laws for Neural Language Models
+[^2]: A. Habibian, A. Ghodrati, ... 2024. Clockwork Diffusion: Efficient Generation With Model-Step Distillation
+[^3]: Google, 2025. Measuring the environmental impact of delivering AI at Google Scale
+[^4]: Google, 2025. Life-Cycle Emissions of AI Hardware: A Cradle-To-Grave Approach and Generational Trends
+[^5]: J. You, 2025. How much energy ChatGPT use
+[^6]: A. Casson, 2023. Transformer FLOPs
+[^7]: D. Bahdanau, 2022. The FLOPs Calculus of Language Model Training
+[^8]: C. Chen, 2023. Transformer Inference Arithmetic
+[^9]: Huggingface, 2022. Understanding FLOPs-per-token estimates from OpenAI’s scaling laws
+[^10]: D. Patterson, 2022. The Carbon Footprint of Machine Learning Training Will Plateau, Then Shrink
+[^11]: Google, 2022. PaLM: Scaling Language Modeling with Pathways
+[^12]: Meta, 2024. The Llama 3 Herd of Models
+[^13]: NVidia, 2025. Llama 3.1 70B 24.11.1 (DGXC Benchmarking)
+[^14]: GenAI Impact. EcoLogits
+[^15]: Schwartz et al., 2020, Henderson et al., 2020. Green AI
+[^16]: Edward Hu, 2021. LoRA, Low-rank Adaptation of LLMs
+[^17]: Julien Delavande, Regis Pierrard, 2025. Video Killed the Energy Budget: Characterizing the Latency and Power Regimes of Open Text-to-Video Models
+[^18]: Zalan Borsos, Raphael Marinier, Damien Vincent, ..., 2023. AudioLM
+[^19]: Andrea Agostinelli, Timo I. Denk, Zalán Borsos, ..., 2023. MusicLM
+[^20]: Zach Evans, Julian D. Parker, ..., 2024. Stable Audio Open
+[^21]: William Peebles, Saining Xie, 2023. Scalable Diffusion Models with Transformers
+[^22]: Alibaba Wan Team, 2025. Wan 2.1 T2V 1.3B configuration
+[^23]: Hugging Face Diffusers. CogVideoXTransformer3DModel
+[^24]: Robin Rombach, Andreas Blattmann, ..., 2022. High-Resolution Image Synthesis with Latent Diffusion Models
+[^25]: Haohe Liu, Zehua Chen, ..., 2023. AudioLDM: Text-to-Audio Generation with Latent Diffusion Models
+[^26]: Ashish Vaswani, Noam Shazeer, ..., 2017. Attention Is All You Need
+[^27]: Jade Copet, Felix Kreuk, ..., 2023. Simple and Controllable Music Generation

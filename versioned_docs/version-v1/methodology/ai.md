@@ -275,7 +275,7 @@ Si l'on considère une taille de "prompt moyen" d'environ 400 jetons, alors l'im
 
 ## Simulateur
 
-import { AIPlayGround } from '@site/src/components/ai-playground';
+import { AIPlayGround } from '@site/src/v1/components/ai-playground';
 
 <AIPlayGround lang="fr" />
 

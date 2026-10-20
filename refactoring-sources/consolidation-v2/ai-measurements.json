@@ -1,0 +1,24 @@
+{
+  "source": "https://arxiv.org/html/2511.05597v1",
+  "title": "From Prompts to Power",
+  "authors": "Francisco Caravaca, Angel Cuevas, Ruben Cuevas",
+  "version": "v1, 2025-11-05",
+  "measurementBoundary": "GPU energy sampled through CodeCarbon/NVML; CPU, RAM, storage, PUE, manufacturing and idle-capacity allocation are outside this comparison",
+  "precisionNote": "Values reported in the paper text, not raw measurement traces. Repeated-run dispersion is unavailable for these specific points.",
+  "phase": {
+    "section": "IV-A, Fig. 1 discussion",
+    "model": "facebook/opt-30b",
+    "hardware": "NVIDIA A100 80GB",
+    "longInput": {"inputTokens": 900, "outputTokens": 100, "gpuWh": 0.08},
+    "longOutput": {"inputTokens": 100, "outputTokens": 900, "gpuWh": 0.3}
+  },
+  "batch": {
+    "section": "IV-B, Fig. 3 discussion",
+    "model": "meta-llama/Llama-3.1-405B",
+    "hardware": "2 x 8 NVIDIA A100 80GB",
+    "inputTokens": 300,
+    "outputTokens": 300,
+    "single": {"prompts": 1, "durationSeconds": 15.4, "gpuWh": 21.7},
+    "grouped": {"prompts": 100, "durationSeconds": 29.4, "gpuWh": 60.4}
+  }
+}
