@@ -1,227 +1,156 @@
 # Cloud
 
-## Résumé
+import { MethodIllustration } from '@site/src/components/method-illustrations';
 
-Ce chapitre évalue un périmètre cloud quand les ressources physiques sous-jacentes ne sont pas directement visibles. La méthode transforme les données de facturation ou d'usage fournisseur en **unités pivot matérielles** (vCPU.h, Go RAM.h, Go SSD.h, Go transférés), puis calcule les impacts environnementaux via les modèles paramétriques composants.
+Le calcul part des ressources réservées et des données d’usage fournisseur. Il convertit ces activités en énergie et en fabrication allouée. Le coût financier ne constitue pas une unité physique : remises et taxes n’ajoutent pas de consommation.
 
-### Périmètre évalué
+## Préparer les données
 
-- **IaaS** : machines virtuelles, volumes de stockage, trafic réseau
-- **PaaS** : quand il peut être relié à des unités techniques explicites
-- **Services managés** : quand une règle de correspondance vers des ressources matérielles peut être documentée
-
-Le cloud maîtrisé (on-premise, salle serveur) est traité dans [Infrastructure d'hébergement](./infrastructure-d-hebergement).
-
-## Pipeline d'évaluation
-
-Le calcul suit une pipeline en 5 étapes :
-
-```mermaid
-flowchart LR
-    A[Données fournisseur<br>facturation, billing,<br>export FOCUS] --> B[Classification<br>par famille de service]
-    B --> C[Inférence matérielle<br>unités pivot :<br>vCPU.h, Go.h, Go]
-    C --> D[Calcul énergie<br>unités pivot ×<br>coefficients]
-    D --> E[Calcul impacts<br>énergie × PUE ×<br>facteur élec pays]
-    E --> F[Agrégation<br>opérationnel +<br>intrinsèque]
-
-    style A fill:#264653,color:#fff
-    style B fill:#2a9d8f,color:#fff
-    style C fill:#e9c46a,color:#000
-    style D fill:#f4a261,color:#000
-    style E fill:#e76f51,color:#fff
-    style F fill:#6c757d,color:#fff
-```
-
-## Étape 1 : classification des services
-
-Les services cloud sont classés en familles selon leur nature physique :
-
-| Famille | Exemples | Unité pivot |
+| Ressource | Quantité à recueillir | Conversion |
 |---|---|---|
-| **Calcul** | VM, conteneurs, fonctions, batch | vCPU.h, GPU.h |
-| **Stockage** | Volumes bloc, stockage objet, snapshots, sauvegardes | Go SSD.h ou Go HDD.h |
-| **Réseau** | Transit, CDN, load balancers | Go transférés |
-| **Données** | Bases managées, caches, moteurs de recherche | Combinaison calcul + stockage |
-| **IA** | Inférence managée, fine-tuning | GPU.h, tokens |
+| VM ou conteneur | Nombre, vCPU, RAM, heures | vCPU.h et Go RAM.h |
+| Stockage | Capacité physique et durée | Go.h, copies incluses une seule fois |
+| Fonction | Durée, invocations, ressources réservées | Selon la correspondance documentée du fournisseur |
+| Service managé | Unités techniques ou architecture | Signaler les ressources non observables |
 
-Les services purement logiques (DNS, IAM, monitoring sans stockage) sont exclus car leur empreinte matérielle est négligeable ou non attribuable.
+Une fonction peut être étudiée après conversion documentée en ressources-temps ; aucun forfait universel par invocation n’est appliqué.
 
-## Étape 2 : inférence matérielle (unités pivot)
+<span id="comprendre-le-calcul" />
 
-### Principe
+L’énergie IT est la somme des `ressources × heures × puissance unitaire`. Elle est ensuite multipliée par le PUE, puis par le facteur électrique retenu pour la région et sa part renouvelable, selon la convention détaillée ci-dessous. Les puissances préremplies sont des coefficients historiques modifiables, pas des mesures du fournisseur.
 
-Chaque SKU de facturation est converti en **unités pivot** — des grandeurs physiques indépendantes du fournisseur :
+La fabrication est allouée au temps de réservation : `fabrication attribuée à la ressource × heures / durée de vie en heures`. Le facteur par VM doit déjà inclure sa part du serveur, hors stockage compté séparément.
 
-| Unité pivot | Ce qu'elle représente | Exemple |
+## Méthode détaillée et services managés
+
+### De la facturation à une activité physique
+
+Chaque ligne d’usage relève du calcul, de la mémoire, du stockage, du réseau ou d’un service managé. Elle est décrite par un identifiant de ressource, une région, une période, une quantité et une unité. Les exports de facturation peuvent faciliter la collecte, mais une remise ou une ligne en euros n’est pas une mesure de ressources physiques.
+
+<MethodIllustration kind="cloud-billing" lang="fr" />
+
+| Service | Unités utiles | Difficulté d’interprétation |
 |---|---|---|
-| **vCPU.h** | Temps de calcul CPU | 4 vCPU × 730 h/mois = 2 920 vCPU.h |
-| **GPU.h** | Temps d'accélération GPU | 1 GPU × 100 h = 100 GPU.h |
-| **Go RAM.h** | Mémoire active | 16 Go × 730 h = 11 680 Go.h |
-| **Go SSD.h** | Stockage SSD actif | 100 Go × 730 h = 73 000 Go.h |
-| **Go HDD.h** | Stockage HDD actif | 1 000 Go × 730 h = 730 000 Go.h |
-| **Go** | Volume réseau transféré | 500 Go sortants |
+| VM et conteneurs | vCPU.h, Go RAM.h, GPU.h | Allocation hôte, surallocation, charge réelle |
+| Stockage objet ou bloc | Go.h, opérations, réplication | Capacité logique ou physique, classe de stockage |
+| Serverless | Invocations, secondes, mémoire et CPU réservés | Démarrages à froid, concurrence, capacité de fond |
+| Base de données managée | Ressources-temps, stockage, I/O, sauvegardes | Architecture masquée, réplication et services de gestion |
+| Réseau | Go par trajet ou segment | Frontière, pays et phases du facteur |
 
-### Correspondance service → unités pivot
+### Calculer énergie et fabrication
 
-| Service | Données d'entrée | Unités pivot |
-|---|---|---|
-| **VM (EC2, Compute Engine, Azure VM)** | Type d'instance, heures | vCPU.h + Go RAM.h + Go SSD.h (via specs instance) |
-| **Stockage bloc (EBS, Persistent Disk)** | Go.mois | Go SSD.h ou Go HDD.h |
-| **Stockage objet (S3, GCS, Blob)** | Go.mois | Go HDD.h (pour le stockage froid) |
-| **Base de données managée (RDS, CloudSQL)** | Type d'instance, Go stockage | vCPU.h + Go RAM.h + Go SSD.h |
-| **Fonctions (Lambda, Cloud Functions)** | Invocations × durée × mémoire | vCPU.h + Go RAM.h (reconstitué) |
-| **Conteneurs (ECS, GKE, AKS)** | vCPU, mémoire, heures | vCPU.h + Go RAM.h |
-| **Réseau (Transit, CDN, NAT)** | Go transférés | Go réseau |
-| **IA managée (Bedrock, Vertex AI)** | Tokens, GPU.h | GPU.h ou tokens → GPU.h |
-
-:::note[Specs d'instance]
-Pour les VM, les specs (vCPU, RAM, stockage) proviennent du référentiel `digital4better/data/cloud/{provider}-vms.csv`. Chaque type d'instance (ex: `m5.xlarge`) est relié à ses caractéristiques physiques (4 vCPU, 16 Go RAM, etc.).
-:::
-
-## Étape 3 : calcul de l'énergie
-
-Les unités pivot sont converties en consommation électrique via des coefficients par composant :
+Pour un lot de VM identiques :
 
 $$
-\begin{aligned}
-&E_{cloud} = E_{vcpu} + E_{gpu} + E_{ram} + E_{ssd} + E_{hdd} + E_{network} \\
-\text{avec} \\
-&E_{vcpu} = vCPU.h \times 0{,}00354 \htmlClass{unit}{[kWh]} \\
-&E_{gpu} = GPU.h \times 0{,}7 \htmlClass{unit}{[kWh]} \\
-&E_{ram} = Go.h \times 0{,}000392 \htmlClass{unit}{[kWh]} \\
-&E_{ssd} = Go.h \times 1{,}2 \times 10^{-6} \htmlClass{unit}{[kWh]} \\
-&E_{hdd} = Go.h \times 6{,}5 \times 10^{-7} \htmlClass{unit}{[kWh]} \\
-&E_{network} = Go \times 0{,}001 \htmlClass{unit}{[kWh]}
-\end{aligned}
+E_{IT}=\frac{h}{1000}\left[n(vW_{CPU}+rW_{RAM})+sW_{SSD}+dW_{HDD}\right]
 $$
 
-| Composant | Coefficient | Unité | Source |
-|---|---|---|---|
-| vCPU | 0,00354 | kWh / vCPU.h | Cloud Jewels (3,54 W moyen par vCPU) |
-| GPU | 0,7 | kWh / GPU.h | Basé sur TDP H100 (700 W) |
-| RAM | 0,000392 | kWh / Go.h | Cloud Carbon Footprint |
-| SSD | 1,2E-06 | kWh / Go.h | Cloud Carbon Footprint |
-| HDD | 6,5E-07 | kWh / Go.h | Cloud Carbon Footprint |
-| Réseau | 0,001 | kWh / Go | Cloud Carbon Footprint |
-
-## Étape 4 : calcul des impacts
-
-### Impact opérationnel
-
-L'énergie est convertie en impact via les paramètres régionaux du datacenter :
+$n$ est le nombre de VM, $v$ les vCPU par VM, $r$ les Go RAM par VM, $s,d$ les capacités physiques totales SSD/HDD et $h$ les heures. Les coefficients sont des puissances moyennes réservées, pas un TDP multiplié arbitrairement par un taux CPU.
 
 $$
-\begin{aligned}
-&I_{ope_{i}} = E_{cloud} \times PUE \times \left( (1 - REF) \times IF_{i,pays} + REF \times IF^{renouv}_{i,pays} \right) \\
-\text{avec} \\
-&PUE = \text{Power Usage Effectiveness du site} \\
-&REF = \text{Part d'énergie renouvelable déclarée} \\
-&IF_{i,pays} = \text{Facteur d'impact du mix électrique du pays}
-\end{aligned}
+I_{fab}=\frac{h}{8760L}(nM_{VM}+sM_{SSD}+dM_{HDD})
 $$
 
-Le **CUE** (Carbon Usage Effectiveness) synthétise PUE × facteur électrique :
+$M_{VM}$ est déjà la part de fabrication d’un serveur attribuée à une VM, hors stockage. Multiplier la fabrication du serveur entier par le nombre de VM créerait un double compte. Le PUE intervient ensuite dans l’électricité ; il ne modifie pas $I_{fab}$.
+
+### Services managés, régions et cas sans correspondance matérielle
+
+Une architecture fournisseur documentée permet une conversion du service en ressources-temps. Un facteur de service compatible constitue une autre voie, à condition de connaître les postes déjà couverts.
+
+#### Services non reconnus : recours temporaire à un facteur monétaire {#facteur-monetaire}
+
+Pour un service cloud non encore reconnu, par exemple une nouvelle offre, un **facteur monétaire adapté** permet une estimation provisoire en attendant la règle qui reliera ce service à une capacité matérielle.
 
 $$
-CUE = PUE \times \left( (1 - REF) \times IF_{GWP,pays} + REF \times IF^{renouv}_{GWP,pays} \right)
+I_{i,mon}=C_{admissible}\times f_{i,mon}
 $$
 
-### Impact intrinsèque (embodied)
+$C_{admissible}$ est la dépense dans la devise du facteur. Pour chaque indicateur $i$, $f_{i,mon}$ est exprimé en **unité d’impact par unité monétaire**. Par exemple, des USD multipliés par des kg CO₂e/USD donnent des kg CO₂e.
 
-L'impact de fabrication est calculé pour chaque composant en proportion de la durée d'usage :
+Cette approche s’applique à **tout indicateur disposant d’un facteur adapté**. Sans facteur pour un indicateur, son impact reste non évalué. Le calcul ne reconstitue pas de capacité matérielle.
+
+<MethodIllustration kind="cloud-monetary" lang="fr" />
+
+Le facteur précise sa devise, son année, sa zone et son périmètre. La dépense suit la même convention monétaire.[^mon-convention]
+
+Exclure les licences et le support de cette voie évite de les assimiler à une consommation de matériel cloud ; cela ne signifie pas que leur impact est nul.
+
+#### Électricité des régions cloud {#electricite-cloud}
+
+Pour un service multirégion, l’activité, la réplication, le stockage et l’électricité sont répartis par région. La **convention cloud Fruggr utilise les impacts renouvelables « green » des données D4B pour la part renouvelable (REF)**. Cette part conserve les impacts de cycle de vie de la production électrique.[^green]
+
+Pour un indicateur $i$, une région et une période données :
 
 $$
-\begin{aligned}
-&I_{emb}^{vm} = \frac{scope3_{instance} \times heures}{durée\_vie \times 365 \times 24} \\
-&I_{emb}^{ssd} = 0{,}16 \times Go_{SSD} \times \frac{heures}{durée\_vie \times 365 \times 24} \\
-&I_{emb}^{hdd} = 0{,}02 \times Go_{HDD} \times \frac{heures}{durée\_vie \times 365 \times 24}
-\end{aligned}
+IF_{cloud,i}=(1-REF)\,IF_{mix,i}+REF\,IF_{green,i}
 $$
 
-Où :
-- $scope3_{instance}$ est l'empreinte carbone de fabrication du serveur sous-jacent (kgCO₂e), quand elle est connue via les données constructeur ou le référentiel D4B
-- $0{,}16$ kgCO₂e/Go est le SEF moyen des SSD (Tannu & Nair 2023)
-- $0{,}02$ kgCO₂e/Go est le SEF moyen des HDD
-- $durée\_vie$ est la durée de vie des équipements datacenter (5 ans par défaut)
+$REF$ est une proportion entre 0 et 1. $IF_{mix,i}$ est le facteur du mix de consommation et $IF_{green,i}$ celui de sa production renouvelable, avec une méthode et une unité compatibles. L’impact d’usage vaut $E_{IT}\times PUE\times IF_{cloud,i}$. À 100 % de renouvelable, le facteur est **$IF_{green,i}$, pas zéro**. Le PUE s’applique une seule fois.
 
-### Paramètres régionaux
+La provenance, la période et l’échelle du REF sont explicitées. Cette convention est distinguée de la lecture géographique au mix moyen décrite dans les [facteurs électriques](../../fondations/impacts-de-la-consommation-d-energie.md#lecture-des-contrats-délectricité). Si le REF ou le facteur « green » manque, le repli sur le mix moyen est signalé ; la donnée manquante n’est pas remplacée par zéro. L’exemple interactif ci-dessous conserve cette lecture au mix moyen, sans appliquer de REF.
 
-Les paramètres PUE, WUE et REF proviennent du référentiel `digital4better/data/cloud/{provider}-regions.csv` :
+Les durées réelles priment sur 730 h/mois. Les ressources arrêtées peuvent encore réserver du stockage ou d’autres capacités. Une contribution nulle suppose l’absence de ressources encore provisionnées. Un GPU nécessite un profil propre ; les coefficients CPU ne le décrivent pas.
 
-| Paramètre | Description | Source | Défaut si inconnu |
-|---|---|---|---|
-| **PUE** | Efficacité énergétique du site | Déclaration fournisseur | 1,58 (moyenne mondiale) |
-| **WUE** | Consommation d'eau du refroidissement (L/kWh) | Déclaration fournisseur | 0 (non documenté) |
-| **REF** | Part d'énergie renouvelable | Déclaration fournisseur | 0 (conservateur) |
-| **Pays** | Mix électrique | Localisation du datacenter | Mix mondial |
+### Contrôler l’exhaustivité
 
-:::note[Transparence fournisseur]
-La qualité des données régionales varie fortement. AWS publie PUE et WUE par région. Azure publie des fiches par datacenter. Google publie un CFE% (carbon-free energy) par région. OVHcloud et Scaleway publient des KPIs de durabilité. Ces données sont collectées dans `digital4better/data/cloud/`.
-:::
+Le nombre de ressources et les périodes sont rapprochés de l’inventaire fournisseur. La restitution précise la part des activités sans correspondance, les conversions documentées et les doublons exclus. Un total précis sur les VM connues peut couvrir une faible part d’une plateforme largement managée.
 
-## Services managés
+## Situer ce calcul par rapport au RCP cloud
 
-Les services managés ne donnent pas toujours accès à une machine identifiable. La méthode distingue trois cas :
+Le calcul D4B par ressources et puissances est une estimation explicite. Le RCP cloud définit des unités pour le bâtiment et ses équipements techniques, les équipements informatiques et les services IaaS. Un facteur de VM peut donc déjà couvrir des postes absents de notre exemple.[^rcp-cloud]
 
-| Cas | Principe | Exemple |
-|---|---|---|
-| **Unité technique exposée** | Utiliser directement l'unité la plus proche d'une ressource physique | Base RDS : type d'instance → vCPU.h + Go RAM.h + Go SSD.h |
-| **Archétype technique** | Rapprocher le service d'une config type connue | Fonction Lambda : invocations × durée × mémoire → vCPU.h + Go RAM.h |
-| **Service opaque** | Documenter comme gap, utiliser un forfait provisoire | Service applicatif sans unité technique visible |
+L’utilisation d’un facteur fournisseur dépend de son unité, de sa période, de ses ressources et des phases incluses. Un PUE, un bâtiment ou une fabrication de serveur déjà couverts ne s’ajoutent pas au facteur. Le stockage peut être attaché à la VM ou constituer un service distinct.
 
-### Logiques de modélisation
+### Choisir une voie de calcul cohérente
 
-| Logique | Quand l'appliquer | Unités pivot |
-|---|---|---|
-| **Calcul** | Le service expose du temps CPU/GPU ou de la mémoire | vCPU.h, GPU.h, Go RAM.h |
-| **Stockage** | L'unité principale est une capacité stockée × durée | Go SSD.h, Go HDD.h |
-| **Réseau** | L'usage est décrit par des volumes transférés | Go réseau |
-| **Hybride** | Le service combine plusieurs couches | Décomposer en calcul + stockage + réseau |
+Le RCP applicatif privilégie les données issues du RCP cloud. À défaut, il décrit une voie alternative ; il demande une voie cohérente entre les contextes serveurs de l’étude. Le présent exemple D4B ne se présente pas comme un calcul conforme au RCP cloud.[^rcp-app]
 
-## Application concrète
+Le RCP cloud de juin 2026 ne prend pas les GPU en compte dans ses allocations. Pour l’IA, la décomposition spécifique des accélérateurs et ses limites restent donc nécessaires. Le RCP applicatif cite une édition cloud d’avril 2025 : leur articulation suppose d’identifier explicitement l’édition effectivement utilisée.
 
-**Cas : infrastructure cloud d'un service SaaS (AWS, région eu-west-1, Irlande)**
+## Périmètre à compléter
 
-| Ressource | Quantité mensuelle | Unités pivot | Énergie (kWh) |
-|---|---|---|---|
-| 4 × m5.xlarge (4 vCPU, 16 Go) | 4 × 730 h | 11 680 vCPU.h + 46 720 Go RAM.h | 41,3 + 18,3 = 59,6 |
-| 1 × p4d.24xlarge (8 A100 GPU) | 200 h | 1 600 GPU.h | 1 120 |
-| 2 To EBS gp3 | 730 h | 1 460 000 Go SSD.h | 1,8 |
-| 500 Go S3 | 730 h | 365 000 Go HDD.h | 0,2 |
-| 1 To transit sortant | — | 1 000 Go | 1,0 |
-| **Total énergie IT** | | | **1 183 kWh/mois** |
+**L’exemple ci-dessous couvre les VM et leur stockage, pas une plateforme cloud complète.**
 
-| Impact | Calcul | Valeur |
-|---|---|---|
-| Énergie avec PUE (1,2) | 1 183 × 1,2 | 1 419 kWh/mois |
-| GWP opérationnel | 1 419 × 0,25 kgCO₂e/kWh (Irlande) | **355 kgCO₂e/mois** |
-| GWP intrinsèque (4 serveurs + GPU) | (4×60 + 1×250) × (730 / 43 800) | **9 kgCO₂e/mois** |
-| **Total GWP** | | **364 kgCO₂e/mois** |
+| Dans l’exemple | À ajouter si présent dans le service étudié |
+|---|---|
+| Fabrication allouée des VM et du stockage SSD/HDD, électricité d’usage et PUE | Réseau, GPU, services de gestion et fabrication du bâtiment |
 
-:::note[Le GPU domine]
-Dans cet exemple, les 200 h de GPU (A100) consomment 95 % de l'énergie IT. Les VM standard sont marginales. C'est un pattern fréquent pour les services utilisant de l'IA : le calcul GPU domine très largement le profil d'impact.
-:::
+<span id="lire-leffet-des-paramètres" />
 
-## Hypothèses et limites
+Pour interpréter le résultat :
 
-- Le cloud est le domaine où l'écart entre données observées et données reconstruites est le plus fort.
-- Un même service managé peut changer d'architecture sans changement visible dans la facture.
-- Certaines unités fournisseur sont commerciales avant d'être techniques (ex: "unités de capacité" Amazon DynamoDB).
-- La part d'impact intrinsèque dans le cloud est souvent plus incertaine que la part opérationnelle.
-- Les comparaisons entre fournisseurs ne sont robustes que si les règles de correspondance restent homogènes.
-- La durée de vie des équipements datacenter (5 ans par défaut) est une hypothèse forte ; certains hyperscalers conservent leur matériel plus longtemps.
+- **Compter chaque ressource une seule fois.** Les VM d’une base managée déjà inventoriées ne sont pas ajoutées à nouveau.
+- **Comparer le même service rendu.** Changer le pays modifie ici l’électricité d’usage, pas la fabrication.
+- **Distinguer allocation et réduction physique.** Une part d’impact plus faible ne prouve pas que le fournisseur consomme moins.
 
-## Données mobilisées
+<span id="règles-et-sources" />
 
-- `digital4better/data` → `data/cloud/{provider}-vms.csv` (specs instances)
-- `digital4better/data` → `data/cloud/{provider}-regions.csv` (PUE, WUE, REF)
-- `digital4better/data` → `data/factor/*` (mix électrique par pays/mois)
-- Exports fournisseur : AWS Cost and Usage Report, Azure Billing, GCP Cloud Billing, format FOCUS
+Les valeurs préremplies sont des **hypothèses d’illustration**. Les facteurs électriques proviennent de D4B 2025[^ref-2]. Cloud Carbon Footprint documente l’approche par ressources et puissances[^ref-1] ; ses coefficients dépendent du matériel et de la charge et ne remplacent pas une mesure représentative.
 
-## Sources
+Les règles communes sont détaillées dans [Périmètre et unité d’analyse](../../fondations/perimetre-frontieres-services-tiers-et-unite-d-analyse.md), [Allocation](../../regles/allocation-et-partage-des-impacts.md) et [Double comptage](../../regles/double-comptabilisation.md).
 
-- Green Cloud Computing, UBA, 2021 (coefficients par composant)
-- Cloud Carbon Footprint (coefficients énergie par composant)
-- Tannu & Nair, 2023. The Dirty Secret of SSDs (SEF SSD/HDD)
-- Documentations fournisseurs : [AWS](https://sustainability.aboutamazon.com/), [Azure](https://datacenters.microsoft.com/sustainability/), [GCP](https://cloud.google.com/sustainability/region-carbon), [OVHcloud](https://corporate.ovhcloud.com/), [Scaleway](https://www.scaleway.com/en/docs/environmental-footprint/)
-- [digital4better/data](https://github.com/digital4better/data)
+## Exemple interactif {#simuler-votre-situation}
+
+Cet exemple met en application les calculs et les limites présentés ci-dessus. Le simulateur couvre un lot de VM identiques et du stockage SSD/HDD.
+
+Ex: quatre VM de 4 vCPU et 16 Go RAM, avec 2 000 Go SSD et 500 Go HDD physiques pendant 730 h, donnent **61,65069 kWh IT** avec les coefficients affichés. Avec PUE 1,2 et le facteur Irlande 2025, l’usage vaut **19,29 kg CO₂e**. Les hypothèses de fabrication affichées ajoutent 9,5 kg : **28,79 kg CO₂e de sous-total**.
+
+import { ScenarioPlayground } from '@site/src/components/scenario-playground';
+
+<div className="inline-example">
+
+<ScenarioPlayground kind="cloud" lang="fr" />
+
+</div>
+
+[^rcp-cloud]: ADEME, [RCP services cloud et centre de données, juin 2026](https://librairie.ademe.fr/economie-circulaire-et-dechets/6031-referentiel-par-categorie-de-produit-rcp-de-services-cloud-et-de-centre-de-donnees.html), p. 18, 26–64.
+
+[^rcp-app]: ADEME, [RCP des applicatifs numériques, juin 2026](https://librairie.ademe.fr/economie-circulaire-et-dechets/9434-referentiel-par-categorie-de-produit-rcp-des-applicatifs-numeriques.html), p. 6, 27–35.
+
+[^ref-1]: [Cloud Carbon Footprint](https://www.cloudcarbonfootprint.org/docs/methodology/). Documentation en ligne, version non figée.
+
+[^ref-2]: Digital4Better, [instantané D4B 2025](https://github.com/digital4better/data/blob/77cae4a58fadd5deb3b8d4e5577020da08f780d8/data/factor/country-yearly.csv). Instantané 77cae4a, données 2025 ; revue du 16 octobre 2026.
+
+[^green]: Digital4Better, [facteurs électriques renouvelables par pays](https://github.com/digital4better/data/blob/77cae4a58fadd5deb3b8d4e5577020da08f780d8/data/factor/country-yearly-green.csv), instantané `77cae4a`.
+
+[^mon-convention]: Taxes, remises et conversions de devise suivent la convention utilisée pour construire le facteur monétaire. La source, la version et les ajustements appliqués sont conservés.

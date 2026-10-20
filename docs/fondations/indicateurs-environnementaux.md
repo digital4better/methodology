@@ -1,14 +1,14 @@
 # Indicateurs environnementaux
 
-## En bref
+import { MethodIllustration } from '@site/src/components/method-illustrations';
 
 La méthode retient une lecture multicritère. Les émissions de gaz à effet de serre sont importantes, mais elles ne suffisent pas à décrire à elles seules les impacts du numérique. L'extraction de métaux critiques, la consommation d'eau, la toxicité des procédés de fabrication et l'épuisement des ressources abiotiques sont autant de dimensions que le seul indicateur carbone ne capture pas.
 
 ## Indicateurs pris en compte dans l'évaluation {#indicateurs-pris-en-compte-dans-l-evaluation}
 
-Quel que soit l'objet d'étude, la méthode aboutit à une évaluation sous la forme d'indicateurs environnementaux. Ces indicateurs ont été choisis conformément aux préconisations du §7 du RCP mère sur les services numériques.
+Quel que soit l'objet d'étude, la méthode aboutit à une évaluation sous la forme d'indicateurs environnementaux. La sélection de neuf indicateurs est la convention D4B conservée dans cette version.
 
-Sont pris en compte à la fois les indicateurs obligatoires et les indicateurs facultatifs. Les 9 indicateurs mid-point retenus se répartissent en 4 catégories de dommages end-point :
+Les neuf indicateurs [mid-point](../references/glossaire.md#approche-mid-point) retenus sont regroupés en quatre familles de lecture. Ces regroupements éditoriaux ne constituent pas un calcul de dommages [end-point](../references/glossaire.md#approche-end-point) :
 
 ```mermaid
 flowchart LR
@@ -23,11 +23,11 @@ flowchart LR
         CTUhnc[CTUh-nc<br>CTUh]
         CTUhc[CTUh-c<br>CTUh]
         PM[PM<br>disease occ.]
-        IR[IR<br>kg U235 eq.]
+        IR[IR<br>unité selon méthode]
     end
     subgraph Ressources
         WU[WU<br>m³ eq.]
-        ADPe[ADPe<br>kg SB eq.]
+        ADPe[ADPe<br>kg Sb eq.]
     end
 ```
 
@@ -35,7 +35,7 @@ Un indicateur de flux supplémentaire vient aider à l'interprétation des résu
 
 ### Tableau des indicateurs
 
-| Indicateur mid-point | Abréviation | Unité | Dommage end-point | Définition |
+| Indicateur mid-point | Abréviation | Unité | Famille de lecture | Définition |
 |---|---|---|---|---|
 | Changement climatique total | GWP | kg CO₂ eq. | Dommage climatique | Potentiel de changement climatique induit par les émissions de gaz à effet de serre (GES). Les GES absorbent le rayonnement infrarouge émis par la surface de la Terre ; l'augmentation de leur concentration contribue au réchauffement climatique. |
 | Acidification | AP | mol H+ eq. | Dommage écologique | Potentiel d'acidification des milieux (sols et eaux de surface) induit par les émissions d'oxydes d'azote, d'oxydes de soufre, d'ammoniac et d'acide chlorhydrique. |
@@ -43,13 +43,21 @@ Un indicateur de flux supplémentaire vient aider à l'interprétation des résu
 | Toxicité humaine (non-cancérigène) | CTUh-nc | CTUh | Santé humaine | Potentiel de toxicité sur l'homme induit par l'émission de substances susceptibles de créer des dommages de type non cancérigène. |
 | Toxicité humaine (cancérigène) | CTUh-c | CTUh | Santé humaine | Effets toxicologiques chroniques sur la santé humaine dus aux émissions de substances cancérigènes. |
 | Emissions de particules fines | PM | disease occurrence | Santé humaine | Effets sanitaires liés à l'inhalation de particules fines (diamètre < 10 µm), provoquant des problèmes respiratoires et cardiovasculaires. |
-| Emissions de substances ionisantes | IR | kg U235 eq. | Santé humaine | Effets des émissions radioactives sur la santé humaine. Les radionucléides libèrent des rayonnements ionisants qui peuvent provoquer des dommages à l'ADN. |
-| Utilisation de la ressource en eau | WU | m³ eq. | Ressources | Quantité totale d'eau consommée. Indicateur de flux exprimé en m³, non pondéré par le stress hydrique local. |
-| Épuisement des ressources naturelles | ADPe | kg SB eq. | Ressources | Quantité de ressources minérales et métalliques extraites, exprimée en équivalent antimoine (SB). |
+| Emissions de substances ionisantes | IR | kBq U235 eq. pour EF ; vérifier le jeu de données | Santé humaine | Effets des émissions radioactives sur la santé humaine. Les radionucléides libèrent des rayonnements ionisants qui peuvent provoquer des dommages à l'ADN. |
+| Utilisation de la ressource en eau | WU | m³ eq. | Ressources | Impact potentiel de privation d'eau après caractérisation, selon la méthode du facteur. À distinguer du volume physique consommé ou prélevé, exprimé en m³ non pondérés. |
+| Épuisement des ressources naturelles | ADPe | kg Sb eq. | Ressources | Quantité de ressources minérales et métalliques extraites, exprimée en équivalent antimoine (Sb). |
 
 :::note[Compatibilité des formules]
-Toutes les formules de calcul présentées dans la méthode sont applicables à chacun des 9 indicateurs. L'indice $i$ dans les équations représente l'indicateur choisi ; l'unité $U_i$ doit être adaptée en conséquence.
+Les formules d'agrégation sont applicables aux indicateurs disposant de facteurs compatibles. Une valeur absente ne vaut pas zéro. L'indice $i$ dans les équations représente l'indicateur choisi ; l'unité $U_i$ doit être adaptée en conséquence.
 :::
+
+### Contrôle des unités et des méthodes
+
+Un libellé commun ne garantit pas la compatibilité : conserver le nom et la version de la méthode de caractérisation avec chaque facteur. Le volume d'eau physique ne s'additionne pas à un indicateur de rareté caractérisé. De même, l'ADP d'un ancien modèle composant ne se confond pas automatiquement avec l'ADPe d'un autre référentiel.[^donnees-modele][^source-4]
+
+Le rayonnement ionisant est exprimé en **kBq U235 eq.** dans EF : une activité équivalente, pas une masse.[^rcp-parent] Certains libellés historiques D4B mentionnent des kg. Ces facteurs ne sont pas agrégés tant que leur inventaire et leur unité ne sont pas vérifiés.
+
+La consommation électrique en kWh est distincte de l'énergie primaire en MJ. Une conversion d'unités (1 kWh = 3,6 MJ) ne transforme pas une consommation finale en demande d'énergie primaire.
 
 ## Pourquoi ne pas se limiter au carbone
 
@@ -69,26 +77,28 @@ Le numérique concentre des enjeux environnementaux qui dépassent largement le 
 
 Un smartphone fabriqué en Asie du Sud-Est et utilisé en France peut présenter un profil où :
 
-- le **GWP** est dominé par la fabrication (mix électrique carboné en Asie) ;
-- l'**ADPe** est dominé par l'extraction de métaux critiques (cobalt, tantale) ;
-- le **WU** est dominé par la fabrication des puces (litres d'eau ultra-pure par wafer) ;
+- le **GWP** est dominé par la fabrication (mix électrique carboné en Asie).
+- l'**ADPe** est dominé par l'extraction de métaux critiques (cobalt, tantale).
+- le **WU** est dominé par la fabrication des puces (litres d'eau ultra-pure par wafer).
 - l'**IR** est dominé par la phase d'usage (mix électrique français à forte composante nucléaire).
 
-Une lecture uniquement carbone masquerait les trois dernières dimensions et pourrait conduire à des décisions sous-optimales (par exemple, prolonger un équipement fonctionnel plutôt que le remplacer, ce qui est bon pour le carbone mais neutre pour les ressources déjà extraites).
+Ces profils sont des possibilités à vérifier par une ACV, et non des répartitions universelles. Prolonger un équipement ne change pas son extraction passée, mais peut éviter une nouvelle fabrication à service équivalent. Une comparaison doit donc expliciter le scénario de remplacement, la durée et les transferts entre indicateurs.
 
 :::note[Pas de hiérarchie entre indicateurs]
 La méthode ne hiérarchise pas les indicateurs entre eux. Le GWP n'est pas « plus important » que l'ADPe. Chaque indicateur éclaire une dimension différente du problème. C'est la lecture conjointe qui permet une analyse informée.
 :::
 
-## Du mid-point au single score
+## Du mid-point au single score {#du-mid-point-au-single-score}
 
 ### Approche mid-point et end-point
 
-Les indicateurs mid-point quantifient un effet intermédiaire dans la chaîne de causalité (ex. : kg CO₂ eq. pour le changement climatique). Les indicateurs end-point estiment le dommage final (ex. : perte de biodiversité, années de vie ajustées). La méthode retient les indicateurs mid-point comme référence, car ils sont plus reproductibles et moins dépendants de modèles de dommages contestés.
+Les indicateurs [**mid-point**](../references/glossaire.md#approche-mid-point) décrivent un problème environnemental, par exemple le changement climatique en kg CO₂ eq. Les indicateurs [**end-point**](../references/glossaire.md#approche-end-point) estiment les dommages associés, par exemple des années de vie en bonne santé perdues.[^mid-end]
+
+La méthode retient les mid-point comme référence pour limiter les hypothèses supplémentaires de modélisation des dommages.
 
 ### Score unique (single score)
 
-Pour les utilisateurs qui ont besoin d'une vue synthétique, la méthode propose un score unique basé sur la méthodologie PEF (Product Environmental Footprint) de la Commission européenne. Ce score combine normalisation et pondération des 9 indicateurs en 4 sous-scores :
+Le score ci-dessous est une **proposition historique non validée pour cette version**. Ses coefficients, son millésime et leur compatibilité avec les facteurs doivent être établis avant utilisation. Aucun score agrégé n’est calculé dans les illustrations. Les regroupements ne constituent ni un score PEF complet ni un modèle de dommages end-point.[^source-3]
 
 | Sous-score | Indicateurs regroupés | Aire de protection |
 |---|---|---|
@@ -100,17 +110,45 @@ Pour les utilisateurs qui ont besoin d'une vue synthétique, la méthode propose
 Le détail des coefficients de normalisation et de pondération est présenté dans les [Annexes techniques](../references/annexes-techniques).
 
 :::note[Usage du single score]
-Le score unique est un outil de communication et de comparaison rapide. Il ne remplace pas la lecture des indicateurs individuels pour une analyse approfondie. Toute décision structurante doit s'appuyer sur les résultats mid-point détaillés.
+La restitution de référence présente les indicateurs individuels, leur couverture et leurs limites. Le regroupement historique « biodiversité » ne mesure pas directement une perte de biodiversité.
 :::
 
 ## Indicateurs en veille
 
 La méthode peut faire référence à des indicateurs supplémentaires lorsque :
 
-- la pertinence environnementale est forte mais les données ne sont pas encore suffisamment homogènes ;
+- la pertinence environnementale est forte mais les données ne sont pas encore suffisamment homogènes.
 - les référentiels disponibles ne permettent pas encore une intégration stable dans tous les cas d'usage.
 
-Ces indicateurs peuvent être cités sans être systématiquement calculés. Exemples : stress hydrique pondéré (AWARE), empreinte biodiversité, empreinte sol (land use).
+L’empreinte biodiversité et l’usage des sols font partie des sujets suivis, sans être calculés systématiquement.
+
+[**AWARE**](../references/glossaire.md#aware), pour *Available WAter REmaining*, est une méthode de caractérisation de l’eau. Elle pondère le volume consommé selon l’eau disponible après les besoins humains et ceux des écosystèmes. Un même m³ consommé peut ainsi avoir un impact potentiel différent selon le bassin et la période.[^aware]
+
+AWARE peut servir à calculer **WU**. Si un facteur existant utilise une autre méthode, ses résultats ne sont pas directement additionnés à ceux d’AWARE. La méthode et sa version restent explicites.
+
+## Couverture des calculs {#couverture-calculs}
+
+Les neuf indicateurs définissent le cadre. Leur présence dans le cadre ne garantit pas un facteur utilisable pour chaque poste.
+
+| Poste ou résultat | Couverture actuelle des illustrations | Interprétation du résultat |
+|---|---|---|
+| Fabrication paramétrique d’un équipement | GWP partiel ; autres catégories non évaluées au niveau de l’assemblage | Bilan climatique partiel, sans conclusion sur les autres indicateurs |
+| Composant CPU | GWP et ADPe historique dans l’exemple dédié | Résultat du composant seul, pas de l’équipement complet |
+| Électricité | Facteurs disponibles selon l’indicateur, le pays et le millésime | Somme possible uniquement à méthode et unité compatibles |
+| Réseau ou service tiers sans facteur adapté | Activité connue, impact non évalué | Résultat partiel tant que cet impact manque |
+| Eau directe | Volume physique séparé | Volume physique, distinct de l’impact de rareté |
+
+Un résultat nul correspond à un zéro justifié. « Non évalué » signifie que les données ou le modèle manquent. Un total complet nécessite la couverture des postes retenus, indicateur par indicateur.
+
+<MethodIllustration kind="missing-data" lang="fr" />
+
+## Correspondance avec le RCP 2026
+
+D4B conserve ses neuf indicateurs et ses conventions de restitution. Le RCP parent de juin 2026 présente seize catégories EF. Ce ne sont donc pas deux listes identiques ; les résultats disponibles doivent préciser les catégories couvertes et les éventuelles exclusions.[^rcp-parent]
+
+Les sept catégories supplémentaires sont les ressources fossiles, l’eutrophisation des eaux douces, marine et terrestre, la formation d’ozone photochimique, l’appauvrissement de l’ozone stratosphérique et l’usage des sols. Leur absence dans un résultat D4B ne signifie pas un impact nul.
+
+Une extension demande des inventaires et facteurs compatibles, pas une conversion du carbone. Elle ferait l’objet d’une évolution méthodologique distincte. Le score agrégé historique reste non validé pour cette version et ne constitue pas un score EF complet.
 
 ## Hypothèses et limites
 
@@ -119,14 +157,14 @@ Ces indicateurs peuvent être cités sans être systématiquement calculés. Exe
 - Certains indicateurs (notamment WU) présentent des valeurs négatives pour certains équipements dans la Base Empreinte, liées à l'estimation des impacts de fin de vie.
 - Le single score, s'il est utile pour la communication, ne doit pas masquer les transferts d'impact entre catégories.
 
-## Données mobilisées
+[^rcp-parent]: ADEME, [RCP services numériques, version 2, juin 2026](https://librairie.ademe.fr/societe-et-politiques-publiques/9418-methodologie-d-evaluation-environnementale-basee-sur-l-analyse-du-cycle-de-vie-acv-pour-un-service-numerique.html), p. 23–25.
 
-- `digital4better/data` → `data/energy/*`, `data/factor/*`, `data/equipment/*`
-- Base Empreinte ADEME (facteurs multicritères)
+[^source-3]: Commission européenne, méthodologie PEF (Product Environmental Footprint) Voir le [corpus documentaire](../references/sources-et-corpus).
 
-## Sources
+[^source-4]: Digital4Better, [digital4better/data](https://github.com/digital4better/data) Catalogue évolutif ; utiliser un commit pour figer les facteurs.
 
-- ISO 14040 / ISO 14044
-- Référentiel ADEME / ARCEP sur les services numériques (RCP mère, §7)
-- Commission européenne, méthodologie PEF (Product Environmental Footprint)
-- [digital4better/data](https://github.com/digital4better/data)
+[^donnees-modele]: `digital4better/data` → `data/energy/*`, `data/factor/*`, `data/equipment/*`. Base Empreinte ADEME (facteurs multicritères). [Digital4Better, catalogue de données, instantané 77cae4a](https://github.com/digital4better/data/tree/77cae4a58fadd5deb3b8d4e5577020da08f780d8). Références et portée : [Sources et corpus](../references/sources-et-corpus).
+
+[^aware]: WULCA, [What is AWARE?](https://wulca-waterlca.org/what-is-aware/) et [FAQ](https://wulca-waterlca.org/what-is-aware/faq/). Boulay et al., 2018, modèle AWARE. Documentation consultée le 20 octobre 2026.
+
+[^mid-end]: RIVM, [LCIA: the ReCiPe model](https://www.rivm.nl/en/life-cycle-assessment-lca/recipe), présentation des niveaux midpoint et endpoint, mise à jour du 29 octobre 2024.

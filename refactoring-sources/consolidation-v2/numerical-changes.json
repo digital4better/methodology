@@ -1,0 +1,771 @@
+{
+  "version": "d4b-components-illustration-2026.10.19",
+  "scope": "Illustrations only; not calibration or production migration",
+  "ddr5": {
+    "before512Gb": 1209.92,
+    "after512Gb": 1330.9120000000003
+  },
+  "laptop": {
+    "components": {
+      "cpu": 21.771,
+      "memory": 44.462,
+      "storage": 29.56474226804124,
+      "display": 40.82284002373888,
+      "battery": 3.64,
+      "structure": 8
+    },
+    "manufacturing": 148.2605822917801,
+    "life": 5,
+    "power": 17.620978858160235,
+    "embodied": 9.402624447728318e-7
+  },
+  "profiles": [
+    {
+      "key": "computer",
+      "before": {
+        "label": [
+          "Ordinateur moyen (portable + fixe avec écran)",
+          "Average computer (laptop + desktop with display)"
+        ],
+        "power": 137,
+        "embodied": 0.00000136
+      },
+      "after": {
+        "label": [
+          "Ordinateur : 60 % portable, 40 % fixe",
+          "Computer: 60% laptop, 40% desktop"
+        ],
+        "power": 26.784206881424332,
+        "embodied": 0.000001290418740307268
+      }
+    },
+    {
+      "key": "mobile",
+      "before": {
+        "label": [
+          "Mobile moyen (smartphone + tablette)",
+          "Average mobile (smartphone + tablet)"
+        ],
+        "power": 1.325,
+        "embodied": 0.000001
+      },
+      "after": {
+        "label": [
+          "Mobile : 95 % smartphone, 5 % tablette",
+          "Mobile: 95% smartphone, 5% tablet"
+        ],
+        "power": 4.846334768902078,
+        "embodied": 9.133724196316587e-7
+      }
+    },
+    {
+      "key": "laptop",
+      "before": {
+        "label": [
+          "Ordinateur portable",
+          "Laptop"
+        ],
+        "power": 75,
+        "embodied": 0.00000118
+      },
+      "after": {
+        "label": [
+          "Portable (configuration illustrative)",
+          "Laptop (illustrative configuration)"
+        ],
+        "components": {
+          "cpu": 21.771,
+          "memory": 44.462,
+          "storage": 29.56474226804124,
+          "display": 40.82284002373888,
+          "battery": 3.64,
+          "structure": 8
+        },
+        "manufacturing": 148.2605822917801,
+        "life": 5,
+        "power": 17.620978858160235,
+        "embodied": 9.402624447728318e-7
+      }
+    },
+    {
+      "key": "desktop",
+      "before": {
+        "label": [
+          "Ordinateur fixe personnel avec écran",
+          "Personal desktop with display"
+        ],
+        "power": 230,
+        "embodied": 0.000001789
+      },
+      "after": {
+        "label": [
+          "Fixe avec écran (configuration illustrative)",
+          "Desktop with display (illustrative configuration)"
+        ],
+        "components": {
+          "cpu": 18.311999999999998,
+          "memory": 117.86000000000001,
+          "storage": 51.700824742268054,
+          "display": 143.67780804747775,
+          "battery": 0,
+          "structure": 12
+        },
+        "manufacturing": 343.5506327897458,
+        "life": 6,
+        "power": 40.52904891632048,
+        "embodied": 0.0000018156531836089222
+      }
+    },
+    {
+      "key": "smartphone",
+      "before": {
+        "label": [
+          "Smartphone",
+          "Smartphone"
+        ],
+        "power": 1,
+        "embodied": 0.00000101
+      },
+      "after": {
+        "label": [
+          "Smartphone (configuration illustrative)",
+          "Smartphone (illustrative configuration)"
+        ],
+        "components": {
+          "cpu": 27.775000000000002,
+          "memory": 25.102000000000004,
+          "storage": 12.14618556701031,
+          "display": 16.47680750148368,
+          "battery": 1.3499999999999999,
+          "structure": 4
+        },
+        "manufacturing": 86.84999306849399,
+        "life": 3,
+        "power": 4.732946791691395,
+        "embodied": 9.179984046644468e-7
+      }
+    },
+    {
+      "key": "tablet",
+      "before": {
+        "label": [
+          "Tablette",
+          "Tablet"
+        ],
+        "power": 7.5,
+        "embodied": 8.91e-7
+      },
+      "after": {
+        "label": [
+          "Tablette (configuration illustrative)",
+          "Tablet (illustrative configuration)"
+        ],
+        "components": {
+          "cpu": 27.775000000000002,
+          "memory": 25.102000000000004,
+          "storage": 17.95237113402062,
+          "display": 26.34981450445104,
+          "battery": 1.95,
+          "structure": 5
+        },
+        "manufacturing": 104.12918563847167,
+        "life": 4,
+        "power": 7.000706335905044,
+        "embodied": 8.254787040086858e-7
+      }
+    }
+  ],
+  "scenarios": [
+    {
+      "kind": "web",
+      "before": {
+        "contributions": [
+          {
+            "label": [
+              "Terminal : fabrication allouée",
+              "Device: allocated manufacture"
+            ],
+            "kg": 7.079999999999999
+          },
+          {
+            "label": [
+              "Terminal : électricité",
+              "Device: electricity"
+            ],
+            "kg": 3.6802634229166666,
+            "kwh": 115.27083333333333
+          },
+          {
+            "label": [
+              "Réseau fixe",
+              "Fixed network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Réseau cellulaire",
+              "Cellular network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Hébergement : fabrication allouée",
+              "Hosting: allocated manufacture"
+            ],
+            "kg": 20
+          },
+          {
+            "label": [
+              "Hébergement : électricité",
+              "Hosting: electricity"
+            ],
+            "kg": 3.831252,
+            "kwh": 120
+          }
+        ],
+        "activities": [
+          {
+            "label": [
+              "Temps terminal cumulé",
+              "Cumulative device time"
+            ],
+            "value": 1666.6666666666667,
+            "unit": "h"
+          },
+          {
+            "label": [
+              "Transferts",
+              "Transfers"
+            ],
+            "value": 200,
+            "unit": "Go / GB"
+          }
+        ],
+        "subtotal": 34.591515422916665,
+        "energy": 235.27083333333331,
+        "errors": [],
+        "missing": [
+          [
+            "Facteur réseau fixe absent",
+            "Missing fixed network factor"
+          ],
+          [
+            "Facteur réseau cellulaire absent",
+            "Missing cellular network factor"
+          ],
+          [
+            "Services tiers non inventoriés et fabrication du bâtiment",
+            "Unlisted third-party services and building manufacture"
+          ]
+        ],
+        "functionalCount": 100000,
+        "unit": [
+          "page vue",
+          "page view"
+        ]
+      },
+      "after": {
+        "contributions": [
+          {
+            "label": [
+              "Terminal : fabrication allouée",
+              "Device: allocated manufacture"
+            ],
+            "kg": 6.61137347981678
+          },
+          {
+            "label": [
+              "Terminal : électricité",
+              "Device: electricity"
+            ],
+            "kg": 0.8415595552701137,
+            "kwh": 26.358784708605345
+          },
+          {
+            "label": [
+              "Réseau fixe",
+              "Fixed network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Réseau cellulaire",
+              "Cellular network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Hébergement : fabrication allouée",
+              "Hosting: allocated manufacture"
+            ],
+            "kg": 20
+          },
+          {
+            "label": [
+              "Hébergement : électricité",
+              "Hosting: electricity"
+            ],
+            "kg": 3.831252,
+            "kwh": 120
+          }
+        ],
+        "activities": [
+          {
+            "label": [
+              "Temps terminal cumulé",
+              "Cumulative device time"
+            ],
+            "value": 1666.6666666666667,
+            "unit": "h"
+          },
+          {
+            "label": [
+              "Transferts",
+              "Transfers"
+            ],
+            "value": 200,
+            "unit": "Go / GB"
+          }
+        ],
+        "subtotal": 31.284185035086892,
+        "energy": 146.35878470860536,
+        "errors": [],
+        "missing": [
+          [
+            "Facteur réseau fixe absent",
+            "Missing fixed network factor"
+          ],
+          [
+            "Facteur réseau cellulaire absent",
+            "Missing cellular network factor"
+          ],
+          [
+            "Services tiers non inventoriés et fabrication du bâtiment",
+            "Unlisted third-party services and building manufacture"
+          ]
+        ],
+        "functionalCount": 100000,
+        "unit": [
+          "page vue",
+          "page view"
+        ]
+      }
+    },
+    {
+      "kind": "mail",
+      "before": {
+        "contributions": [
+          {
+            "label": [
+              "Stockage conservé",
+              "Retained storage"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Terminal : fabrication allouée",
+              "Device: allocated manufacture"
+            ],
+            "kg": 0.19824
+          },
+          {
+            "label": [
+              "Terminal : électricité",
+              "Device: electricity"
+            ],
+            "kg": 0.11174485,
+            "kwh": 3.5
+          },
+          {
+            "label": [
+              "Réseau fixe",
+              "Fixed network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Réseau cellulaire",
+              "Cellular network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Hébergement : fabrication allouée",
+              "Hosting: allocated manufacture"
+            ],
+            "kg": 20
+          },
+          {
+            "label": [
+              "Hébergement : électricité",
+              "Hosting: electricity"
+            ],
+            "kg": 3.831252,
+            "kwh": 120
+          }
+        ],
+        "activities": [
+          {
+            "label": [
+              "Stockage physique cumulé",
+              "Cumulative physical storage"
+            ],
+            "value": 36,
+            "unit": "Go.mois / GB.month"
+          },
+          {
+            "label": [
+              "Temps terminal cumulé",
+              "Cumulative device time"
+            ],
+            "value": 46.666666666666664,
+            "unit": "h"
+          },
+          {
+            "label": [
+              "Transferts",
+              "Transfers"
+            ],
+            "value": 2.8,
+            "unit": "Go / GB"
+          }
+        ],
+        "subtotal": 24.14123685,
+        "energy": 123.5,
+        "errors": [],
+        "missing": [
+          [
+            "Facteur de stockage absent",
+            "Missing storage factor"
+          ],
+          [
+            "Facteur réseau fixe absent",
+            "Missing fixed network factor"
+          ],
+          [
+            "Facteur réseau cellulaire absent",
+            "Missing cellular network factor"
+          ],
+          [
+            "Services tiers non inventoriés et fabrication du bâtiment",
+            "Unlisted third-party services and building manufacture"
+          ]
+        ],
+        "functionalCount": 1000,
+        "unit": [
+          "message envoyé",
+          "sent message"
+        ]
+      },
+      "after": {
+        "contributions": [
+          {
+            "label": [
+              "Stockage conservé",
+              "Retained storage"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Terminal : fabrication allouée",
+              "Device: allocated manufacture"
+            ],
+            "kg": 0.15796409072183573
+          },
+          {
+            "label": [
+              "Terminal : électricité",
+              "Device: electricity"
+            ],
+            "kg": 0.026254048524777154,
+            "kwh": 0.8223123467141442
+          },
+          {
+            "label": [
+              "Réseau fixe",
+              "Fixed network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Réseau cellulaire",
+              "Cellular network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Hébergement : fabrication allouée",
+              "Hosting: allocated manufacture"
+            ],
+            "kg": 20
+          },
+          {
+            "label": [
+              "Hébergement : électricité",
+              "Hosting: electricity"
+            ],
+            "kg": 3.831252,
+            "kwh": 120
+          }
+        ],
+        "activities": [
+          {
+            "label": [
+              "Stockage physique cumulé",
+              "Cumulative physical storage"
+            ],
+            "value": 36,
+            "unit": "Go.mois / GB.month"
+          },
+          {
+            "label": [
+              "Temps terminal cumulé",
+              "Cumulative device time"
+            ],
+            "value": 46.666666666666664,
+            "unit": "h"
+          },
+          {
+            "label": [
+              "Transferts",
+              "Transfers"
+            ],
+            "value": 2.8,
+            "unit": "Go / GB"
+          }
+        ],
+        "subtotal": 24.015470139246613,
+        "energy": 120.82231234671414,
+        "errors": [],
+        "missing": [
+          [
+            "Facteur de stockage absent",
+            "Missing storage factor"
+          ],
+          [
+            "Facteur réseau fixe absent",
+            "Missing fixed network factor"
+          ],
+          [
+            "Facteur réseau cellulaire absent",
+            "Missing cellular network factor"
+          ],
+          [
+            "Services tiers non inventoriés et fabrication du bâtiment",
+            "Unlisted third-party services and building manufacture"
+          ]
+        ],
+        "functionalCount": 1000,
+        "unit": [
+          "message envoyé",
+          "sent message"
+        ]
+      }
+    },
+    {
+      "kind": "mobile",
+      "before": {
+        "contributions": [
+          {
+            "label": [
+              "Terminal : fabrication allouée",
+              "Device: allocated manufacture"
+            ],
+            "kg": 1.818
+          },
+          {
+            "label": [
+              "Terminal : électricité",
+              "Device: electricity"
+            ],
+            "kg": 0.01596355,
+            "kwh": 0.5
+          },
+          {
+            "label": [
+              "Réseau fixe",
+              "Fixed network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Réseau cellulaire",
+              "Cellular network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Hébergement : fabrication allouée",
+              "Hosting: allocated manufacture"
+            ],
+            "kg": 20
+          },
+          {
+            "label": [
+              "Hébergement : électricité",
+              "Hosting: electricity"
+            ],
+            "kg": 3.831252,
+            "kwh": 120
+          }
+        ],
+        "activities": [
+          {
+            "label": [
+              "Distribution de l’application",
+              "App distribution"
+            ],
+            "value": 90,
+            "unit": "Go / GB"
+          },
+          {
+            "label": [
+              "Temps terminal cumulé",
+              "Cumulative device time"
+            ],
+            "value": 500,
+            "unit": "h"
+          },
+          {
+            "label": [
+              "Transferts",
+              "Transfers"
+            ],
+            "value": 110,
+            "unit": "Go / GB"
+          }
+        ],
+        "subtotal": 25.66521555,
+        "energy": 120.5,
+        "errors": [],
+        "missing": [
+          [
+            "Facteur réseau fixe absent",
+            "Missing fixed network factor"
+          ],
+          [
+            "Facteur réseau cellulaire absent",
+            "Missing cellular network factor"
+          ],
+          [
+            "Services tiers non inventoriés et fabrication du bâtiment",
+            "Unlisted third-party services and building manufacture"
+          ]
+        ],
+        "functionalCount": 10000,
+        "unit": [
+          "session",
+          "session"
+        ]
+      },
+      "after": {
+        "contributions": [
+          {
+            "label": [
+              "Terminal : fabrication allouée",
+              "Device: allocated manufacture"
+            ],
+            "kg": 1.6523971283960042
+          },
+          {
+            "label": [
+              "Terminal : électricité",
+              "Device: electricity"
+            ],
+            "kg": 0.07555463275650517,
+            "kwh": 2.3664733958456976
+          },
+          {
+            "label": [
+              "Réseau fixe",
+              "Fixed network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Réseau cellulaire",
+              "Cellular network"
+            ],
+            "kg": null
+          },
+          {
+            "label": [
+              "Hébergement : fabrication allouée",
+              "Hosting: allocated manufacture"
+            ],
+            "kg": 20
+          },
+          {
+            "label": [
+              "Hébergement : électricité",
+              "Hosting: electricity"
+            ],
+            "kg": 3.831252,
+            "kwh": 120
+          }
+        ],
+        "activities": [
+          {
+            "label": [
+              "Distribution de l’application",
+              "App distribution"
+            ],
+            "value": 90,
+            "unit": "Go / GB"
+          },
+          {
+            "label": [
+              "Temps terminal cumulé",
+              "Cumulative device time"
+            ],
+            "value": 500,
+            "unit": "h"
+          },
+          {
+            "label": [
+              "Transferts",
+              "Transfers"
+            ],
+            "value": 110,
+            "unit": "Go / GB"
+          }
+        ],
+        "subtotal": 25.55920376115251,
+        "energy": 122.3664733958457,
+        "errors": [],
+        "missing": [
+          [
+            "Facteur réseau fixe absent",
+            "Missing fixed network factor"
+          ],
+          [
+            "Facteur réseau cellulaire absent",
+            "Missing cellular network factor"
+          ],
+          [
+            "Services tiers non inventoriés et fabrication du bâtiment",
+            "Unlisted third-party services and building manufacture"
+          ]
+        ],
+        "functionalCount": 10000,
+        "unit": [
+          "session",
+          "session"
+        ]
+      }
+    }
+  ]
+}

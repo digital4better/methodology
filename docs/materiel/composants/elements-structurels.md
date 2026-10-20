@@ -1,16 +1,6 @@
 # Éléments structurels
 
-## Résumé
-
-Cette section couvre les sous-ensembles d'un équipement qui sont rarement décrits en détail mais dont les impacts ne peuvent pas être ignorés. Elle concerne notamment :
-
-- la carte mère ;
-- le boîtier ;
-- l'assemblage ;
-- les cartes auxiliaires ;
-- les résiduels non explicitement modélisés autrement.
-
-Cette section joue un rôle de complétion méthodologique : elle évite de sous-estimer les équipements quand seuls les composants majeurs sont connus.
+La carte mère, le boîtier, l'assemblage, les cartes auxiliaires et les autres éléments résiduels sont souvent peu décrits. Leur omission sous-estimerait l'équipement. Cette section complète les inventaires limités aux composants majeurs, sans compter deux fois les éléments connus.
 
 ## Caractéristiques
 
@@ -24,34 +14,32 @@ Cette section joue un rôle de complétion méthodologique : elle évite de sous
 
 ## Principe de modélisation
 
-La méthode accepte ici une modélisation plus forfaitaire que pour les composants majeurs, parce que les données détaillées sont souvent absentes. L'objectif n'est pas de créer une précision artificielle, mais de couvrir proprement ce qui manquerait autrement dans l'équipement.
+Une représentation forfaitaire couvre les sous-ensembles peu documentés, sans donner une précision artificielle au modèle.[^donnees-modele]
 
-Deux logiques sont privilégiées :
-
-- un facteur résiduel quand une composition détaillée existe déjà en grande partie ;
-- un archétype structurel par famille d'équipement quand la composition est plus incomplète.
+| Données disponibles | Représentation retenue |
+| --- | --- |
+| Composition largement connue | Facteur résiduel limité aux éléments manquants. |
+| Composition plus incomplète | Archétype structurel de la famille d’équipement. |
 
 ## Impact intrinsèque (fabrication)
 
 ### Méthode de calcul
 
-L'impact intrinsèque des éléments structurels est généralement estimé :
+L'estimation repose sur un forfait documenté par catégorie, ou sur la différence entre un archétype complet et la somme des composants connus.
 
-- par un facteur forfaitaire par équipement ou par catégorie ;
-- ou par différence entre un archétype complet d'équipement et la somme des composants explicitement connus.
+Cette différence exige des configurations, phases, unités et méthodes de caractérisation compatibles. Un résiduel négatif signale une incohérence à examiner ; il ne justifie ni une remise arbitraire à zéro ni un crédit environnemental.
 
-Cette section est donc avant tout une logique de complétion pour éviter les oublis dans une modélisation partielle.
+### Quand une donnée manque {#complétion-automatique}
 
-### Complétion automatique
+Un inventaire limité aux composants principaux peut oublier le boîtier, la carte mère ou l’assemblage. Une estimation groupée de ces éléments manquants peut compléter le calcul, à condition de connaître précisément ce qu’elle couvre.
 
-Quand les données manquent, la méthode recommande :
+| Situation | Exemple fictif |
+| --- | --- |
+| **Au départ** | Le **CPU, la RAM et le SSD** d’un portable sont déjà comptés. Le boîtier et la carte mère ne le sont pas. |
+| **Référence choisie** | Une estimation documentée couvre **le boîtier et la carte mère, sans CPU, RAM ni SSD**. |
+| **Dans le calcul** | Cette estimation est ajoutée aux composants connus. Un facteur portant sur **un portable complet** ne conviendrait pas : il compterait aussi le CPU, la RAM et le SSD une seconde fois. |
 
-1. de conserver la composition explicite disponible ;
-2. d'évaluer la part résiduelle manquante ;
-3. d'utiliser un forfait structurel par type d'équipement ;
-4. de tracer clairement l'hypothèse retenue dans le registre des hypothèses.
-
-Le recours au forfait ne doit jamais masquer une donnée réellement disponible.
+Si le contenu du complément n’est pas identifiable, son addition n’est pas justifiée. Les éléments encore manquants et la référence retenue figurent dans le [registre des hypothèses](../../references/registre-des-hypotheses-et-valeurs-par-defaut).
 
 ### Fin de vie
 
@@ -61,74 +49,49 @@ La fin de vie n'est généralement pas isolée au niveau des seuls éléments st
 
 ### Profil de consommation
 
-Les éléments structurels ont peu d'impact opérationnel autonome, mais ils conditionnent certains profils de consommation via :
+<dl className="model-profiles">
+  <div><dt>Éléments passifs</dt><dd>Le boîtier et les autres pièces passives n’ont pas de consommation autonome.</dd></div>
+  <div><dt>Sous-ensembles actifs</dt><dd>La carte mère, ses pertes et les cartes auxiliaires contribuent à la consommation de l’équipement.</dd></div>
+</dl>
 
-- la carte mère et ses pertes ;
-- les cartes auxiliaires actives ;
-- l'architecture générale de l'équipement.
-
-Dans la plupart des cas, cet impact est absorbé au niveau de l'équipement complet plutôt que modélisé séparément.
+L'architecture de l'équipement influe sur ces contributions. Elles sont généralement incluses dans la consommation de l'équipement complet plutôt que modélisées séparément.
 
 ### Facteurs d'ajustement
 
-Les principaux facteurs d'ajustement sont :
-
-- le type d'équipement ;
-- la part effectivement couverte par d'autres composants déjà modélisés ;
-- le niveau de détail disponible sur la composition réelle.
+Le type d'équipement, les composants déjà couverts et le détail disponible sur la composition déterminent le complément nécessaire.
 
 ## Allocation et annualisation
 
-Les éléments structurels sont annualisés avec l'équipement auquel ils appartiennent. Leur allocation suit donc :
-
-- la durée de vie du terminal, du serveur ou de l'équipement réseau ;
-- les règles de partage d'usage applicables à cet équipement ;
-- les conventions définies dans [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts).
-
-## Simulateur
-
-L'impact des elements structurels se lit au niveau de l'equipement complet. Le simulateur ci-dessous montre la part de chaque composant, y compris la structure :
-
-import { TerminalPlayGround } from '@site/src/components/terminal-playground';
-
-<TerminalPlayGround lang="fr" />
+Les éléments structurels suivent la durée de vie et les règles de partage du terminal, du serveur ou de l'équipement réseau auquel ils appartiennent. Les conventions sont décrites dans [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts).
 
 ## Hypothèses & limites
 
 ### Hypothèses retenues
 
-- une complétion forfaitaire explicite vaut mieux qu'une omission silencieuse ;
-- les éléments structurels sont portés par l'équipement complet, pas par un cas d'usage isolé ;
-- la précision de cette section dépend du niveau de détail réellement disponible sur la composition.
+Un complément forfaitaire explicite est préférable à une omission silencieuse. Il appartient à l'inventaire de l'équipement, puis suit son allocation aux usages. Sa précision dépend du détail disponible sur la composition.
 
 ### Limitations connues
 
-- cette partie est, par nature, plus approximative que les composants majeurs ;
-- les cartes mères et sous-ensembles auxiliaires sont rarement documentés de manière uniforme ;
-- le risque principal est la double prise en compte si un archétype complet et une somme partielle sont utilisés ensemble.
+Cette estimation est plus approximative que celle des composants majeurs. Les cartes mères et sous-ensembles auxiliaires sont peu documentés de façon homogène. Le principal risque est de cumuler un archétype complet et des composants qu'il couvre déjà.
 
 ### Perspectives
 
-- mieux documenter les forfaits structurels par type d'équipement ;
-- améliorer la traçabilité entre archétypes complets et résiduels structurels ;
-- proposer un simulateur uniquement si les règles de complétion deviennent suffisamment stabilisées, ce qui n'est pas encore le cas.
+Les forfaits restent à mieux documenter par type d'équipement et à relier aux inventaires complets dont ils sont issus. L’exemple ci-dessous illustre seulement la sensibilité au résiduel, sans proposer de règle d’estimation automatique.
+
+## Exemple interactif {#simulateur}
+
+Le complément structurel s’ajoute uniquement aux éléments non couverts par les composants déjà comptés. L’exemple fait varier ce complément, puis montre sa part dans l’équipement et son allocation annuelle.
+
+import { InlineStructureExample } from '@site/src/components/inline-structure-example';
+
+<div className="inline-example">
+
+<InlineStructureExample lang="fr" />
+
+</div>
 
 ## Application
 
-Cette section est surtout mobilisée dans :
+[Modélisation d’un équipement](../../modelisation/modelisation-d-un-equipement) utilise ce complément lorsque la composition est partielle. Les pages [Terminaux](../equipements/terminaux) et [Serveurs](../equipements/serveurs) l'intègrent pour couvrir les sous-ensembles non détaillés.
 
-- [Modélisation d’un équipement](../../modelisation/modelisation-d-un-equipement), quand la composition est partielle ;
-- [Terminaux](../equipements/terminaux), pour couvrir les sous-ensembles non détaillés ;
-- [Serveurs](../equipements/serveurs), quand seuls les composants majeurs sont explicitement inventoriés.
-
-## Références
-
-### Données mobilisées
-
-- `digital4better/data/data/equipment/*`
-- `digital4better/data/data/hardware/*`
-- forfaits du [Registre des hypothèses et valeurs par défaut](../../references/registre-des-hypotheses-et-valeurs-par-defaut) lorsque nécessaire
-
-### Sources
-
-- corpus `inputs/md`
+[^donnees-modele]: Convention D4B, résiduels exploratoires sans calibration indépendante. Valeurs et statut dans le [registre](../../references/registre-des-hypotheses-et-valeurs-par-defaut#parametres-composants).

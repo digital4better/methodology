@@ -1,0 +1,46 @@
+{
+  "revision": "77cae4a58fadd5deb3b8d4e5577020da08f780d8",
+  "source": "https://github.com/digital4better/data/tree/77cae4a58fadd5deb3b8d4e5577020da08f780d8/data/equipment",
+  "units": { "power": "W", "embodied": "kg CO2e/s" },
+  "profiles": {
+    "computer": {
+      "label": [
+        "Ordinateur moyen (portable + fixe avec écran)",
+        "Average computer (laptop + desktop with display)"
+      ],
+      "power": 137,
+      "embodied": 0.00000136
+    },
+    "mobile": {
+      "label": [
+        "Mobile moyen (smartphone + tablette)",
+        "Average mobile (smartphone + tablet)"
+      ],
+      "power": 1.325,
+      "embodied": 0.000001
+    },
+    "laptop": {
+      "label": ["Ordinateur portable", "Laptop"],
+      "power": 75,
+      "embodied": 0.00000118
+    },
+    "desktop": {
+      "label": [
+        "Ordinateur fixe personnel avec écran",
+        "Personal desktop with display"
+      ],
+      "power": 230,
+      "embodied": 0.000001789
+    },
+    "smartphone": {
+      "label": ["Smartphone", "Smartphone"],
+      "power": 1,
+      "embodied": 0.00000101
+    },
+    "tablet": {
+      "label": ["Tablette", "Tablet"],
+      "power": 7.5,
+      "embodied": 0.000000891
+    }
+  }
+}

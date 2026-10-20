@@ -1,21 +1,8 @@
 # Équipements réseau actifs
 
-## Résumé
+Cette section couvre les switches, routeurs, points d'accès et appliances réseau comparables. Elle modélise leur fabrication, leur consommation en usage et leur répartition entre services, utilisateurs ou volumes transportés.
 
-Cette section couvre les équipements réseau actifs utilisés pour faire circuler, aiguiller ou distribuer les données, notamment :
-
-- switches ;
-- routeurs ;
-- points d'accès ;
-- appliances réseau actives comparables.
-
-Elle modélise :
-
-- l'impact intrinsèque de fabrication de ces équipements ;
-- leur impact opérationnel en usage ;
-- leur répartition entre usages, services ou volumes transportés.
-
-Ces équipements doivent être distingués des approches purement systémiques en `kWh/Go` lorsqu'un inventaire physique, une composition type ou une topologie réseau est disponible.
+Un inventaire physique se distingue d'un facteur système en `kWh/Go`. Ces représentations ne peuvent se compléter que sur des périmètres sans recouvrement.
 
 ## Caractéristiques
 
@@ -30,37 +17,33 @@ Ces équipements doivent être distingués des approches purement systémiques e
 
 ## Principe de modélisation
 
-La méthode privilégie :
+Des actifs observables permettent une approche par inventaire ou archétype d'équipement.[^source-1][^donnees-modele] L'approche système intervient lorsque ce détail n'est pas disponible.
 
-- une approche par inventaire ou archétype d'équipement réseau quand les actifs sont observables ;
-- une approche plus systémique au niveau réseau seulement quand la granularité des équipements n'est pas disponible.
-
-Quand l'équipement est connu, il est préférable de le modéliser comme un équipement à part entière, avec :
-
-- un impact intrinsèque de fabrication ;
-- une consommation de référence en usage ;
-- une règle d'allocation entre ports, flux, services ou utilisateurs.
+Un équipement connu associe un impact intrinsèque, une consommation en usage et une règle d'allocation entre ports, flux, services ou utilisateurs.
 
 ## Impact intrinsèque (fabrication)
 
 ### Méthode de calcul
 
-L'impact intrinsèque peut être estimé :
+| Données disponibles | Représentation retenue |
+| --- | --- |
+| Type d’équipement connu | Facteur correspondant à la famille réseau. |
+| Ports ou classe de débit connus | Archétype documenté de capacité comparable. |
+| Sous-ensembles identifiés | Modèle hybride complétant les éléments connus sans recouvrement. |
 
-- à partir d'un facteur par type d'équipement réseau ;
-- à partir d'un archétype par classe de débit ou de nombre de ports ;
-- ou par un modèle hybride si certains sous-ensembles sont connus.
+Les compositions détaillées étant moins souvent documentées que pour les serveurs, le calcul reste généralement plus forfaitaire.
 
-Dans la plupart des cas, l'approche reste plus forfaitaire que pour un serveur, car les compositions détaillées sont moins souvent documentées.
+### Quand une donnée manque {#complétion-automatique}
 
-### Complétion automatique
+Une puissance inconnue peut être remplacée par celle d’un équipement de référence comparable. Le nombre de ports ne suffit pas : le débit, les fonctions actives et l’alimentation éventuelle d’autres appareils doivent aussi correspondre.
 
-Quand les caractéristiques manquent, la méthode recommande :
+| Situation | Exemple fictif |
+| --- | --- |
+| **Au départ** | Un switch possède **24 ports**, mais aucune mesure de puissance n’est disponible. |
+| **Référence choisie** | Un profil de switch à 24 ports, de même classe de débit et de fonctions, retient **30 W**. Cette puissance est supposée pour l’exemple. |
+| **Dans le calcul** | La consommation est estimée à partir de **30 W et du temps de fonctionnement**. Le résultat indique « puissance de référence », et non « puissance mesurée ». |
 
-1. d'identifier la famille d'équipement ;
-2. de rattacher l'équipement à une classe cohérente de ports ou de débit ;
-3. d'utiliser un archétype réseau documenté ;
-4. de consigner explicitement le niveau de confiance.
+Une fiche technique compatible est préférable à un profil générique. Sans référence suffisamment proche, la consommation reste non évaluée. La source et les conditions de fonctionnement accompagnent toute estimation ; le débit nominal seul ne détermine pas l’impact de fabrication.
 
 ### Fin de vie
 
@@ -70,31 +53,21 @@ La fin de vie est généralement intégrée dans les facteurs intrinsèques ou a
 
 ### Profil de consommation
 
-Les équipements réseau actifs présentent souvent :
+<dl className="model-profiles">
+  <div><dt>Charge faible</dt><dd>Une consommation subsiste même lorsque le trafic est faible ou nul.</dd></div>
+  <div><dt>Sensibilité au trafic</dt><dd>Certaines catégories consomment peu différemment lorsque la charge varie.</dd></div>
+  <div><dt>Interfaces et fonctions</dt><dd>Les interfaces actives, le débit et les fonctions avancées peuvent modifier la puissance.</dd></div>
+</dl>
 
-- une consommation non nulle même à faible charge ;
-- une faible élasticité à la charge pour certaines catégories ;
-- des écarts plus sensibles quand le nombre d'interfaces actives, le débit ou certaines fonctions avancées augmentent.
-
-Quand aucune courbe détaillée n'est disponible, une consommation annuelle ou une puissance de référence par archétype peut être utilisée.
+En l'absence de courbe détaillée, une puissance ou une consommation annuelle de référence par archétype peut être utilisée.
 
 ### Facteurs d'ajustement
 
-Les principaux facteurs d'ajustement sont :
-
-- le temps d'activation réel ;
-- le taux d'occupation des ports ou interfaces ;
-- le niveau de charge réseau ;
-- le `PUE` ou autres facteurs de site si l'équipement est hébergé dans un environnement maîtrisé.
+La consommation dépend du temps d'activation, de l'occupation des ports et de la charge réseau. Le `PUE` ou d'autres facteurs de site interviennent si l'équipement appartient au périmètre de l'environnement d'hébergement concerné.
 
 ## Allocation et annualisation
 
-L'impact des équipements réseau actifs est annualisé sur leur durée de vie, puis alloué selon l'objet évalué. L'allocation peut reposer :
-
-- sur le temps d'usage ;
-- sur le nombre de ports ou interfaces mobilisés ;
-- sur le débit ou le volume transporté ;
-- sur une clé simplifiée cohérente avec le cas d'usage.
+L'impact intrinsèque est annualisé sur la durée de vie, puis réparti selon l'objet évalué. La clé peut reposer sur le temps, les ports mobilisés, le débit, le volume transporté ou une autre convention justifiée par le cas d'usage.
 
 Les règles générales sont décrites dans [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts).
 
@@ -102,38 +75,20 @@ Les règles générales sont décrites dans [Allocation et partage des impacts](
 
 ### Hypothèses retenues
 
-- un archétype réseau documenté est préférable à une décomposition spéculative ;
-- la consommation d'usage peut être approchée à partir d'une puissance de référence quand aucune mesure directe n'est disponible ;
-- l'équipement réseau doit être distingué du réseau systémique modélisé à l'échelle `LAN`, `WAN` ou `RAN`.
+Un archétype documenté est préférable à une décomposition spéculative. Une puissance de référence peut remplacer une mesure absente si les conditions d'usage sont explicites. L'équipement physique reste distinct du réseau système à l'échelle `LAN`, `WAN` ou `RAN`.
 
 ### Limitations connues
 
-- les inventaires d'équipements réseau sont souvent incomplets hors contextes spécialisés ;
-- les consommations réelles sont peu documentées à granularité fine ;
-- il existe un risque de double comptage si un même périmètre combine à la fois des équipements inventoriés et un facteur réseau agrégé.
+Les inventaires sont souvent incomplets et les consommations peu documentées à une granularité fine. Un facteur réseau agrégé peut déjà couvrir les équipements inventoriés : leur addition sur un même périmètre créerait un double compte.
 
 ### Perspectives
 
-- enrichir les archétypes D4B par classe d'équipement réseau ;
-- mieux distinguer les consommations selon les profils de charge ;
-- proposer un simulateur pour certains équipements réseau quand les paramètres utiles seront suffisamment stabilisés.
+Les améliorations portent sur des archétypes par classe d'équipement et des profils de charge mieux documentés. Un simulateur dédié ne serait pertinent qu'avec des paramètres suffisamment stabilisés.
 
 ## Application
 
-Cette section est mobilisée directement dans :
+[Réseau LAN](../reseau-et-infrastructure/reseau) utilise les actifs locaux inventoriés. [Infrastructure d’hébergement](../../cas-d-usage/environnements/infrastructure-d-hebergement) couvre les équipements réseau connus du site. [Service web](../../cas-d-usage/services/service-web) peut intégrer une contribution locale ou d'entreprise explicitement évaluée.
 
-- [Réseau LAN](../reseau-et-infrastructure/reseau), quand le réseau local est modélisé par inventaire ;
-- [Infrastructure d’hébergement](../../cas-d-usage/environnements/infrastructure-d-hebergement), quand les équipements réseau du site sont connus ;
-- [Service web](../../cas-d-usage/services/service-web), quand une part réseau locale ou d'entreprise est évaluée explicitement.
+[^source-1]: MIT Materials Systems Laboratory / ICT Benchmarking, [Intended Uses and Limitations of the PAIA Model](https://p1-ofp.static.pub/ShareResource/social_responsibility/PAIA_Intended_Use/PAIA_Intended_Use.pdf), document non daté, sections « Limitations », « Server tool » et « Network switch tool ».
 
-## Références
-
-### Données mobilisées
-
-- `digital4better/data/data/hardware/networks.*`
-- `digital4better/data/data/equipment/*`
-
-### Sources
-
-- `inputs/md/intended-uses-and-limitations-of-the-paia-model.md`
-- corpus `inputs/md`
+[^donnees-modele]: `data/equipment/*`. [Digital4Better, catalogue de données, instantané 77cae4a](https://github.com/digital4better/data/tree/77cae4a58fadd5deb3b8d4e5577020da08f780d8).

@@ -3,10 +3,11 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import rehypeFootnotes from './plugins/rehype-footnotes.cjs';
 
 export default {
   title: 'Digital4Better Open Methodology',
-  tagline: 'Dinosaurs are cool',
+  tagline: 'Comprendre et évaluer les impacts environnementaux du numérique',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -21,7 +22,6 @@ export default {
   projectName: 'methodology', // Usually your repo name.
 
   onBrokenLinks: 'throw',
-  onBrokenMarkdownLinks: 'warn',
 
   i18n: {
     defaultLocale: 'fr',
@@ -29,6 +29,9 @@ export default {
   },
   markdown: {
     mermaid: true,
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
   },
   presets: [
     [
@@ -36,9 +39,14 @@ export default {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/digital4better/methodology/tree/main',
+          lastVersion: 'v1',
+          versions: {
+            v1: {label: 'v1', path: '', banner: 'none'},
+            current: {label: 'v2 beta', path: 'v2-beta', banner: 'none'},
+          },
+          editUrl: 'https://github.com/digital4better/methodology/tree/feature/v2',
           remarkPlugins: [remarkMath],
-          rehypePlugins: [() => rehypeKatex({trust: true, strict: "ignore"})],
+          rehypePlugins: [() => rehypeKatex({trust: true, strict: "ignore"}), rehypeFootnotes],
           routeBasePath: '/'
         },
         blog: false,
@@ -55,19 +63,16 @@ export default {
 
   themeConfig: {
     // Replace with your project's social card
-    image: 'img/docusaurus-social-card.jpg',
     navbar: {
       title: 'Open Methodology',
       logo: {
-        alt: 'My Site Logo',
-        src: 'img/logo.svg',
+        alt: 'Digital4Better',
+        src: 'img/digital4better-wordmark.svg',
       },
       items: [
         {
-          type: 'docSidebar',
-          sidebarId: 'sidebar',
-          position: 'left',
-          label: 'Docs',
+          type: 'docsVersionDropdown',
+          position: 'right',
         },
         {
           type: 'localeDropdown',

@@ -1,0 +1,22 @@
+{
+  "source": "https://arxiv.org/html/2511.05597v1",
+  "method": "Compare structural ratios, not absolute energy between different model/hardware configurations.",
+  "phase": {
+    "measuredRatio": 3.75,
+    "constantMfuProxyRatio": 1,
+    "conclusion": "The proxy treats equal total token counts identically. It cannot reproduce the measured input/output asymmetry with one fixed MFU."
+  },
+  "batch": {
+    "measuredSingleToGroupedPerPromptRatio": 35.9271523178808,
+    "constantMfuProxyRatio": 1,
+    "conclusion": "Batch is not represented explicitly. A fixed MFU cannot reproduce this effect; do not apply the observed ratio universally."
+  },
+  "calibrationStatus": "not-calibrated",
+  "nextEvidence": [
+    "Phase-sensitive duration and energy traces",
+    "Explicit batch and concurrency",
+    "Matching model, precision, engine and hardware",
+    "Idle and whole-server boundary",
+    "Held-out validation data"
+  ]
+}

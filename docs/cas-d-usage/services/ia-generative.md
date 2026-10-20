@@ -1,386 +1,427 @@
 # IA générative
 
-## Résumé
+import { MethodIllustration } from '@site/src/components/method-illustrations';
 
-Cette note méthodologique propose un cadre de calcul pour évaluer l’empreinte environnementale des modèles d’IA générative, en intégrant l’entraînement, le fine-tuning et l’inférence. La démarche repose sur l’estimation de la charge de calcul (FLOPs) requise par chaque usage, sa conversion en temps d’utilisation des GPU, puis en consommation énergétique et en émissions de gaz à effet de serre (GES). Elle inclut également la part d’impact liée à la fabrication et au cycle de vie des équipements. Cette approche vise à fournir une méthode reproductible, transparente et adaptée à différents modèles et contextes d’usage, en cohérence avec les recommandations de la recherche sur la Green AI[^15].
+Évaluer un service d’IA demande de relier une tâche à du calcul, puis à des équipements, de l’électricité et des impacts. Cette page couvre entraînement, fine-tuning, génération de texte et de médias, ainsi que l’analyse d’images, de vidéo et la transcription audio. La méthode relie le traitement serveur au cycle de vie complet du service.
 
-### Périmètre évalué
+## Définir le service étudié
 
-Ce chapitre couvre :
+Une requête n’est pas une unité suffisante sans préciser sa fonction : longueur du contexte, volume de sortie, qualité attendue, latence et nombre de tentatives. Un million de jetons, une minute de vidéo et un entraînement constituent des unités différentes.
 
-- l’entraînement ;
-- le fine-tuning ;
-- l’inférence ;
-- la part d’impact liée au matériel de calcul et au serveur support.
+Le périmètre distingue le traitement serveur, l’infrastructure réservée, le service applicatif, le développement du modèle et le cycle de vie du matériel. Chaque niveau comprend des ressources et des activités à inventorier.
 
-Il couvre les usages où l’on peut relier un modèle à une charge de calcul estimable, puis à un usage matériel.
+La spécification SCI-AI[^source-4] distingue les responsabilités du fournisseur et du consommateur. Elle aide à fixer la frontière ; le périmètre de chaque étude reste explicite.
 
-## Paramètres d'entrée
-
-- la nature de l’usage étudié : entraînement, fine-tuning ou inférence ;
-- le nombre de paramètres, ou une approximation documentée ;
-- le volume de tokens ou d’activations traités ;
-- les hypothèses matérielles : GPU, serveur, durée de vie ;
-- les hypothèses d’exploitation : `MFU`, `PUE`, facteur électrique, éventuel `REF`.
-
-### Dépendances tierces
-
-Ce cas d’usage dépend souvent :
-
-- d’un fournisseur cloud ou d’hébergement ;
-- d’un constructeur ou fournisseur matériel ;
-- d’un modèle tiers ou d’une API tierce dans le cas d’une IA consommée comme service.
-
-Ces dépendances doivent être explicitées car elles conditionnent la visibilité réelle sur le matériel, l’énergie et les facteurs d’impact.
-
-### Règle d'allocation
-
-L’allocation repose principalement sur le temps d’usage du matériel exprimé en `GPUh`, puis sur une répartition prorata des autres composants du serveur.
-
-### Risque de double comptage
-
-Le principal risque de double comptage apparaît :
-
-- si l’infrastructure GPU est déjà comptée ailleurs dans un chapitre cloud ou hébergement ;
-- si l’entraînement est amorti sur l’inférence sans préciser clairement le périmètre retenu ;
-- si des services tiers d’IA sont comptés à la fois comme API et comme infrastructure reconstruite.
-
-### Hypothèses temporelles
-
-Les résultats dépendent notamment :
-
-- de la durée de vie retenue pour les GPU et serveurs ;
-- de la période sur laquelle l’usage est observé ;
-- du facteur électrique retenu pour la période et la localisation considérées.
-
-## Principe
-
-La méthodologie repose sur une philosophie simple : relier directement les usages réels d’un modèle d’IA (entraînement, fine-tuning, inférence) à l’empreinte matérielle nécessaire pour les réaliser.
+## Du service aux impacts
 
 ```mermaid
-flowchart LR
-A[Usage du modèle] --> B[Estimation FLOPs]
-B --> C[Conversion en GPUh]
-C --> D[Consommation énergétique GPU]
-D --> E[Impact opérationnel GPU]
-C --> F[Impact fabrication GPU]
-C --> C'[Détermination part serveur]
-C' --> D'[Consommation énergétique serveur]
-D' --> E'[Impact opérationnel serveur]
-C' --> F'[Impact fabrication serveur]
-F --> G[Impact total]
-F' --> G
-E --> G
-E' --> G
+flowchart TD
+    A["Tâche, modèle et volumes"] --> B["Charge de calcul en FLOP"]
+    B --> C["Temps GPU et temps serveur"]
+    C --> D["Électricité IT × PUE"]
+    C --> E["Fabrication allouée"]
+    D --> F["Facteur électrique du site"]
+    E --> G["Impacts du traitement"]
+    F --> G
+    class A,B d4b-blue
+    class C,G d4b-navy
+    class D,F d4b-coral
+    class E d4b-sand
 ```
 
-Plutôt que de partir de mesures globales de consommation électrique au niveau des centres de données, souvent inaccessibles ou propriétaires (Google, 2025[^3][^4]), elle évalue en premier lieu la quantité de calcul exigée par le modèle selon :
+Des mesures représentatives constituent la référence pour l’énergie et la durée lorsqu’elles existent. Le modèle par opérations sert à expliciter un scénario lorsque ces données manquent. Une empreinte complète fournie par une API inclut déjà ses composants ; leur ajout créerait un double compte.
 
-- ses caractéristiques propres (taille, nombre de paramètres, proportion de paramètres activés, architecture),
-- le volume de jetons consommés ou générés (texte, images, etc.).
+### Jetons, paramètres et opérations
 
-Cette charge de calcul est exprimée en FLOPs, puis convertie en temps d’utilisation effectif du matériel (GPUh) en tenant compte de l’efficacité réelle (Model FLOP Utilization, MFU).
+Un [**jeton**](../../references/glossaire.md#jeton) est une unité du tokenizer, pas un mot. Son découpage dépend du modèle, de la langue et du contenu. Le comptage repose sur l’API ou le tokenizer ; une conversion constante mots/jetons reste une approximation.
 
-L’étape suivante traduit ce temps d’utilisation en consommation énergétique et en émissions de GES, à partir des caractéristiques physiques des GPU/serveurs et des conditions d’exploitation (PUE, facteur d’émission électrique).
+Les paramètres sont les poids du modèle. Dans un modèle dense, la plupart participent au calcul ; dans un [**Mixture of Experts (MoE)**](../../references/glossaire.md#moe), seule une partie est activée pour chaque jeton. Le calcul utilise les paramètres actifs, mais la mémoire doit accueillir les poids stockés et les états nécessaires. Un [FLOP](../../references/glossaire.md#flop) désigne une opération ; FLOP/s désigne un débit. Ces deux unités décrivent des grandeurs différentes.
 
-Enfin, une part de l’impact lié à la fabrication et au cycle de vie des équipements est ajoutée proportionnellement au temps d’usage, suivant une logique inspirée de l’Analyse de Cycle de Vie (ACV) (ISO 14040 et 14044).
+| Symbole | Définition | Unité |
+|---|---|---|
+| $P$, $P_p$ | Paramètres actifs du modèle génératif et du modèle de prompt | Nombre |
+| $T$, $T_{in}$, $T_{out}$ | Jetons traités, en entrée et en sortie | Jetons |
+| $Q$, $m$ | Débit GPU théorique et [MFU](../../references/glossaire.md#mfu) | FLOP/s ; fraction |
+| $n$, $H$ | Nombre de GPU par serveur ; durée de vie matérielle | Nombre ; heures |
+| $W_g$, $W_s$ | Puissance d’un GPU ; puissance du serveur hors GPU | Watts |
+| $M_g$, $M_s$ | Fabrication d’un GPU ; fabrication du serveur hors GPU | kg CO₂e |
 
-:::note[Pourquoi utiliser les FLOPs comme métrique ?]
-D'après l'étude Green AI[^15], les FLOPs sont une métrique pertinente pour mesurer l’impact des IA génératives, car ils expriment la charge de calcul réellement effectuée, directement corrélée à la consommation d’énergie et fournissent une base indépendante du matériel pour comparer équitablement différents modèles.
-:::
+### Texte, entraînement et fine-tuning
 
-## Évaluation des impacts
+Les approximations issues des modèles de calcul des Transformers représentent principalement les opérations proportionnelles aux paramètres (Hoffmann et al.[^source-1]).
 
-### Qu’est-ce qu’un token ?
+| Traitement | Charge approximative | Convention |
+|---|---|---|
+| Entraînement | $F=6PT$ | Passe avant et rétropropagation |
+| Fine-tuning | $F=6PT$ | Proxy d’entraînement complet ; gain LoRA non présumé |
+| Traitement du prompt | $F_p=2PT_{in}$ | Avant réutilisation de préfixe |
+| Génération de texte | $F_g=2PT_{out}$ | Génération avec cache des états du contexte |
 
-Un **jeton** ou **token** est l’unité discrète manipulée par le modèle pour représenter une entrée ou une sortie. Selon la modalité, ce token peut être un fragment de mot, une position spatiale, ou une unité temporelle codée.
+$T$ doit compter **toutes les présentations** des données : un corpus de 10 milliards de jetons parcouru trois fois représente 30 milliards de jetons traités. Une multiplication supplémentaire par batch et étapes créerait un double compte si le compteur les inclut déjà.
 
-Le tableau ci‑dessous donne un repère rapide pour chaque modalité et une façon simple d’estimer les variables utilisées dans les formules.
+**Dans ces formules, $P$ désigne les paramètres actifs par jeton**, y compris les couches partagées d’un MoE. Si le routage varie, le compte repose sur la moyenne des paramètres sollicités sur les jetons traités. Par exemple, Mixtral 8×7B mobilise environ 13 milliards de paramètres par jeton pour 47 milliards au total ; utiliser 47 milliards dans $2PT$ surestimerait cette composante du calcul.[^moe-actifs]
 
-| Modalité  | Ce qu’est un token                                  | Formule (tokens / activations)                                                                                   | Exemple / estimation                                                                                                                                                                    |
-|-----------|-----------------------------------------------------|------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Texte** | Fragment de mot (souvent 3–4 caractères en moyenne) | $T_\text{text} = \text{nombre de mots} \times \text{tokens par mot}$                                             | 100 mots → $T_\text{text} \approx 130$–160 tokens selon le tokenizer.                                                                                                                   |
-| **Image** | Token spatial / latent (patch)                      | $T_\text{image} = (\text{largeur}/\text{patch}) \times (\text{hauteur}/\text{patch})$                            | Image 512×512, patches 16×16 → 512/16 = 32 tokens par axe → 32×32 = 1 024 tokens.                                                                                                       |
-| **Audio** | Token temporel issu d’un codec (ex. EnCodec)        | $T_\text{audio} = \lceil \text{durée (s)} \times \text{sample rate} \div \text{downscale temporel} \rceil$ | Clip audio 10 s, sample rate 24 kHz, downscale temporel 320 → $T_\text{audio} \approx 750$ tokens temporels.                                                                                  |
-| **Vidéo** | Token spatial par frame + nombre de frames          | $T_\text{frame} = (\text{largeur}/\text{patch}) \times (\text{hauteur}/\text{patch})$                            | Vidéo 4 s à 24 fps → $F=96$ frames. Frame 512×512, patches 16×16 → $T_\text{frame} \approx 32\times32=1\,024$ tokens par frame et $T_\text{video} = 96 \times 1\,024 = 98\,304$ tokens. |
+**Un paramètre gelé n’est pas un paramètre inactif.** Il conserve sa valeur pendant l’entraînement, mais intervient encore dans la passe avant. La rétropropagation à travers sa couche reste nécessaire si des paramètres situés en amont sont entraînés. [LoRA](../../references/glossaire.md#lora) réduit les poids mis à jour et leurs états d’optimiseur ; le gain de calcul dépend des opérations réellement conservées.[^gel-parametres]
 
-#### Explications des termes techniques
+Le proxy $6PT$ reste ici celui d’un entraînement complet, sans réduction automatique liée au gel des couches. Un calcul spécifique au fine-tuning distingue passe avant, propagation des gradients et mise à jour des poids. Multiplier simplement $P$ par la proportion entraînable ne suffit pas.
 
-- **Patch** : découpage de l’image ou de la frame en blocs carrés traités comme un **token** par le modèle.
-- **Downscale / downsampling** : réduction de la résolution spatiale (images/vidéo) ou temporelle (audio) pour passer dans un espace latent plus petit, utilisé pour le calcul des **activations**. Exemple : downscale 8 → largeur et hauteur divisées par 8.
-- **Canaux latents** : nombre de dimensions dans l’espace latent (profondeur des features) pour image, vidéo ou audio.
+Ces approximations ne détaillent pas l’attention, le routage, les communications ni les déplacements mémoire. Précision numérique, quantification et taille des lots influencent les performances sans réduire automatiquement le nombre de paramètres.
 
-### Estimation de la charge de calcul
+### Générer des images, de la vidéo ou de l’audio
 
-Pour les générations image, audio et vidéo, l'estimation peut distinguer le traitement du prompt textuel et la génération du média. Ces deux étapes peuvent être réalisées par des composants différents selon les systèmes considérés :
+Le prompt et le média sont calculés séparément. Certains profils utilisent un encodeur de prompt distinct : $F_p=2P_pT_{in}$. Ces parcours de génération partent d’un **prompt textuel**. Les médias fournis en entrée relèvent des parcours d’analyse présentés dans la section suivante.
 
-$$$FLOP_\text{total} \approx FLOP_\text{prompt textuel} + FLOP_\text{génération média}$$$
+Les expressions ci-dessous donnent la charge totale $F$, prompt compris. Pour les profils [DiT/hybrides](../../references/glossaire.md#diffusion), $A(x)=2Px+4Lx^2d$ représente une étape sur $x$ positions : calcul proportionnel aux paramètres et attention. $L$ est le nombre de couches et $d$ leur dimension cachée.[^media-architecture]
 
-Pour l'audio, le downscale temporel utilisé pour convertir le sample rate en tokens latents est une hypothèse de modélisation propre au système évalué.
+| Sortie générée | Charge approximative | Paramètres de volume |
+|---|---|---|
+| Images, DiT/hybride | $F=F_p+kS\,A(N)$ | $k$ images, $S$ étapes, $N$ positions par image |
+| Vidéo, DiT/hybride | $F=F_p+S\,A(N_v)$ | $N_v$ positions spatio-temporelles |
+| Audio autorégressif | $F=F_p+2PN_aq$ | $N_a$ positions audio, $q$ codebooks |
+| Audio par diffusion | $F=F_p+S\,A(N_a)$ | $N_a$ positions audio, $S$ étapes |
 
-| Cas d'usage                                     | Formule de calcul                                                                                                                   | Variables                                                                                                                                                                                                                                                                                  | Explication                                                                                                                                                                                                                                                                                      |
-|-------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Entraînement**                                | $FLOP \approx 6 \times P_\text{total} \times T_\text{training}$                                                                     | $P_{total}$ : nombre total de paramètres du modèle<br/>$T_{training}$: nombre de tokens traités pendant l'entraînement (tokens × batch × steps)                                                                                                                                            | Pour chaque jeton et paramètre il faut 6 FLOPs : 2 FLOPs pour la passe forward et 4 pour le calcul de gradient et la propagation<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                               |
-| **Fine tuning**                                 | $FLOP \approx (2 \times P_\text{total} + 4 \times P_\text{tunable}) \times T_\text{training}$                                       | $P_{total}$ : nombre total de paramètres du modèle<br/>$P_{tunable}$ : nombre de paramètres entrainables (dépend de l'optimisation : LoRA, ...)<br/>$T_{training}$: nombre de tokens traités pendant l'entraînement (tokens × batch × steps)                                               | Idem que pour l'entrainement complet, néanmoins le nombre de paramètres mis à jour est moindre<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8])                                                                                                 |
-| **Traitement du prompt**<br/>(texte)            | $FLOP \approx 1 \times P_{active} \times T_{input}$                                                                                 | $P_{active}$ : nombre de paramètres actifs<br/>$T_{input}$: nombre de tokens du prompt                                                                                                                                                                                                     | Le prompt est encodé une première fois par le modèle. Lors de la génération auto-régressive, les états intermédiaires déjà calculés sont ensuite réutilisés pour éviter de recalculer l’ensemble du contexte à chaque nouveau jeton généré.<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8]) |
-| **Traitement du prompt**<br/>(image)            | $FLOP \approx 1 \times P_{active} \times T_\text{image}$                                                                       | $P_{active}$ : nombre de paramètres actifs                                                                                                                                              | Chaque image du prompt est encodée une fois par le modèle. $T_\text{image}$ correspond aux positions spatiales encodées, sans multiplier à nouveau par les canaux internes du modèle.<br/>(Source : Latent Diffusion Models[^24], DiT[^21])                                                                                                                                                       |
-| **Traitement du prompt**<br/>(audio)            | $FLOP \approx 1 \times P_{active} \times T_\text{audio}$                                                                            | $P_{active}$ : nombre de paramètres actifs                                                                                                                                                | Chaque clip audio du prompt est encodé une fois par le modèle. $T_\text{audio}$ correspond aux positions temporelles latentes, sans multiplier à nouveau par les canaux internes du modèle.<br/>(Sources : AudioLDM[^25], Stable Audio Open[^20])                                                                                                                                         |
-| **Génération de texte**                         | $FLOP \approx 2 \times P_\text{active} \times T_\text{output}$                                                                      | $P_{active}$ : nombre de paramètres actifs<br/>$T_{output}$: nombre de tokens générés                                                                                                                                                                                                      | Pour chaque jeton et paramètre il faut 2 FLOPs pour la passe forward.<br/>Le nombre de paramètres actifs lors de l'inférence dépend de l'architecture du modèle (en particulier pour les MoE).<br/>(Source : Scaling Law[^1], Transformers FLOPs[^6][^7], Transformers Inference Arithmetic[^8]) |
-| **Génération d'image**<br/>(U-Net)             | $FLOP \approx S \times \big(2 \times P_\text{active} \times N_\text{site}\big)$                                                                  | $N_{site}$: nombre de sites latents spatiaux = largeur latente x hauteur latente<br/>$S$ : nombre d'étapes de débruitage                                                                                                                                                                                                              | Le coût dominant d’une diffusion image latente U-Net est le débruitage répété sur une grille spatiale latente. Les canaux sont déjà représentés dans les poids du modèle et ne sont donc pas multipliés une seconde fois.<br/>(Sources : Latent Diffusion Models[^24], Clockwork Diffusion[^2], Transformers Inference Arithmetic[^8])                                                                                                                                              |
-| **Génération d'image**<br/>(DiT)               | $FLOP \approx S \times \big(2 \times P_\text{active} \times T_\text{image} + 4 \times L \times T_\text{image}^2 \times d\big)$                  | $L$: nombre de couches Transformer<br/>$d$: dimension cachée<br/>$S$ : nombre d'étapes de débruitage                                                                                                                       | Les modèles image DiT traitent des tokens latents patchifiés. Le premier terme couvre le passage linéaire du modèle, le second l'attention quadratique entre tokens spatiaux.<br/>(Sources : DiT[^21], Latent Diffusion Models[^24], Transformers Inference Arithmetic[^8]) |
-| **Génération de vidéo**<br/>(U-Net / traitement local des frames) | $FLOP \approx S \times \big( 2 \times P_\text{active} \times N_\text{site} \times F \big)$ | $N_{site}$: nombre de sites latents spatiaux = largeur latente x hauteur latente<br/>$F$: nombre de frames à générer<br/>$S$ : nombre d'étapes de débruitage | L'ordre de grandeur est linéaire avec le nombre de frames. Il représente les architectures de type U-Net vidéo, dont le coût dominant reste local aux frames ou à de petits voisinages temporels.<br/>(Sources : Clockwork Diffusion[^2], Transformers Inference Arithmetic[^8], Video Killed the Energy Budget[^17]) |
-| **Génération de vidéo**<br/>(DiT / attention spatio-temporelle globale) | $FLOP \approx S \times \big( 2 \times P_\text{active} \times T_\text{video} + 4 \times L \times T_\text{video}^2 \times d \big)$ | $F_{latent}=\lfloor(F-1)/c_t\rfloor+1$<br/>$c_t$: compression temporelle<br/>$L$: nombre de couches Transformer<br/>$d$: dimension cachée<br/>$S$ : nombre d'étapes de débruitage | Le premier terme correspond au coût linéaire sur les tokens vidéo patchifiés. Le second modélise le coût quadratique de l’auto-attention spatio-temporelle globale sur ces tokens.<br/>(Sources : DiT[^21], Video Killed the Energy Budget[^17], configuration Wan 2.1[^22]) |
-| **Génération de vidéo**<br/>(Hybride DiT + 3D VAE) | $FLOP \approx S \times \big( 2 \times P_\text{active} \times T_\text{video} + 4 \times L \times T_\text{video}^2 \times d \big)$ | $F_\text{effectif} = \lceil F / B \rceil \times B$<br/>$B$: taille du bloc de frames effectivement calculé<br/>$T_\text{video}$ est calculé comme pour DiT, avec $F_{effectif}$ à la place de $F$ | Certaines architectures hybrides traitent la vidéo par blocs temporels fixes et avec une VAE 3D. Le coût est alors estimé sur les frames et tokens effectivement calculés plutôt que sur la seule durée demandée.<br/>(Sources : CogVideoX[^23], configuration Wan 2.1[^22], Video Killed the Energy Budget[^17]) |
-| **Génération d'audio**<br/>(diffusion / attention temporelle) | $FLOP \approx S \times \big( 2 \times P_\text{active} \times T_\text{audio} + 4 \times L \times T_\text{audio}^2 \times d \big)$ | $L$ : nombre de couches Transformer<br/>$d$ : dimension cachée<br/>$S$ : nombre d'étapes de débruitage | L’audio est généré par diffusion sur une séquence 1D de tokens latents. Le coût est linéaire pour le traitement de la séquence et quadratique si l’architecture applique une attention globale temporelle.<br/>(Sources : AudioLDM[^25], Stable Audio Open[^20], Attention Is All You Need[^26]) |
-| **Génération d'audio**<br/>(codec / autoregressive) | $FLOP \approx 2 \times P_\text{active} \times T_\text{codec}$ | $T_\text{codec}=T_\text{audio}\times C$<br/>$C$ : nombre de codebooks du preset | Certains générateurs audio produisent directement une séquence de tokens codec. Le coût principal est alors linéaire avec le nombre de tokens générés.<br/>(Sources : MusicGen[^27], Stable Audio Open[^20]) |
+#### Formules des profils image et vidéo {#formules-des-profils-image-et-vidéo}
 
-### Conversion en usage GPU
+Pour une image de largeur $w$ et hauteur $h$, les profils retiennent une réduction spatiale de 8 puis des patches de côté $p$ dans l’[espace latent](../../references/glossaire.md#espace-latent) :
 
-Si l'on connait la capacité de traitement en FLOP d'un GPU, il est alors trivial de calculer la durée théorique de son usage afin de satisfaire un des cas d'usage précédent :
+$$
+N=\left\lceil\frac{\lfloor w/8\rfloor}{p}\right\rceil
+  \left\lceil\frac{\lfloor h/8\rfloor}{p}\right\rceil
+$$
 
-$$$D_{gpu} = \frac{FLOP}{(C_{gpu}\times MFU)}$$$
+Pour une vidéo, $k$ est le nombre d’images temporelles. Le profil peut le compléter à un multiple de $b$ avant une compression temporelle de facteur $c$ :
 
-Avec $D_{gpu}$ la durée d'utilisation en heures du GPU,  $C_{gpu}$ la capacité de calcul théorique en FLOP/h du GPU.
+$$
+k'=\lceil k/b\rceil b,\qquad
+N_v=\left(\left\lfloor\frac{k'-1}{c}\right\rfloor+1\right)N
+$$
 
-La capacité de calcul réellement utilisable par un GPU, en tenant compte de la typologie de modèle, du type de GPU/TPU, du fort parallélisme, des échanges réseaux, etc... représenterait seulement 25 à 50% de la capacité théorique (cf. Benchmarks NVidia[^13]).
+Une vidéo de 5 secondes à 24 images/s représente ainsi **120 images avant compression**. Une image de 1 024 × 1 024 pixels contient quatre fois plus de positions spatiales qu’une image de 512 × 512 ; le terme d’attention croît davantage.
 
-Ce taux d'utilisation est appelé $MFU$ (Model Flop Utilization).
+Les profils **U-Net** utilisent plutôt $F=F_p+kS\,2P\lfloor w/8\rfloor\lfloor h/8\rfloor$ ; en vidéo, $k$ est remplacé par $k'$. Cette approximation ne détaille pas les convolutions ni le décodage VAE.
 
-### Conversion en consommation d'énergie
+#### Formules des profils audio {#formules-des-profils-audio}
 
-Si l'on considère que pendant la durée d'utilisation du GPU sa consommation énergétique est maximale, le calcul de sa consommation d'énergie est simple :
+Pour une durée $t$ en secondes et une fréquence d’échantillonnage $f_s$, le nombre de positions est $N_a=\lceil t f_s/c_t\rceil$, où $c_t$ est la réduction temporelle du profil. Les [codebooks](../../references/glossaire.md#codebook) $q$ sont les ensembles de codes utilisés pour représenter l’audio.
 
-$$$E_{gpu} = D_{gpu} \times P_{gpu}$$$
+Ces proxies demandent une calibration par architecture et moteur. Le multiplicateur $q$ ne décrit pas à lui seul l’exécution parallèle ou séquentielle des codebooks. MusicGen et Stable Audio Open documentent les architectures, sans valider ces estimations d’énergie. Codecs, décodage et traitements de sortie restent à inventorier.[^media-audio]
 
-Avec $P_{gpu}$ la puissance en Watts du GPU
+### Analyser des médias en entrée
 
-Dans un contexte de centre de données, il est pertinent de multiplier ce chiffre par son $PUE$  (Power Usage Efficiency) afin de tenir compte de son efficacité énergétique.
+L’analyse additionne encodage du média, traitement de sa représentation avec la consigne et génération de la réponse. Un « jeton image » facturé par une API n’est pas un facteur énergétique universel.
 
-### Impact environnemental de la consommation d'énergie
+| Entrée | Charge approximative | Profil et frontière |
+|---|---|---|
+| Images, pages scannées | $F=F_{enc}+2P_{lang}(T_{in,eff}+T_m+T_{out})$ | Qwen2.5-VL 7B ; $T_m$ positions visuelles |
+| Vidéo | Même formule, avec $T_m=UN/4$ | Qwen2.5-VL 7B ; $U$ paires d’images, sans piste audio |
+| Audio | $F=C(F_{conv}+F_{enc,bloc}+F_{dec,bloc})$ | Whisper base ; $C=\lceil t/30\rceil$ blocs de 30 s |
 
-Afin d'obtenir l'impact environnemental (par exemple, émissions GES) de l'énergie, il suffit d'appliquer des facteurs d'émissions électriques comme ceux disponibles dans le référentiel Open Data D4B :
+#### Calcul des entrées visuelles et audio {#calcul-des-entrées-visuelles-et-audio}
 
-$$$I_{operational} = E_{gpu} \times F_{energy}$$$
+**Images et vidéo.** Le profil Qwen2.5-VL utilise des patches de 14 pixels, une fusion spatiale 2 × 2 et un regroupement temporel par deux. Les dimensions traitées $w,h$ sont arrondies au multiple supérieur de 28. Une image fixe est répétée pour former une paire.[^qwen-config]
 
-### Impact environnemental de la fabrication du GPU
+$$
+N=(w/14)(h/14),\qquad T_m=UN/4
+$$
 
-L'impact lié à la fabrication du GPU est calculé proportionnellement à la durée d'usage rapportée à la durée de vie estimée du GPU :
+$U$ compte les images indépendantes ou les paires vidéo, avec $U=\lceil\lceil t f\rceil/2\rceil$ pour une durée $t$ et $f$ images analysées par seconde. $F_{enc}$ additionne projection des patches, projections linéaires, attention et fusion. L’encodeur comporte 32 couches, dont quatre à attention globale ; les autres utilisent des fenêtres.[^qwen-report]
 
-$$$I_{embodied} = I_{manufacturing} \times \frac{D_{usage}}{D_{lifespan}}$$$
+Le cœur langage compte environ 7,61 milliards de paramètres ($P_{lang}$), séparément de l’encodeur. $T_{in,eff}$ représente la consigne après réutilisation éventuelle du préfixe. Le cache ne retire **ni l’encodage ni les positions du média**. L’attention longue du modèle de langage, les normalisations et les opérations non linéaires ne sont pas détaillées.
 
-### Prise en compte des impacts serveur
+Le contexte comprend la consigne complète, les positions du média et la réponse. Au-delà des 128 000 positions retenues pour ce profil, le calcul demande un autre découpage. La résolution décrit l’image déjà redimensionnée ; elle ne reconstitue pas automatiquement le prétraitement réel.
 
-L’impact des autres composants (CPU, RAM, stockage, châssis) est également pris en compte. Les durées étant exprimées en GPUh, l’impact de ces composants est réparti au prorata du nombre de GPU par serveur. Par exemple, dans un serveur de 8 GPU, un huitième des impacts opérationnels et intrinsèques des composants non-GPU est imputé à chaque GPUh calculée.
+**Audio.** Whisper base utilise six couches d’encodeur et six de décodeur, de dimension $d=512$. Le signal est ramené à 16 kHz puis découpé en fenêtres de 30 s, complétées si nécessaire. Chaque bloc comporte $N=1\,500$ positions après convolution.[^whisper-config][^whisper-audio]
 
-$$$I_{total} = I_{gpu} + \frac{I_{server}}{N_{gpu/server}}$$$
+Pour $C>0$, les $T_{out}$ jetons de transcription sont répartis en $u=T_{out}/C$ jetons par bloc. Avec $L_e=L_d=6$ couches et un vocabulaire de $V=51\,865$ unités :
 
-### Prise en compte des caches
+$$
+\begin{aligned}
+F_{conv}&=2(3000)(80)d(3)+2Nd^2(3)\\
+F_{enc,bloc}&=L_e(24Nd^2+4N^2d)\\
+F_{dec,bloc}&=L_d\bigl(4Nd^2+28ud^2\\
+&\quad+2du(u+1)+4Nud\bigr)+2udV
+\end{aligned}
+$$
 
-Deux mécanismes de cache peuvent réduire le coût effectif de l’inférence.
+Le décodeur comprend projections de l’attention croisée, génération avec cache KV et projection vers le vocabulaire. Pour $u=0$, son coût est nul dans ce proxy ; une durée audio nulle donne également zéro bloc. Une multiplication suivie d’une addition compte pour deux FLOP.
 
-Le premier est un **cache d’inférence**, utilisé au sein d’une même requête. Lorsqu’un prompt a été traité une première fois, les états intermédiaires associés aux jetons déjà vus peuvent être réutilisés pendant la génération des jetons suivants. Ce mécanisme explique que le coût de génération ne nécessite pas de recalculer l’ensemble du contexte à chaque étape.
+La limite est de **448 jetons par bloc**. Recherche en faisceau, nouvelles tentatives, détection de silence et découpage adaptatif ne sont pas inclus. Ainsi, 10 et 30 secondes occupent un même bloc dans ce scénario ; ces paliers dépendent du moteur et ne constituent pas une mesure d’énergie. Le [MFU](../../references/glossaire.md#mfu) et la puissance restent à calibrer.
 
-Le second est un **cache de préfixe**, utilisé entre plusieurs requêtes distinctes partageant un même début strictement identique. Dans ce cas, une partie du prompt peut parfois être réutilisée d’une requête à l’autre, ce qui réduit le coût de traitement des jetons d’entrée.
+<MethodIllustration kind="input-media" lang="fr" />
 
-La méthodologie de base calcule un impact brut du traitement du prompt, sans réutilisation inter-requêtes.
+#### Combiner les modalités sans double comptage
 
-Lorsque plusieurs requêtes réutilisent un même préfixe, le taux de réutilisation peut être noté $r_{cache}$ :
+Le résumé d’une vidéo avec son mobilise la piste visuelle, la transcription et, si nécessaire, le traitement du texte transcrit. Une réponse déjà incluse reste comptée une seule fois. Un PDF scanné passe par ses pages en images ; un PDF avec texte extrait peut suivre le parcours texte.
 
-$$$r_{cache} = \frac{T_{cached}}{T_{input}}$$$
+<MethodIllustration kind="combined-media" lang="fr" />
 
-avec :
+L’édition d’image et les modèles audio-vidéo natifs demandent également un profil propre à leur architecture. Une architecture conjointe nécessite des mesures du déploiement ou un profil dédié. Décodage, transferts, stockage et traitements applicatifs complètent le périmètre lorsqu’ils sont significatifs.
 
-- $T_{input}$ le nombre total de jetons d’entrée
-- $T_{cached}$ le nombre de jetons d’entrée réutilisés depuis le cache
-- $r_{cache} \in [0;1]$
-- $r_{cache} = 0$ : aucune réutilisation du prompt
-- $r_{cache} = 1$ : prompt entièrement réutilisé
+### Temps GPU et temps serveur
 
-Les jetons réutilisés depuis un cache ne sont toutefois pas supposés sans impact. Un coefficient résiduel $\alpha$ est introduit pour représenter l’impact d’un jeton servi depuis un cache relativement à un jeton recalculé :
+$$
+D_{GPU,h}=\frac{F}{Qm\,3600},\qquad D_{serveur,h}=\frac{D_{GPU,h}}{n}
+$$
 
-- $\alpha \in [0;1]$
-- $\alpha = 0$ : les jetons servis depuis un cache sont supposés négligeables devant l’impact évité
-- $\alpha = 1$ : un jeton servi depuis un cache est supposé avoir le même impact qu’un jeton recalculé
+Le [MFU](../../references/glossaire.md#mfu) est la fraction du débit théorique utilisée pour le travail modélisé. La valeur initiale de 0,4 est une hypothèse, pas une constante matérielle. Le débit doit correspondre à la précision et à l’usage des unités de calcul : les 989 TFLOP/s du H100[^ref-7] désignent ici le scénario dense FP16/BF16, pas FP32.
 
-L’impact effectif du prompt peut alors être approximé par :
+À [MFU](../../references/glossaire.md#mfu) inchangé, la division par $n$ suppose une accélération proportionnelle au nombre de GPU. Le [MFU](../../references/glossaire.md#mfu) doit être recalibré si la configuration change. La durée, le délai de traitement du prompt et le débit calculés ne sont donc pas des benchmarks de service. La faisabilité mémoire se vérifie séparément : poids, cache KV, activations et états d’optimiseur doivent tenir dans les ressources disponibles.
 
-$$$I_{prompt,effectif} = I_{prompt,brut} \times \big((1-r_{cache}) + \alpha \times r_{cache}\big)$$$
+### [MFU](../../references/glossaire.md#mfu) : pourquoi le débit réel est inférieur au maximum {#comprendre-le-mfu}
 
-Cette correction peut être appliquée de manière identique à l’impact opérationnel et à l’impact intrinsèque du prompt. Le coût de génération des jetons de sortie reste inchangé.
+Le [**MFU (Model FLOPs Utilization)**](../../references/glossaire.md#mfu) rapporte le débit de calcul utile au modèle au débit théorique des accélérateurs. Un [MFU](../../references/glossaire.md#mfu) de 0,4 signifie que 40 % de ce débit théorique contribue au travail compté. Cela ne signifie ni que le GPU est inactif 60 % du temps, ni qu’il consomme 40 % de sa puissance. La définition de PaLM, section 4.1[^ref-8] exclut notamment les opérations supplémentaires de recalcul des activations.
 
-:::note
-Lorsque des données d’exploitation distinguent les jetons d’entrée effectivement recalculés des jetons d’entrée réutilisés depuis un cache, elles peuvent être utilisées pour estimer empiriquement $r_{cache}$. Le coefficient $\alpha$ reste quant à lui une hypothèse de modélisation : il vise à représenter l’impact résiduel associé à la mémoire, au stockage rapide et aux services nécessaires pour conserver et restituer les états en cache. Cette estimation reflète donc un contexte réel d’usage et de déploiement, et non une propriété générale du modèle.
-:::
+| Ce qui limite le débit | Pourquoi cela compte |
+|---|---|
+| Accès à la mémoire | Poids, activations et cache KV doivent circuler entre la mémoire du GPU et ses unités de calcul. La bande passante peut limiter le débit avant que les unités de calcul soient saturées. |
+| Bus et liaisons entre équipements | PCIe, NVLink et le réseau entre serveurs transportent les données. Les échanges et synchronisations entre GPU peuvent laisser certaines unités en attente. |
+| Parallélisme et taille des lots | Des lots trop petits occupent mal le GPU. Répartir le modèle sur davantage de GPU ajoute des communications ; un pipeline peut aussi comporter des périodes d’attente entre étapes. |
+| Dépendances et exécution | En génération autorégressive, chaque nouveau jeton dépend des précédents. Les dimensions des matrices, les opérations annexes et l’ordonnancement logiciel influencent aussi le débit. |
 
-## Hypothèses & limites
+Ces limites sont décrites dans les guides NVIDIA sur la performance GPU[^ref-9] et le parallélisme distribué[^ref-10]. Les transferts peuvent être partiellement masqués par du calcul : on ne doit pas additionner mécaniquement tous leurs temps.
+
+**Dans le modèle par opérations**, le [MFU](../../references/glossaire.md#mfu) est un coefficient global, sans simulation séparée des bus ni des communications. Il intervient dans la durée $D=F/(nQm)$. À charge et matériel identiques, passer de 0,4 à 0,2 double la durée estimée, donc l’énergie et la fabrication allouée au temps actif dans ce modèle à puissance constante. Ce n’est pas une loi générale de consommation électrique.
+
+<MethodIllustration kind="mfu" lang="fr" />
+
+#### Choisir et calibrer le [MFU](../../references/glossaire.md#mfu) {#choisir-et-calibrer-le-mfu}
+
+La valeur **0,4 est une hypothèse initiale**, pas une moyenne universelle. En inférence, elle sert de coefficient effectif à calibrer : traitement du prompt et génération n’ont pas les mêmes contraintes. Un [MFU](../../references/glossaire.md#mfu) d’entraînement n’est donc pas directement transposable à une requête isolée.
+
+Pour $n$ GPU identiques, une durée de traitement mesurée $t$ en secondes permet d’estimer $m=F/(nQt)$. Cette estimation dépend de la convention de calcul de $F$, de la précision numérique de $Q$, du batch, du moteur et du matériel. Une valeur supérieure à 1 signale une incohérence de mesure, de périmètre ou de convention.
+
+Une mesure sur la configuration complète produit un [MFU](../../references/glossaire.md#mfu) qui intègre déjà les pertes de parallélisation ; une seconde pénalité les compterait deux fois. Les périodes sans requêtes et l’attente en file restent distinctes de cette calibration. Une durée et une énergie déjà mesurées ne nécessitent pas de correction supplémentaire par le [MFU](../../references/glossaire.md#mfu).
+
+Un calcul paramétrique du [MFU](../../references/glossaire.md#mfu) est prévu dans une prochaine évolution de la méthodologie, pour relier ces contraintes au matériel et à la charge. Il reste à calibrer et à valider sur des mesures ; il ne fait pas encore partie des règles de calcul.
+
+### Électricité et fabrication
+
+$$
+E_{site,kWh}=D_{GPU,h}\frac{W_g+W_s/n}{1000}\,PUE
+$$
+
+$$
+I_{usage}=E_{site,kWh}\,f_{électricité},\qquad
+I_{fabrication}=\frac{D_{GPU,h}}{H}(M_g+M_s/n)
+$$
+
+Le serveur hors GPU inclut CPU, RAM, stockage et châssis. Le PUE multiplie l’électricité IT, **pas la fabrication**. Il ne faut pas l’appliquer si l’énergie mesurée couvre déjà le site. Les puissances nominales des profils ne remplacent pas une mesure moyenne au niveau du serveur.
+
+$H$ est la durée de vie du matériel en heures : $H=années\times365{,}25\times24$.
+
+Le calcul ci-dessus attribue la fabrication au temps de traitement. Un serveur réservé à un service lui reste toutefois attribué pendant les périodes sans requêtes. Traiter plus vite ne supprime donc pas cette part de fabrication ; elle reste à répartir entre les services qui réservent le matériel.
+
+### Cache : deux mécanismes distincts
+
+<div className="cache-mechanisms">
+  <section>
+    <h4>1. Cache KV</h4>
+    <p><strong>Au sein d’une même génération</strong></p>
+    <p>Conserve les clés et valeurs d’attention des jetons déjà traités pour les réutiliser aux étapes suivantes.</p>
+    <p className="cache-mechanism-scope">Évite de recalculer les états des jetons précédents. Son usage est supposé dans le calcul de génération.</p>
+  </section>
+  <section>
+    <h4>2. Cache de préfixe</h4>
+    <p><strong>Entre plusieurs requêtes</strong></p>
+    <p>Réutilise les états d’un début de prompt commun, par exemple les mêmes consignes ou le même document.</p>
+    <p className="cache-mechanism-scope">Réduit le travail de traitement du préfixe commun, sans réduire la génération de la réponse.</p>
+  </section>
+</div>
+
+#### Effet du cache de préfixe {#dans-le-simulateur--cache-de-préfixe}
+
+La part $r$ du préfixe réutilisée réduit le calcul du prompt :
+
+$$
+F_{p,effectif}=F_p\left[(1-r)+\alpha r\right],\qquad
+r=\frac{T_{cached}}{T_{in}}
+$$
+
+Le coefficient résiduel $\alpha=0{,}1$ est une hypothèse pour le travail conservé. La correction précède le calcul du temps, de l’énergie et de la fabrication allouée au temps actif. Elle ne modifie pas le travail de génération. Le taux réel de réutilisation nécessite une mesure ; mémoire, éviction, durée de conservation et synchronisation du cache peuvent ajouter des coûts.
+
+Ex: 405,87 milliards de paramètres, 100 jetons d’entrée et 400 de sortie donnent $405{,}87\times10^{12}$ FLOP. Avec tout le préfixe réutilisé et 10 % de travail résiduel, la charge devient $332{,}8134\times10^{12}$ FLOP. Il s’agit d’un résultat du proxy, pas d’une économie mesurée.
+
+## Compléter le cycle de vie
+
+<span id="articulation-avec-le-rcp-applicatif" />
+
+Le calcul sur la période étudiée est distingué de la part d’entraînement attribuée au service.[^rcp-app] Elle constitue une contribution distincte de l’inférence.
+
+La répartition d’un entraînement entre usages repose sur un dénominateur documenté : volume réellement servi sur une période, capacité réservée ou scénarios d’usage futur. L’intensité d’entraînement allouée vaut $I_{train}/V_{service}$. Lorsque ce volume est inconnu, plusieurs scénarios rendent cette incertitude visible. Une prévision reste distincte d’une mesure.
+
+Pour une application [RAG](../../references/glossaire.md#rag) ou agentique, l’inventaire couvre chaque étape : indexation, embeddings, recherche, appels de modèles, outils, stockage et nouvelles tentatives. Leurs impacts s’additionnent pour une **tâche achevée**, sans recompter le serveur d’un service déjà évalué. Les pages [Web](./service-web.md), [Cloud](../environnements/cloud.md) et [Hébergement](../environnements/infrastructure-d-hebergement.md) complètent ces postes.
+
+L’eau directe du site demande une définition du WUE et une énergie IT compatible. L’eau associée à l’électricité relève d’un autre facteur. Métaux, ressources et toxicité nécessitent des inventaires caractérisés ; ils ne se déduisent pas d’un résultat carbone par un ratio constant.
+
+<MethodIllustration kind="rag" lang="fr" />
+
+## Mesure, incertitude et choix de méthode
+
+| Approche | Données nécessaires | Usage pertinent |
+|---|---|---|
+| Mesure du déploiement | Durée, puissance serveur, charge, capacité inactive, allocation | Calibrer un service réel ; publier le périmètre de mesure |
+| Proxy FLOP de cette page | Architecture, volumes, matériel, [MFU](../../references/glossaire.md#mfu) et puissances | Explorer les dépendances et expliciter les hypothèses |
+| EcoLogits[^ref-12] | Modèle, fournisseur et activités couvertes par ses méthodologies | Évaluer des appels avec son corpus ; vérifier la modalité et la version |
+
+EcoLogits documente désormais des méthodes pour l’inférence LLM et la vidéo. Les périmètres et modèles diffèrent : un classement de résultats sans harmoniser tâche, matériel, repos, cache et mix électrique ne démontre pas la précision d’une méthode.
+
+La calibration de ce modèle repose sur des mesures couvrant plusieurs tailles de prompt et de sortie, batchs et niveaux de charge. L’analyse séparée de la durée et de l’énergie permet d’ajuster le [MFU](../../references/glossaire.md#mfu) ou les puissances. Un jeu de mesures distinct sert à vérifier l’erreur. Un intervalle obtenu en faisant varier les hypothèses est une **analyse de sensibilité**, pas un intervalle de confiance statistique.[^source-3]
+
+Une confrontation à des mesures publiées montre une limite concrète : à nombre total de jetons identique, le proxy à [MFU](../../references/glossaire.md#mfu) constant ne reproduit pas l’écart observé entre prompt long et réponse longue. La taille du batch modifie aussi l’énergie par requête. La calibration doit donc distinguer ces situations ; aucune correction universelle n’est déduite de ces observations.[^phase-mesures]
+
+### Travaux récents et portée de leurs résultats
+
+More than Carbon (2025)[^ref-13] étudie le cycle de vie de l’A100 sur plusieurs catégories d’impact. Life-Cycle Emissions of AI Hardware (2025)[^ref-14] traite la production et l’usage du matériel. Ces travaux justifient de séparer phases et indicateurs ; ils ne valident pas tous les profils matériels de cette méthodologie.
+
+L’étude de recherche Moshi (prépublication, 2026)[^ref-15] inclut expériences, essais échoués et développement. Pour la vidéo, Video Killed the Energy Budget (2025)[^ref-16] étudie les régimes de latence et de puissance de modèles ouverts. Ces résultats motivent une frontière explicite et une calibration par déploiement, pas un facteur universel par jeton ou seconde de média.
+
+Pour appliquer ces choix : [périmètre](../../fondations/perimetre-frontieres-services-tiers-et-unite-d-analyse.md), [allocation](../../regles/allocation-et-partage-des-impacts.md), [qualité des données](../../regles/qualite-des-donnees-et-matrice-de-robustesse.md) et [double comptage](../../regles/double-comptabilisation.md).
+
+#### Relier les études du corpus aux calculs D4B
+
+Le rapport ADEME sur les GPU répartit les impacts sur les heures d’activité utiles de la carte. L’exemple D4B ci-dessus rapporte la fabrication aux heures calendaires de vie, puis à la durée du calcul. Ces dénominateurs diffèrent lorsque le matériel reste au repos ; un facteur par [GPU·h](../../references/glossaire.md#gpu-heure) n’est pas interchangeable sans connaître cette allocation.[^corpus-gpu]
+
+Le rapport porte sur le matériel étudié. Ses exclusions, notamment réseau, terminaux et bâtiment, ne deviennent pas celles d’un service IA complet. La frontière du facteur doit être connue avant d’ajouter le reste du serveur ou l’électricité.[^corpus-gpu]
+
+*How Hungry is AI?* estime l’énergie d’inférence à partir de performances API, de configurations matérielles inférées et d’hypothèses de puissance et de batch. Ses résultats ne sont pas des mesures électriques directes des API. Le modèle exclut le repos des GPU inutilisés dans les nœuds partiellement chargés : cette limite reste visible lors d’un rapprochement avec une infrastructure réservée.[^corpus-inference]
+
+## Hypothèses et limites {#hypotheses-et-limites}
+
+Le modèle par opérations fournit une **estimation du traitement serveur**, fondée sur un compte d’opérations et des profils matériels. Une source sur l’architecture d’un modèle ne valide pas à elle seule son énergie ni son empreinte.
 
 ### Hypothèses retenues
 
-- Lors de la génération auto-régressive, un cache d’inférence est généralement utilisé pour réemployer les états intermédiaires déjà calculés.
-- La réutilisation inter-requêtes d’un préfixe de prompt n’est pas systématique. Elle dépend du contexte de déploiement et de la stabilité effective des prompts.
-- En l’absence de mesure directe, le taux de réutilisation $r_{cache}$ est une hypothèse d’usage.
-- En première approximation, trois usages peuvent être retenus : un mode simple avec $\alpha = 0$, un mode prudent avec $\alpha = 0{,}1$, et un mode exploratoire sous forme de fourchette entre $0$ et $0{,}25$.
+| Poste | Hypothèse initiale | Ce qu’il faut adapter |
+|---|---|---|
+| Calcul et parallélisme | [MFU](../../references/glossaire.md#mfu) 0,4 ; débit théorique selon la précision du profil GPU | Mesurer la durée sur le modèle, le moteur, le batch et le matériel utilisés |
+| Électricité | PUE 1,2 ; facteur des États-Unis au démarrage, instantané 2025 | Choisir le lieu et la période ; les facteurs nationaux ne décrivent pas un site à chaque heure |
+| Matériel | Puissances et fabrication issues de profils ; durée de vie de 5 ans | Remplacer les proxys par des mesures et un inventaire documenté |
+| Allocation | Fabrication répartie au prorata du temps actif ; autres composants partagés par GPU | Compléter la capacité réservée au repos et les règles de partage du serveur |
+| Modèle | Architecture et paramètres référencés ou explicitement supposés | Vérifier version, précision, quantification et modalités couvertes |
+| Cache | Cache KV supposé ; préfixe réutilisé à 0 % au départ, avec 10 % de calcul résiduel lorsqu’il est réutilisé | Mesurer la réutilisation ; conservation, éviction et transferts ne sont pas détaillés |
+
+Les valeurs retenues pour une étude sont documentées avec leur source et peuvent différer de ces hypothèses initiales. Pour les entrées visuelles, le cache de préfixe réduit le texte seulement ; cette correction ne s’applique pas au profil de transcription audio.
 
 ### Limitations connues
 
-- Incertitudes sur les données d'entrée : données d’entraînement réelles, caractéristiques des modèles souvent confidentiels, MFU, ...
-- Pas de prise en compte du fait que les modèles tiennent ou non en mémoire sur le matériel sélectionné
-- Pas de prise en charge des spécificités éventuelles des TPU, FPGA, Asics, ...
-- Pas d'ACV fiable sur les équipements.
-- La méthode ne modélise pas finement les conditions d’activation, de conservation et d’éviction des caches.
-- Les jetons servis depuis un cache ne sont pas sans impact : la méthode suppose simplement que le calcul évité domine l’overhead mémoire et service associé au cache.
-- Le taux réel de réutilisation d’un prompt dépend fortement de la structure des usages, de la répétitivité des préfixes et du contexte technique de déploiement.
-- La valeur de $\alpha$ reste incertaine en l’absence de mesure directe de l’overhead mémoire et service associé au cache.
-- Les données de facturation ou d’exploitation distinguant jetons recalculés et jetons réutilisés peuvent servir de proxy opérationnel, mais ne constituent pas une mesure physique directe de l’impact environnemental.
+- **Périmètre partiel.** Terminaux, réseau externe, stockage applicatif, RAG, capacité inactive et bâtiment restent à compléter. L’entraînement n’est pas automatiquement alloué aux requêtes d’inférence.
+- **Faisabilité matérielle non vérifiée.** Les poids, activations et caches peuvent dépasser la mémoire disponible. Les contrôles de contexte des profils d’entrée ne vérifient pas cette capacité. Les profils proposés ne décrivent pas les TPU, FPGA ou autres accélérateurs.
+- **Performance simplifiée.** Les formules ne détaillent pas tous les coûts d’attention, de routage, de mémoire ou de communication. La puissance est constante dans le calcul ; un [MFU](../../references/glossaire.md#mfu) identique ne garantit pas la même efficacité pour un autre traitement.
+- **Portée des modalités.** La vidéo en entrée exclut sa piste audio ; Whisper utilise des blocs complétés de 30 s. Les profils de génération sont exploratoires. Édition d’image et modèles multimodaux conjoints nécessitent un profil dédié.
+- **Données incertaines.** Les caractéristiques des modèles fermés, les facteurs de fabrication et l’activité réelle peuvent être mal connus. Une unité facturée ou un jeton mis en cache n’est pas une mesure physique d’impact.
 
-### Perspectives
+### Interpréter et consolider le résultat
 
-- Prendre en compte des métriques publiques comme tokens/s en plus des FLOPs.
-- Prendre en compte la précision (FP32, FP16, ...)
-- Intégrer un overhead pour prendre en compte l'impact du parallélisme (réseau, réplication, queuing, ...).
-- Intégrer la mémoire GPU comme goulet d'étranglement.
-- Intégrer à la méthodologie l'amortissement de l’entraînement sur l’inférence.
-- Adapter le MFU en fonction des caractéristiques du serveur (nombre de GPU par serveur, ...).
-- Intégrer des facteurs d’impact multi-critères (énergie primaire, eau, métaux rares).
-- Intégrer l'entrainement des versions de développement imputables à la version actuelle d'un modèle
+L’électricité et le climat affichés sont un **sous-total de périmètre**, pas une ACV complète, une latence garantie ou un facteur universel par requête. L’eau, les ressources et la toxicité demandent des données propres ; elles ne se déduisent pas du carbone.
 
-## Application
+La réutilisation d’un résultat suppose une tâche, une version du modèle, un matériel, un lieu, une période et des exclusions documentés. Sa validation repose sur des mesures de durée et d’énergie ; une variation des hypothèses décrit une sensibilité, pas un intervalle de confiance. Les sections [Compléter le cycle de vie](#compléter-le-cycle-de-vie) et [Mesure, incertitude et choix de méthode](#mesure-incertitude-et-choix-de-méthode) précisent cette démarche.
 
-Cette section a pour but d'évaluer le modèle en utilisant les données publiques du modèle LLM Open source Llama 3.1 (405B paramètres).
+## Exemple complet : Llama 3.1 405B
 
-### Hypothèses matérielles
+Cet exemple historique permet de refaire les opérations. Il utilise 405 milliards de paramètres arrondis, 15 000 milliards de jetons et un facteur électrique de 0,420 kg CO₂e/kWh. Le simulateur utilise les paramètres de son profil et le facteur national versionné sélectionné ; ses valeurs peuvent donc différer.
 
-Le NVIDIA DGX H100 est une configuration "classique" sur laquelle sont exécutés les traitements.
+### Configuration, calcul de l’entraînement et de l’inférence
 
-| Caractéristiques     | Composant                                                  | Puissance                 | Impact cycle de vie (approximatif)            |
-|----------------------|------------------------------------------------------------|---------------------------|-----------------------------------------------|
-| CPU                  | 2 x Intel Xeon Platinum 8480C processors (112 cores total) | 2 x 350 = 700 W           | 2 x 25 = 50 kgCO2e                            |
-| RAM                  | 2TB                                                        | 2 x 1024 x 0.392 = 803 W  | 2 x 1024 x 533 / 384 = 2843 kgCO2e            |                                             
-| Storage              | 30 TB SSD                                                  | 30 x 1024 x 0.0012 = 37 W | 30 x 1024 x 0.16 = 4915 kgCO2e                |
-| GPU                  | 8 x H100 80 GB(989 TFLOP/s par GPU)                        | 8 x 700 W                 | 8 x 250 kgCO2e                                |
-| Chassis              |                                                            | -                         | 250 kgCO2e                                    |
-| Total (hors GPU)     |                                                            | 1540 W                    | 10058 kgCO2e                                  |
-| Total (hors GPU) / h |                                                            | 1540 W                    | 10058 / (5 x 24 x 365, 25) = 0,230 kgCO2e / h |
+| Élément | Puissance | Fabrication |
+|---|---:|---:|
+| 8 GPU H100 | 8 × 700 W | 8 × 250 kg CO₂e |
+| 2 CPU | 2 × 350 W | 2 × 113 kg CO₂e |
+| RAM, 2 000 Go | 2 000 × 0,392 W | 2 000 × 1,3 kg CO₂e |
+| SSD, 30 000 Go | 30 000 × 0,0012 W | 30 000 × 0,16 kg CO₂e |
+| Châssis | Non individualisée | 250 kg CO₂e |
+| Total hors GPU | 1 520 W | 7 876 kg CO₂e |
 
-### Impact de l'entrainement
+Ces facteurs de fabrication sont des hypothèses historiques, pas une ACV certifiée du DGX. Avec [MFU](../../references/glossaire.md#mfu) 0,4, PUE 1,2 et durée de vie de cinq ans :
 
-Llama 3.1 (405B paramètres) a été entrainé avec environ 15 trillions (15e12) jetons.
-D'après Huggingface, il a été entrainé avec 24576 GPU H100 :
-Training Time (GPU hours)    Power Consumption (W)    Emissions (tons CO2eq)
-Llama 3.1 8B	1.46M	700	420
-Llama 3.1 70B	7.0M	700	2 040
-Llama 3.1 405B	30.84M	700	8 930
+| Étape | Calcul | Résultat arrondi |
+|---|---|---:|
+| Charge d’entraînement | $6\times405\times10^9\times15\times10^{12}$ | $3{,}645\times10^{25}$ FLOP |
+| Temps GPU cumulé | $F/(989\times10^{12}\times0{,}4\times3600)$ | 25,59 millions GPU·h |
+| Électricité du site | $D_{GPU,h}\times(0{,}700+1{,}520/8)\times1{,}2$ | 27,33 millions kWh |
+| Usage | $E\times0{,}420$ | 11 480 t CO₂e |
+| Fabrication allouée | $D_{GPU,h}(250+7876/8)/(5\times365{,}25\times24)$ | 721 t CO₂e |
 
-D'après les formules du modèle et en prenant pour hypothèse un MFU de 40% (à affiner d'après les benchmarks NVIDIA[^13] il pourrait être plus proche de 35%) pour l'entrainement, un PUE de 1,2 et un facteur d'émission GES de 0,420 kgCO2e / kWh :
+La fiche Meta[^ref-11] déclare 30,84 millions de GPU·h pour le 405B. L’écart d’environ 17 % sur le temps ne valide pas le modèle : précision, utilisation, opérations annexes et frontière doivent être rapprochées.
 
-$$$
-\begin{aligned}
-&FLOP_{training} = 6 \times P_{total} \times T_{training} = 6 \times 405e9 \times 15e12 = 3,65e25 FLOP \\
-&D_{training} = \frac{FLOP_{training}}{FLOP_{gpu} \times MFU} = \frac{FLOP_{training}}{989e12 * 3600 \times 0,40} = 25,6e6 GPU.h \\
-&E_{training} = 0,700 \times D_{training} \times PUE = 21,5e6 kWh \\
-&I^{gpu}_{training_{ope}} = 0,420 \times E_{training} = 9 030 tCO2e \\
-\end{aligned}
-$$$
+Pour **un million de jetons générés**, hors prompt, le même scénario donne 0,569 GPU·h, 255 g CO₂e d’usage et 16 g de fabrication, soit 271 g. Avec 400 jetons d’entrée et 400 de sortie, sans cache de préfixe, le proxy donne environ 0,217 g CO₂e. Ces résultats n’ont pas valeur de facteur universel par requête.
 
-:::note
-L'écart entre les données fournies sur Huggingface et le calcul est < 2% ce qui reste très raisonnable.
-:::
+## Exemple interactif {#simuler-votre-situation}
 
-Pour l'impact intrinsèque, on prend pour hypothèse une durée de vie des équipements de 5 ans :
+L’exemple interactif applique le modèle par opérations décrit ci-dessus à un traitement serveur. Sa couverture reste partielle : il ne constitue ni une ACV complète du service ni une implémentation complète de SCI-AI.
 
-$I^{gpu}_{training_{emb}} = \frac{D_{training}}{D_{lifespan}} \times I_{total_{emb}} = \frac{25,6e6}{(5 \times 24 \times 365,25)} \times 250 = 146 tCO2e$
+| Frontière | Éléments à inventorier | Dans le simulateur |
+|---|---|---|
+| Traitement serveur | Accélérateurs, CPU, RAM, stockage, durée, énergie et fabrication allouée | Oui, avec des profils simplifiés |
+| Infrastructure réservée | Temps actif et inactif, redondance, réseau interne, capacité disponible | Temps actif seulement ; PUE pour l’exploitation du site |
+| Service applicatif | Orchestration, RAG, base vectorielle, outils, API tierces, terminaux et réseau | À compléter |
+| Développement du modèle | Préparation des données, essais, entraînements abandonnés, évaluations et modèle final | Un traitement à la fois, sans inventaire automatique |
+| Cycle de vie matériel | Fabrication, transport, maintenance et fin de vie selon l’ACV utilisée | Fabrication des profils ; autres phases à vérifier |
 
-:::note
-On constate que l'impact intrinsèque est considérablement plus faible que l'impact opérationnel.
-:::
+| Votre besoin | Entrée → sortie | Parcours du simulateur |
+|---|---|---|
+| Créer une image, une vidéo, de la voix ou de la musique | Texte → média | Générer, puis choisir le média |
+| Décrire une photo, lire un document scanné | Images + consigne → texte | Analyser des images |
+| Résumer les scènes d’une vidéo | Images échantillonnées + consigne → texte | Analyser une vidéo, piste visuelle |
+| Transcrire une conversation | Audio → texte | Transcrire un audio |
 
-A l'impact du GPU il convient d'ajouter l'impact opérationnel et intrinsèque du serveur. Il y a 8 GPUs par serveur, donc on ajoute 1 / 8 des composants autres que GPU.
-
-$$$
-\begin{aligned}
-&I_{training_{ope}} = I^{gpu}_{training_{ope}} + \frac{I^{server}_{training_{ope}}}{8} = 9030 + \frac{25,6e6 \times 1,540 \times 0,420 \times 1,2 }{8} = 11513 tCO2e \\
-&I_{training_{emb}} = I^{gpu}_{training_{emb}} + \frac{I^{server}_{training_{emb}}}{8} = 146 + \frac{25,6e6 \times 0,000230}{8} = 899tCO2e
-\end{aligned}
-$$$
-
-### Impact de la génération d'1 million de jetons
-
-Dans un usage de type complétion, le coût d’inférence se décompose en deux parties : le traitement initial du prompt, puis la génération des jetons de sortie. Lors de la génération, les états intermédiaires déjà calculés pour le contexte sont réutilisés, ce qui évite de recalculer l’ensemble du prompt à chaque nouveau jeton. Lorsque plusieurs requêtes partagent en plus un même préfixe, le coût de traitement des jetons d’entrée peut être encore réduit si cette réutilisation est effectivement exploitée. Les calculs ci-dessous correspondent toutefois à un cas de base sans correction explicite par $r_{cache}$.
-
-$$$
-\begin{aligned}
-&I^{gpu}_{output_{ope}} = \frac{2 \times 405e9 \times 1e6}{989e12 \times 3600 \times 0,40} \times (0,700 + \frac{1,540}{8}) \times 1,2 \times 0,420 = 256gCO2e \\
-&I^{gpu}_{output_{emb}} = \frac{2 \times 405e9 \times 1e6}{989e12 \times 3600 \times 0,40} \times \frac{250 + \frac{10058}{8}}{5\times24\times365,25} = 20gCO2e
-\end{aligned}
-$$$
-
-Si l'on considère une taille de "prompt moyen" d'environ 400 jetons, alors l'impact d'une requête est d'environ 0,1 gCO2e.
-
-## Simulateur
+Les parcours **Générer**, **Analyser un média** et **Entraîner** décrivent chacun une tâche, un modèle et un volume à traiter. Le serveur, le pays, le PUE, le [MFU](../../references/glossaire.md#mfu) et la durée de vie restent modifiables dans les hypothèses. Les modèles fermés sont signalés lorsque leurs paramètres sont supposés. [Explication du coefficient](#comprendre-le-mfu).
 
 import { AIPlayGround } from '@site/src/components/ai-playground';
 
-<AIPlayGround lang="fr" />
+<div className="inline-example">
 
-## Comparaison
+<AIPlayGround lang="fr" methodologyHref="#hypotheses-et-limites" />
 
-Cette section propose une comparaison de méthodologies disponibles pour l’évaluation des impacts environnementaux des modèles d’IA générative. Elle met en évidence leurs périmètres, leurs forces et leurs limites, afin de situer la méthodologie D4B par rapport aux approches existantes.
+</div>
 
-| Caractéristique                                           | Full ACV (Google, 2025)[^3][^4]                                                                                 | Ecologits[^14]                                                                        | Méthodologie D4B                                                                  |
-|-----------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
-| Type d’approche                                           | Mesure full-stack : CPU/DRAM, machines idle, datacenter overhead, eau, ACV partielle du hardware                | Evaluation bottom-up appliqué à l’inférence uniquement (usage + fabrication)          | Modélisation FLOPs → GPUh → Impacts                                               |
-| Périmètre                                                 | Fabrication (partielle), usage (tous composants serveur), infrastructure datacenter, eau, émissions Scope 2/3   | Usage infra + fabrication, inférence seulement                                        | Usage entraînement, fine tuning, inférence + fabrication GPU et serveur           |
-| Granularité & mesure                                      | Très fine : mesures réelles sur production Gemini, énergie, eau, émissions                                      | Moyenne haute, open data multi-critères (GWP, PE, ADPe) agrégés par appel API         | Moyenne modérée : dépend des données disponibles (FLOPs, TDP, ...)                |
-| Accessibilité                                             | Faible : données internes Google peu explicitées                                                                | Elevée : code open-source, API ouverte                                                | Elevée : méthodes et hypothèses documentées publiquement                          |
-| Reproductibilité                                          | Faible : instrumentation propriétaire et données internes                                                       | Forte : outil public, calculs transparents et reproductibles                          | Moyenne à élevée : si les données d’entrée sont estimables                        |
-| Transparence                                              | Moyenne : publication méthode mais accès aux données limité                                                     | Forte : codes, hypothèses et modèle open source                                       | Forte : toutes les formules et sources sont explicitées                           |
-| Précision (sur inférence)                                 | Très élevée : vrai déploiement mesuré, inclut spectre complet d’énergie                                         | Moyenne : repose sur modèles simplifiés et hypothèses généralisées                    | Moyenne à élevée selon la précision des paramètres choisis                        |
-| Applicabilité                                             | Limitée : spécifique à l’infrastructure Google et inférence                                                     | Moyenne : inférence sur divers fournisseurs, mais pas entraînement                    | Très large : entraînement, fine tuning, inférence sur base publique               |
-| Usages visés                                              | Analyse interne, reporting fin, communication                                                                   | Évaluation publique, sensibilisation, comparateur multi-fournisseurs                  | Recherche, évaluation interne, FinOps, Green AI                                   |
-| Résultats chiffrés<br/>(Prompt moyen, environ 400 jetons) | ~0,03 gCO2e<br/>~0,24 Wh<br/>Gemini                                                                             | ~40 gCO2e<br/>~95 Wh<br/>LLama 3.1 405b                                               | ~0,12 gCO2e<br/>~0,27 Wh<br/>LLama 3.1 405b<br/>(cf. [Application](#application)) |
-| Limites clés                                              | Données propriétaires, ne couvre pas l’entraînement, se concentre sur l'inférence, biais sur le “prompt median” | Périmètre limité (inférence seule), possible surestimation du fait de l'extrapolation | Dépend fortement des hypothèses (MFU, durée de vie)                               |
+[^rcp-app]: ADEME, [RCP des applicatifs numériques, juin 2026](https://librairie.ademe.fr/economie-circulaire-et-dechets/9434-referentiel-par-categorie-de-produit-rcp-des-applicatifs-numeriques.html), p. 10, 54. Le RCP couvre les services utilisant de l’IA générative, mais un entraînement antérieur à la période étudiée peut échapper à son périmètre temporel. L’évaluation du cycle de vie du modèle répond à une autre question ; la méthode D4B conserve l’entraînement et son allocation explicite aux usages.
 
-Ces résultats montrent que chaque approche a un positionnement spécifique : Google privilégie la précision mais reste fermé et non reproductible, Ecologits mise sur la transparence et la simplicité mais au prix d’une surestimation possible, tandis que la méthodologie D4B propose un compromis reproductible et adaptable aux différents contextes d’usage mais dépend de la précision des données d'entrée.
+[^source-1]: Calcul des modèles : [Kaplan et al., Scaling Laws for Neural Language Models, 2020](https://arxiv.org/abs/2001.08361), [Hoffmann et al., Training Compute-Optimal Large Language Models, 2022](https://arxiv.org/abs/2203.15556), [Hu et al., LoRA, 2021](https://arxiv.org/abs/2106.09685), [Meta, The Llama 3 Herd of Models, 2024](https://arxiv.org/abs/2407.21783).
 
-## Références
 
-### Données mobilisées
+[^source-3]: Mesure en production : [Measuring the environmental impact of delivering AI at Google Scale](https://services.google.com/fh/files/misc/measuring_the_environmental_impact_of_delivering_ai_at_google_scale.pdf). Les observations d’un déploiement ne sont pas des coefficients universels.
 
-- `digital4better/data/data/factor/*`
-- `digital4better/data/data/energy/*`
-- `digital4better/data/data/cloud/*`
-- `digital4better/data/data/hardware/*`
+[^source-4]: Cadre d’allocation : [SCI](https://sci.greensoftware.foundation/) et [SCI-AI](https://github.com/Green-Software-Foundation/sci-ai/blob/main/SPEC.md). Documentation en ligne, version non figée.
 
-### Sources
 
-- références détaillées en notes de bas de page ;
-- corpus `inputs/md` ;
-- [digital4better/data](https://github.com/digital4better/data)
+[^ref-7]: [H100](https://www.nvidia.com/en-us/data-center/h100/).
 
-[^1]: J. Kaplan, S. McCandlish, ..., 2020. [Scaling Laws for Neural Language Models](https://arxiv.org/pdf/2001.08361)
-[^2]: A. Habibian, A. Ghodrati, ... 2024. [Clockwork Diffusion: Efficient Generation With Model-Step Distillation](https://arxiv.org/html/2312.08128v2)
-[^3]: Google, 2025. [Measuring the environmental impact of delivering AI at Google Scale](https://services.google.com/fh/files/misc/measuring_the_environmental_impact_of_delivering_ai_at_google_scale.pdf)
-[^4]: Google, 2025. [Life-Cycle Emissions of AI Hardware: A Cradle-To-Grave Approach and Generational Trends](https://arxiv.org/pdf/2502.01671)
-[^5]: J. You, 2025. [How much energy ChatGPT use](https://epoch.ai/gradient-updates/how-much-energy-does-chatgpt-use)
-[^6]: A. Casson, 2023. [Transformer FLOPs](https://www.adamcasson.com/posts/transformer-flops)
-[^7]: D. Bahdanau, 2022. [The FLOPs Calculus of Language Model Training](https://medium.com/@dzmitrybahdanau/the-flops-calculus-of-language-model-training-3b19c1f025e4)
-[^8]: C. Chen, 2023. [Transformer Inference Arithmetic](https://kipp.ly/transformer-inference-arithmetic/)
-[^9]: Huggingface, 2022. [Understanding FLOPs-per-token estimates from OpenAI’s scaling laws](https://discuss.huggingface.co/t/understanding-flops-per-token-estimates-from-openais-scaling-laws/23133?utm_source=chatgpt.com)
-[^10]: D. Patterson, 2022. [The Carbon Footprint of Machine Learning Training Will Plateau, Then Shrink](https://arxiv.org/pdf/2204.05149)
-[^11]: Google, 2022. [PaLM: Scaling Language Modeling with Pathways](https://arxiv.org/pdf/2204.02311)
-[^12]: Meta, 2024. [The Llama 3 Herd of Models](https://arxiv.org/pdf/2407.21783)
-[^13]: NVidia, 2025. [Llama 3.1 70B 24.11.1 (DGXC Benchmarking)](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/dgxc-benchmarking/resources/llama31-70b-dgxc-benchmarking-a?utm_source=chatgpt.com)
-[^14]: GenAI Impact. [EcoLogits](https://ecologits.ai/latest/methodology/)
-[^15]: Schwartz et al., 2020, Henderson et al., 2020. [Green AI](https://arxiv.org/pdf/1907.10597)
-[^16]: Edward Hu, 2021. [LoRA, Low-rank Adaptation of LLMs](https://arxiv.org/pdf/2106.09685)
-[^17]: Julien Delavande, Regis Pierrard, 2025. [Video Killed the Energy Budget: Characterizing the Latency and Power Regimes of Open Text-to-Video Models](https://arxiv.org/pdf/2509.19222)
-[^18]: Zalan Borsos, Raphael Marinier, Damien Vincent, ..., 2023. [AudioLM](https://arxiv.org/abs/2209.03143)
-[^19]: Andrea Agostinelli, Timo I. Denk, Zalán Borsos, ..., 2023. [MusicLM](https://arxiv.org/abs/2301.11325)
-[^20]: Zach Evans, Julian D. Parker, ..., 2024. [Stable Audio Open](https://arxiv.org/abs/2407.14358)
-[^21]: William Peebles, Saining Xie, 2023. [Scalable Diffusion Models with Transformers](https://arxiv.org/abs/2212.09748)
-[^22]: Alibaba Wan Team, 2025. [Wan 2.1 T2V 1.3B configuration](https://github.com/Wan-Video/Wan2.1/blob/main/wan/configs/wan_t2v_1_3B.py)
-[^23]: Hugging Face Diffusers. [CogVideoXTransformer3DModel](https://huggingface.co/docs/diffusers/api/models/cogvideox_transformer3d)
-[^24]: Robin Rombach, Andreas Blattmann, ..., 2022. [High-Resolution Image Synthesis with Latent Diffusion Models](https://arxiv.org/abs/2112.10752)
-[^25]: Haohe Liu, Zehua Chen, ..., 2023. [AudioLDM: Text-to-Audio Generation with Latent Diffusion Models](https://arxiv.org/abs/2301.12503)
-[^26]: Ashish Vaswani, Noam Shazeer, ..., 2017. [Attention Is All You Need](https://proceedings.neurips.cc/paper/7181-attention-is-all-you-need.pdf)
-[^27]: Jade Copet, Felix Kreuk, ..., 2023. [Simple and Controllable Music Generation](https://arxiv.org/abs/2306.05284)
+[^ref-8]: [PaLM, section 4.1](https://arxiv.org/html/2204.02311v5#S4.SS1).
+
+[^ref-9]: [performance GPU](https://docs.nvidia.com/deeplearning/performance/dl-performance-gpu-background/index.html). Documentation en ligne, version non figée.
+
+[^ref-10]: [parallélisme distribué](https://docs.nvidia.com/nemo/megatron-bridge/latest/parallelisms.html). Documentation en ligne, version non figée.
+
+[^ref-11]: [Meta, Llama 3.1 405B Instruct, 2024](https://huggingface.co/meta-llama/Llama-3.1-405B-Instruct).
+
+[^ref-12]: [EcoLogits](https://ecologits.ai/latest/methodology/). Documentation en ligne, version non figée.
+
+[^ref-13]: [More than Carbon (2025)](https://arxiv.org/abs/2509.00093).
+
+[^ref-14]: [Life-Cycle Emissions of AI Hardware (2025)](https://arxiv.org/abs/2502.01671).
+
+[^ref-15]: [étude de recherche Moshi (prépublication, 2026)](https://arxiv.org/abs/2604.11154).
+
+[^ref-16]: [Video Killed the Energy Budget (2025)](https://arxiv.org/abs/2509.19222).
+
+[^corpus-gpu]: E. Lees-Perasso, D. Ekchajzer, G. Roussilhe et T. De Latour, [Analyses de cycle de vie de GPU pour l’intelligence artificielle](https://librairie.ademe.fr/economie-circulaire-et-dechets/9103-analyse-de-cycle-de-vie-de-gpu-cartes-graphiques-pour-l-intelligence-artificielle.html), ADEME, mars 2026, rapport de 93 pages, § 3.10.5–3.11.1, p. 22–23.
+
+[^corpus-inference]: N. Jegham et al., [How Hungry is AI? Benchmarking Energy, Water, and Carbon Footprint of LLM Inference](https://arxiv.org/abs/2505.09598v6), v6, 24 novembre 2025, § 4.1–4.3, p. 3–5.
+
+[^phase-mesures]: Caravaca, Cuevas et Cuevas, [From Prompts to Power](https://arxiv.org/html/2511.05597v1), novembre 2025, prépublication v1, sections III-B, IV-A et IV-B. Mesures GPU NVML ; le périmètre exclut les autres composants et le PUE.
+
+[^moe-actifs]: Jiang et al., [Mixtral of Experts](https://arxiv.org/abs/2401.04088v1), 2024, abstract, § 2.
+
+[^gel-parametres]: Hu et al., [LoRA](https://arxiv.org/html/2106.09685v2), 2021, § 4.1 ; PyTorch, [Autograd mechanics](https://docs.pytorch.org/docs/2.14/notes/autograd.html#setting-requires-grad), version 2.14, « Setting requires_grad ».
+
+[^media-architecture]: Peebles & Xie, [Scalable Diffusion Models with Transformers](https://arxiv.org/abs/2212.09748), 2022. Source d’architecture ; les expressions ci-dessus sont des proxies D4B à calibrer.
+
+[^media-audio]: Meta, [Simple and Controllable Music Generation](https://arxiv.org/abs/2306.05284), 2023 ; Stability AI, [Stable Audio Open](https://arxiv.org/abs/2407.14358), 2024.
+
+[^qwen-config]: Qwen, [Qwen2.5-VL-7B-Instruct, config.json](https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct/blob/cc594898137f460bfe9f0759e9844b3ce807cfb5/config.json), 2025, commit cc594898, vision_config / text_config.
+
+[^qwen-report]: Qwen, [Qwen2.5-VL Technical Report](https://arxiv.org/abs/2502.13923), 2025, § 2.
+
+[^whisper-config]: OpenAI, [Whisper base, config.json](https://huggingface.co/openai/whisper-base/blob/e37978b90ca9030d5170a5c07aadb050351a65bb/config.json), commit e37978b, encoder_layers, decoder_layers, d_model, max_source_positions, max_target_positions.
+
+[^whisper-audio]: OpenAI, [Whisper audio preprocessing](https://github.com/openai/whisper/blob/main/whisper/audio.py), SAMPLE_RATE, CHUNK_LENGTH, N_FRAMES. Code en ligne, version non figée.

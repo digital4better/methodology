@@ -1,168 +1,104 @@
 # Mail
 
-## Résumé
+import { MethodIllustration } from '@site/src/components/method-illustrations';
 
-Ce chapitre sert à évaluer l'impact environnemental d'un usage de courrier électronique en combinant terminal, réseau, stockage et infrastructure de traitement.
+L’évaluation d’un message, d’une campagne ou d’un volume de messagerie distingue rédaction, lecture, transfert et conservation. Un chiffre universel par mail masquerait les différences de taille, de destinataires et de durée de stockage.
 
-### Périmètre évalué
+## Préparer les données
 
-Le périmètre couvre l'envoi, la réception, la synchronisation et le stockage des messages. Ce cas d’usage peut s'appliquer à un message unitaire, à une campagne, ou à un volume annuel d'usage.
+| Donnée | Ce qu’elle couvre |
+|---|---|
+| Messages, destinataires et taux de lecture | Activité de la campagne ou de la période |
+| Taille des messages | Corps, pièces jointes et données effectivement transmises |
+| Durées de rédaction et de lecture | Temps terminal, séparé du traitement serveur |
+| Copies physiques et conservation | Stockage, sauvegardes comprises une seule fois |
+| Hébergement | Traitement alloué, hors stockage évalué séparément |
 
-## Paramètres d'entrée
+Le scénario suppose un comportement moyen des destinataires. Pour une messagerie annuelle avec un stock ancien, ce stock fait partie de l’inventaire de stockage ; le nombre de nouveaux messages ne le décrit pas.
 
-- Un nombre de messages envoyés, reçus ou stockés
-- Une taille moyenne des messages et pièces jointes
-- Une durée de conservation ou un volume de stockage associé
-- Une hypothèse sur les terminaux et le mode d'accès
-- Le type d'hébergement ou de service mail
+<span id="comprendre-le-calcul" />
 
-### Dépendances tierces
+Le temps terminal vaut `messages × (temps de rédaction + destinataires × part de lecture × temps de lecture)`. Le calcul de l’électricité et de la fabrication allouée repose sur une durée convertie en heures.
 
-La messagerie repose souvent sur un service tiers ou sur une suite collaborative intégrée. Les services annexes, comme l'archivage, l'antispam ou les passerelles de sécurité, doivent être inclus s'ils font partie du service étudié.
+Le modèle de transfert additionne une transmission d’envoi, une livraison par destinataire et les téléchargements des lecteurs. Ce parcours simplifié ne décrit pas tous les protocoles : une synchronisation différente nécessite des flux mesurés.
 
-### Règle d'allocation
+## Méthode détaillée et cas particuliers
 
-L'allocation combine généralement :
+### Décomposer le parcours d’un message
 
-- le temps d'utilisation côté terminal
-- le volume de données transférées côté réseau
-- le volume stocké et la durée de conservation côté infrastructure
+| Étape | Activité à compter | Point de contrôle |
+|---|---|---|
+| Rédaction | Temps actif de l’émetteur | Une fois par message composé, pas par destinataire |
+| Envoi et livraison | Message, pièces jointes, enveloppes et destinataires | Distinguer message logique et octets transmis |
+| Lecture et synchronisation | Taux de lecture, durée, téléchargements et terminaux | Les synchronisations peuvent avoir lieu sans lecture |
+| Conservation | Capacité physique et durée, copies et sauvegardes | Éviter de recompter une réplication incluse dans le facteur |
+| Traitement | Antispam, antivirus, indexation, serveur de messagerie | Allouer les ressources mutualisées |
 
-### Risque de double comptage
+Avec $N$ messages, $R$ destinataires, une part de lecture $l$, des durées $t_e,t_l$ en minutes et un poids $s$ en Mo :
 
-Le risque principal apparaît si le stockage des pièces jointes, l'archivage ou une suite cloud de productivité sont déjà évalués ailleurs. La frontière exacte du service mail doit être documentée.
+$$
+H_{terminal}=\frac{N(t_e+Rl t_l)}{60}
+$$
 
-### Hypothèses temporelles
+$$
+G_{réseau}=\frac{Ns}{1000}(1+R+Rl d),\qquad
+S_{stockage}=\frac{Ns}{1000}c m
+$$
 
-La conservation des messages change fortement le résultat. Il faut distinguer ce qui relève du flux annuel de messages de ce qui relève du stock historique conservé.
+$d$ désigne les téléchargements par lecteur, $c$ les copies physiques totales et $m$ les mois. Le modèle de synchronisation est simplifié : pour des clients téléchargeant tous les messages, la mesure des octets ou un parcours adapté distingue taux de lecture et taux de téléchargement.
 
-## Principe
+La fabrication du terminal utilise le profil moyen par seconde ou, en mode personnalisé, la fabrication unitaire divisée par la durée de vie. Le facteur stockage en kg CO₂e/Go.mois doit couvrir les phases annoncées. L’hébergement exclut ce stockage lorsqu’il est calculé séparément.
 
-1. Définir l'unité fonctionnelle, par exemple un message traité ou un volume annuel de messagerie.
-2. Estimer les volumes réellement transférés et stockés.
-3. Affecter une part terminal au temps d'usage ou au nombre d'interactions.
-4. Affecter une part réseau au volume de données.
-5. Affecter une part hébergement et stockage à la messagerie.
+### Campagne marketing, stock ancien et pièces jointes
 
-## Évaluation des impacts
+La rédaction d’une campagne constitue un poste séparé ou une part de temps répartie entre les messages envoyés.
 
-### Parcours fonctionnel d'un mail
+<MethodIllustration kind="mail-campaign" lang="fr" />
 
-L'évaluation d'un mail ne se limite pas au moment où l'utilisateur clique sur `Envoyer`. Un même message mobilise généralement plusieurs étapes :
+Pour un parc de boîtes aux lettres, le stockage annuel inclut le stock préexistant. L’intégration de la capacité au cours du temps peut reposer sur la moyenne de chaque mois multipliée par sa durée. Le simulateur représente un lot conservé pendant une durée fixe ; il ne reconstitue pas automatiquement un historique de boîte.
 
-- rédaction et envoi par l'expéditeur
-- transmission initiale vers le serveur de messagerie de l'expéditeur
-- acheminement éventuel par des serveurs intermédiaires
-- filtrage, tri et stockage côté destinataire
-- consultation, synchronisation et conservation dans le temps
+Un lien de téléchargement remplace une pièce jointe par d’autres transferts et un stockage distant. Son évaluation dépend des accès réels, de la durée de conservation et du service de partage. L’effet dépend du nombre de lecteurs ; aucun gain fixe n’est présumé.
 
-Ce parcours explique pourquoi l'évaluation d'un mail doit distinguer les terminaux, le réseau et les environnements d'hébergement. Il explique aussi pourquoi le stockage peut rester significatif bien après l'envoi initial.
+### Expéditeur, destinataires et protocoles de messagerie
 
-### Terminaux
+Le parcours historique distingue terminal expéditeur, serveur expéditeur, serveur destinataire et terminal destinataire. Chaque segment peut relever d’un pays et d’un réseau différents. Les échanges d’en-têtes, la synchronisation IMAP et les téléchargements POP ne se déduisent pas du seul taux de lecture.
 
-La méthode distingue les terminaux des expéditeurs et ceux des destinataires. Dans la pratique, il est utile de séparer au minimum :
+La copie envoyée, les copies reçues et les sauvegardes peuvent avoir des durées de conservation différentes. Leur capacité physique est suivie séparément avant agrégation en Go.mois. Le paramètre unique de conservation de l’exemple correspond donc à une simplification, pas à une règle commune à toutes les boîtes.
 
-- les usages `desktop`
-- les usages `mobile`
+La note historique s’appuie sur l’approche ADEME Impact CO₂ pour l’hébergement. L’exemple ci-dessous utilise des entrées séparées de traitement et de stockage : il ne reproduit pas ce forfait. Les facteurs complets et leurs composantes ne sont jamais additionnés.
 
-Les impacts terminal peuvent alors être ramenés à deux grandeurs simples :
+### Interpréter un résultat
 
-- un temps de rédaction côté expéditeur
-- un temps de lecture ou de consultation côté destinataire
+Ex: avec les paramètres initiaux, le temps terminal vaut 46,67 h, les transferts 2,8 Go et le stockage 36 Go.mois. Les facteurs réseau et stockage manquants empêchent d’en déduire un total complet. Le résultat distingue les postes mesurés, inférés et exclus ; il se rapporte à un message envoyé ou à une campagne clairement définie.
 
-Ce temps d'usage est ensuite combiné :
+## Périmètre à compléter
 
-- au nombre de messages
-- au nombre de destinataires
-- au ratio d'ouverture ou de consultation
-- à la répartition mobile / desktop
+Les facteurs réseau et stockage restent vides tant qu’aucune donnée compatible n’est fournie. Le sous-total ne les traite pas comme nuls. Les outils de création, CRM et analyse d’une campagne restent à ajouter si la fonction étudiée les inclut.
 
-Cette approche permet d'imputer une part d'impact embarqué et une part d'impact d'usage aux terminaux, sans prétendre connaître l'équipement exact de chaque utilisateur.
+Un facteur de messagerie complet inclut déjà ses composantes. Dans une suite collaborative, la part attribuée au mail relève d’une allocation documentée. La disponibilité d’un chiffre publié ne suffit pas : sa période, son périmètre et son unité conditionnent son utilisation.
 
-### Réseau
+<span id="règles-et-sources" />
 
-Le réseau d'un service mail est plus complexe qu'un simple aller-retour entre deux boîtes de messagerie. La méthode historique distingue trois segments :
+Pour cadrer le résultat : [périmètre et unité d’analyse](../../fondations/perimetre-frontieres-services-tiers-et-unite-d-analyse), [allocation](../../regles/allocation-et-partage-des-impacts) et [double comptage](../../regles/double-comptabilisation).
 
-1. de l'expéditeur au datacenter de messagerie émetteur
-2. du datacenter émetteur au datacenter destinataire
-3. du datacenter destinataire au destinataire final
+Les facteurs électriques sont issus de l’instantané D4B 2025[^ref-1]. Les activités et données d’hébergement préremplies sont des hypothèses de l’exercice. Les facteurs et conventions sont consultables sous le simulateur.
 
-Cette décomposition est utile pour deux raisons :
+<span id="lire-leffet-des-paramètres" />
 
-- les mix réseau et les distances peuvent différer entre expéditeur, transit et destinataire
-- la consultation des messages peut générer des flux supplémentaires, par exemple lors d'interrogations répétées de type webmail ou IMAP
+La taille des pièces jointes et leur durée de conservation affectent différemment le trafic et le stockage. Une suppression de messages diminue ici une quantité allouée ; elle ne prouve pas une réduction immédiate de la consommation d’un serveur qui reste allumé.
 
-Quand les données sont disponibles, la méthode peut aussi distinguer :
+## Exemple interactif {#simuler-votre-situation}
 
-- le ratio réseau fixe / réseau mobile côté expéditeur
-- le ratio réseau fixe / réseau mobile côté destinataire
-- le poids du message initial
-- le poids des pièces jointes
-- le trafic additionnel lié aux consultations et synchronisations
+Cet exemple met en application les calculs et les limites présentés ci-dessus.
 
-### Environnements d'hébergement
+Ex: 1 000 messages de 1 Mo conservés en trois copies physiques pendant douze mois représentent **36 Go.mois**. C’est une quantité d’activité, pas une empreinte carbone. Le facteur de stockage doit correspondre à une capacité physique et couvrir les phases déclarées.
 
-Quand l'infrastructure de messagerie est connue, il est possible de modéliser les environnements d'hébergement à partir :
+import { ScenarioPlayground } from '@site/src/components/scenario-playground';
 
-- des serveurs de traitement
-- des composants réseau internes, comme firewalls, switches et routeurs
-- des capacités de stockage nécessaires à la conservation des messages
-- des redondances appliquées aux boîtes et sauvegardes
+<div className="inline-example">
 
-Quand ce niveau de détail n'est pas accessible, une approche forfaitaire reste possible. Le document de travail historique s'aligne alors sur la logique publiée par `Impact CO2` pour la partie datacenter mail, notamment pour répartir les impacts d'équipements mutualisés entre les messages et les utilisateurs.
+<ScenarioPlayground kind="mail" lang="fr" />
 
-Dans tous les cas, il faut distinguer :
+</div>
 
-- la part liée au traitement d'un message
-- la part liée au stockage persistant
-- la part liée aux redondances et sauvegardes
-
-### Cas particulier d'une campagne marketing
-
-Le cas d'une campagne marketing n'est pas réductible à un simple message unitaire envoyé en masse. Il ajoute souvent :
-
-- une phase de préparation et de segmentation
-- une phase de conception graphique et éditoriale
-- une diffusion à grande échelle
-- une phase d'analyse et d'optimisation post-campagne
-
-Ce cas d'usage peut donc être traité de deux façons :
-
-- soit en restant sur le coeur `mail` si l'on veut uniquement évaluer la diffusion et la consultation des messages
-- soit en élargissant le périmètre pour inclure les outils de création, de CRM, de routage et d'analyse
-
-Le choix doit être explicite, sinon on risque de comparer des résultats qui ne couvrent pas le même service.
-
-## Hypothèses & limites
-
-### Hypothèses retenues
-
-Les usages mail sont très variables selon l'organisation, notamment sur la taille des pièces jointes, la durée de conservation et l'intensité des synchronisations. Ce cas d’usage est donc sensible aux hypothèses d'usage.
-
-### Limitations connues
-
-Quelques points de vigilance sont particulièrement importants :
-
-- le protocole utilisé côté consultation change le volume réel d'échanges
-- la durée de stockage des messages et pièces jointes peut dominer le résultat
-- les suites collaboratives intègrent parfois d'autres fonctions déjà évaluées ailleurs
-- les campagnes marketing ne doivent pas être confondues avec un usage transactionnel simple
-
-## Références
-
-### Données mobilisées
-
-- `digital4better/data`: familles `data/hardware/*`, `data/equipment/*`, `data/energy/*`, `data/factor/*`, et selon le contexte `data/cloud/*`
-- Données d'usage de messagerie
-- Hypothèses de stockage et de conservation
-- Répartition expéditeur / destinataires, mobile / desktop, fixe / mobile
-- Taille moyenne des messages, pièces jointes, durée de rédaction et durée de lecture
-- Si disponible, données d'hébergement de la messagerie ou paramètres forfaitaires documentés
-
-### Sources
-
-- Note méthodologique interne sur l'impact mail
-- Littérature sur l'impact environnemental des usages de messagerie
-- Corpus méthodologique `inputs/md`
-- Référentiel `Impact CO2` pour certaines hypothèses datacenter mail
-- [digital4better/data](https://github.com/digital4better/data)
+[^ref-1]: Digital4Better, [instantané D4B 2025](https://github.com/digital4better/data/blob/77cae4a58fadd5deb3b8d4e5577020da08f780d8/data/factor/country-yearly.csv). Instantané 77cae4a, données 2025 ; revue du 16 octobre 2026.

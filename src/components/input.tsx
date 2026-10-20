@@ -1,11 +1,12 @@
 import { FC, useId } from "react";
+import Link from "@docusaurus/Link";
 import Box from "@mui/system/Box";
 import Stack from "@mui/system/Stack";
 import { SxProps, Theme } from "@mui/system";
 
 export const Input: FC<
   (
-    | { type: "text"; options?: never; placeholder?: string }
+    | { type: "text" | "number"; options?: never; placeholder?: string }
     | {
         type: "select";
         options:
@@ -19,11 +20,12 @@ export const Input: FC<
   ) & {
     className?: string;
     label: string;
+    labelHref?: string;
     value: string;
     onChange: (value: string) => void;
     sx?: SxProps<Theme>;
   }
-> = ({ type, options, placeholder, label, value, onChange, sx, className }) => {
+> = ({ type, options, placeholder, label, labelHref, value, onChange, sx, className }) => {
   const id = useId();
   const hasGroups =
     type === "select" &&
@@ -40,26 +42,27 @@ export const Input: FC<
     : (options as { label: string; value: string }[]);
   return (
     <Stack
-      className={className}
+      className={`methodology-field ${className ?? ""}`}
       sx={{
         overflow: "hidden",
         ...sx,
         "select,input": {
-          appearance: "none",
           borderRadius: 2,
           borderStyle: "solid",
           borderWidth: "1px",
           borderColor: "border.primary",
           py: 1,
           px: 2,
-          fontsize: "inherit",
+          fontSize: "inherit",
+          backgroundColor: "var(--ifm-background-surface-color)",
+          minHeight: 44,
           fontFamily: "inherit",
           color: "inherit",
         },
       }}
     >
       <Box component="label" sx={{ typography: "label" }} htmlFor={id}>
-        {label}
+        {labelHref ? <Link to={labelHref}>{label}</Link> : label}
       </Box>
       {type === "select" ? (
         <Box
@@ -85,6 +88,9 @@ export const Input: FC<
           id={id}
           component="input"
           type={type}
+          min={type === "number" ? 0 : undefined}
+          step={type === "number" ? "any" : undefined}
+          inputMode="decimal"
           placeholder={placeholder}
           value={value}
           onChange={(event) => onChange(event.target.value)}

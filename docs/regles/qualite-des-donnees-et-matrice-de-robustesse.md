@@ -1,148 +1,91 @@
-# Qualité des données et matrice de robustesse
+# Vérifier la qualité des données
 
-## En bref
+Une donnée utile doit correspondre au matériel, à la période et au périmètre étudiés. Sa précision apparente ou le nom de son fournisseur ne suffisent pas. Sa compatibilité conditionne son utilisation ; sa représentativité et sa traçabilité en déterminent ensuite la pertinence.
 
-Toutes les données n'ont pas la même valeur. Une méthode crédible ne se contente pas d'utiliser une source ; elle indique aussi dans quelle mesure cette source permet de faire confiance au résultat. La qualité des données est un axe transversal de la méthode : elle conditionne la fiabilité des résultats, la comparabilité des évaluations et la priorisation des améliorations futures.
-
-## Pourquoi la qualité des données est déterminante
-
-Dans une ACV numérique, les facteurs d'impact peuvent varier d'un ordre de grandeur selon la source choisie. Un facteur constructeur, un facteur Base Empreinte et un forfait littéraire ne produisent pas le même résultat, même pour le même équipement. La qualité des données n'est donc pas un sujet de gouvernance abstraite : elle a un impact direct et mesurable sur les conclusions.
-
-Un résultat accompagné de son niveau de confiance est toujours plus utile qu'un chiffre nu.
-
-## Hiérarchie des données
-
-La méthode établit un ordre de préférence pour les sources de données, du plus fiable au moins fiable :
+## Contrôler avant de noter
 
 ```mermaid
 flowchart TD
-    A[1. Données mesurées et tracées<br>dans le périmètre étudié] --> B[2. Données primaires documentées<br>par un acteur directement concerné]
-    B --> C[3. Données constructeurs ou fournisseurs<br>relues de façon critique]
-    C --> D[4. Littérature scientifique<br>ou technique]
-    D --> E[5. Forfaits et hypothèses<br>par défaut]
-
-    style A fill:#2d6a4f,color:#fff
-    style B fill:#40916c,color:#fff
-    style C fill:#52b788,color:#fff
-    style D fill:#95d5b2,color:#000
-    style E fill:#d8f3dc,color:#000
+ A[Facteur candidat] --> B{Unité, phases et méthode compatibles ?}
+ B -- Non --> C[Rechercher une autre donnée ou documenter une conversion justifiée]
+ B -- Oui --> D{Matériel, période et géographie représentatifs ?}
+ D -- Oui --> E[Utiliser et conserver la provenance]
+ D -- Partiellement --> F[Documenter le proxy et tester sa sensibilité]
 ```
 
-| Niveau | Type de données | Exemple | Force | Faiblesse |
-|---|---|---|---|---|
-| 1 | Mesurées, tracées | Consommation électrique relevée sur le compteur du datacenter | Précision maximale | Rarement disponible pour tous les composants |
-| 2 | Primaires documentées | Inventaire matériel issu du CMDB de l'organisation | Proximité avec le périmètre | Peut être incomplet ou daté |
-| 3 | Constructeurs / fournisseurs | ACV produit publiée par Dell ou HP | Spécifique au modèle | Périmètre variable, non toujours certifié |
-| 4 | Littérature | Facteur issu d'une étude IMEC ou UNECE | Revue par les pairs | Générique, peut être daté |
-| 5 | Forfait par défaut | Facteur Base Empreinte par famille d'équipement | Toujours disponible | Faible discrimination |
+Une mesure à la prise qui inclut tout le serveur ne s’additionne pas aux consommations de ses composants. Une ACV constructeur limitée au climat ne fournit pas automatiquement les autres indicateurs. Une méthode normalisée ne garantit pas que les données conviennent au produit étudié.
 
-:::note[Données constructeurs]
-Les données constructeurs ne sont pas toujours fiables et surtout peu comparables. Les périmètres diffèrent, les résultats ne sont pas tous certifiés et les méthodologies pas toujours partagées. Toutefois, elles fournissent généralement une estimation plus proche du périmètre réel que l'application systématique de facteurs génériques. L'évolution des référentiels et un meilleur cadrage des ACV produits pourraient amener à réinterroger ce choix.
-:::
+## Examiner six dimensions
 
-## Matrice de robustesse
+| Dimension | Question de contrôle |
+|---|---|
+| Périmètre | Quelles phases, ressources et exclusions sont couvertes ? |
+| Géographie | Les lieux d’usage et de fabrication sont-ils représentatifs ? |
+| Temporalité | L’année décrit-elle encore la technologie et le mix étudiés ? |
+| Description physique | Le modèle, la capacité et le procédé correspondent-ils ? |
+| Traçabilité | Peut-on retrouver la valeur, son unité et sa version ? |
+| Méthode | Les règles de calcul et de caractérisation sont-elles explicites ? |
 
-La robustesse d'une donnée est évaluée selon six dimensions, chacune notée de 1 (faible) à 5 (forte) :
+Les [règles de recherche des sources](./hypotheses-valeurs-par-defaut-et-hierarchie-des-sources) indiquent où chercher. Elles ne classent pas automatiquement leur fiabilité.
 
-| Dimension | 1 -- Faible | 3 -- Moyenne | 5 -- Forte |
-|---|---|---|---|
-| **Précision du périmètre** | Périmètre flou ou implicite | Périmètre documenté mais partiel | Périmètre complet et vérifiable |
-| **Précision géographique** | Donnée mondiale ou inconnue | Donnée continentale | Donnée nationale ou régionale |
-| **Précision temporelle** | Donnée > 5 ans | Donnée 2-5 ans | Donnée < 2 ans |
-| **Granularité physique** | Facteur par grande famille | Facteur par type d'équipement | Facteur par modèle ou composant |
-| **Traçabilité de la source** | Source non citée | Source citée, méthode inconnue | Source citée, méthode reproductible |
-| **Stabilité méthodologique** | Méthode ad hoc ou non documentée | Méthode publiée | Méthode normalisée (ISO, PEF) |
+### Grille interne de documentation, de 1 à 5
 
-### Score de robustesse
+Cette grille Digital4Better est un outil de suivi, pas une certification ISO ou PEF. Chaque dimension peut recevoir une note de 1 à 5 : faible documentation, documentation partielle, puis documentation complète et adaptée. Chaque note est accompagnée de sa justification.
 
-Le score de robustesse est la moyenne des six dimensions :
+Les seuils historiques de temporalité sont : plus de cinq ans, deux à cinq ans, moins de deux ans. Ils demandent une interprétation par domaine : une donnée récente peut être moins représentative qu’une donnée ancienne bien adaptée.
 
-$$
-\begin{aligned}
-&S_{rob} = \frac{1}{6} \sum_{d=1}^{6} N_d \\
-\text{avec} \\
-&S_{rob} = \text{Score de robustesse} \in [1, 5] \\
-&N_d = \text{Note de la dimension } d \in \{1, 2, 3, 4, 5\}
-\end{aligned}
-$$
+La moyenne des six notes est un résumé de documentation. Une incompatibilité bloquante ne peut pas être compensée par les autres notes. Le profil détaillé prime sur la moyenne ; celle-ci n’est ni une probabilité de justesse ni un intervalle de confiance.
 
-### Interprétation
+## Exemple de choix
 
-| Score | Interprétation | Action recommandée |
-|---|---|---|
-| $S_{rob} \geq 4$ | Donnée fiable | Utiliser en confiance |
-| $3 \leq S_{rob} < 4$ | Donnée acceptable | Documenter les limites, surveiller les mises à jour |
-| $2 \leq S_{rob} < 3$ | Donnée fragile | Signaler l'incertitude dans les résultats, prioriser le remplacement |
-| $S_{rob} < 2$ | Donnée insuffisante | Utiliser uniquement en l'absence totale d'alternative, documenter comme lacune |
+Ex: une ACV du modèle exact fournit son GWP de fabrication, tandis qu’une base générique couvre plusieurs indicateurs pour une autre génération de matériel. La donnée spécifique peut décrire le climat si son périmètre convient. Pour les autres indicateurs, le proxy conserve une représentativité distincte, explicitée dans les résultats. L’ensemble ne devient pas une ACV homogène du modèle exact.
 
-## Usage de la matrice
+Lorsque deux facteurs compatibles conduisent à des conclusions différentes, leur analyse en scénarios révèle la sensibilité du résultat. Les données les plus influentes constituent alors les priorités d’amélioration. Une longue liste de sources ne compense pas l’absence de provenance du coefficient dominant.
 
-La matrice de robustesse sert à :
+### Lire une fiche constructeur : moyenne, incertitude et périmètre
 
-- **arbitrer entre deux sources** : à périmètre comparable, choisir la source au score le plus élevé ;
-- **documenter un résultat** : accompagner les résultats d'un niveau de confiance global ;
-- **prioriser les améliorations** : concentrer les efforts sur les données les plus influentes et les moins robustes.
+Une [PCF](../references/glossaire#pcf) décrit une empreinte carbone avec une configuration, des phases et un scénario d’usage. Un résultat [« cradle-to-gate »](../references/glossaire#cradle-to-gate) s’arrête à la sortie de production annoncée ; un résultat sur le cycle complet inclut d’autres phases. Le remplacement de l’usage par des mesures locales suppose une ventilation explicite, sans conserver deux fois l’électricité.
 
-## Application concrète
+IBM distingue, pour ses résultats [PAIA](../references/glossaire#paia), moyenne, écart-type et 95e percentile. Ce dernier n’est ni une moyenne ni une valeur mesurée. PAIA sert à repérer des contributions majeures et des ordres de grandeur par classe de produits ; il ne suffit pas à classer des références proches.[^corpus-pcf]
 
-**Cas : choix du facteur d'impact pour un serveur Dell PowerEdge R750**
+La grille D4B qualifie la documentation. Elle ne transforme pas une note de qualité en distribution statistique. La version du modèle, les hypothèses de durée de vie, le mix électrique et l’inclusion éventuelle du PUE accompagnent toute valeur reprise.
 
-| Dimension | Base Empreinte (serveur générique) | ACV constructeur Dell |
-|---|---|---|
-| Précision du périmètre | 3 -- famille "serveur" | 5 -- modèle spécifique |
-| Précision géographique | 3 -- "Asie" | 4 -- sites de fabrication documentés |
-| Précision temporelle | 3 -- données NegaOctet ~2021 | 4 -- rapport 2023 |
-| Granularité physique | 2 -- facteur par famille | 5 -- détail par composant |
-| Traçabilité | 4 -- méthode NegaOctet publiée | 3 -- méthode partiellement documentée |
-| Stabilité méthodologique | 4 -- cadre PEF | 3 -- cadre constructeur variable |
-| **Score moyen** | **3,2** | **4,0** |
+## Restituer les limites
 
-Conclusion : dans ce cas, le facteur constructeur Dell est préféré. Toutefois, seul le GWP est fourni par le constructeur. Pour les autres indicateurs, on utilisera le facteur Base Empreinte en documentant la limite.
+La restitution distingue les postes mesurés, modélisés et non évalués. Une plage issue de scénarios n’a pas la même signification qu’un intervalle d’incertitude statistique. Une valeur manquante reste inconnue, y compris pour l’eau ou la fabrication du réseau.
 
-:::note[Facteur unique vs multicritère]
-Les données constructeurs fournissent souvent uniquement le GWP (kg CO₂ eq.), tandis que la Base Empreinte fournit les 9 indicateurs. Il est acceptable de combiner les deux sources, à condition de documenter cette combinaison et de noter que les indicateurs proviennent de sources différentes.
-:::
+Une variation de résultat entre hypothèses ne décrit pas nécessairement une différence réelle entre deux services. Une comparaison suppose la même fonction et des méthodes compatibles. Voir [Périmètre](../fondations/perimetre-frontieres-services-tiers-et-unite-d-analyse) et [Temporalité](./temporalite-vieillissement-et-versionnement-des-donnees).
 
-## Arbre de décision pour le choix du facteur d'impact
+## Utiliser la matrice dans une étude
 
-```mermaid
-flowchart LR
-    A{La marque et le modèle<br>de l'équipement<br>sont-ils connus ?} -- oui --> B{Le constructeur<br>a-t-il réalisé une ACV<br>de son produit ?}
-    A -- non --> C[Utilisation du<br>facteur d'impact<br>Base Empreinte]
-    B -- oui --> D[Utilisation du<br>facteur d'impact<br>du constructeur]
-    B -- non --> C
-```
+1. La provenance décrit la source, la date, l’unité et la frontière de chaque donnée.
+2. La compatibilité est déterminante : un facteur précis mais hors périmètre reste inadapté.
+3. Chaque dimension reçoit une qualification distincte, avec les données manquantes explicitées.
+4. L’analyse de sensibilité identifie les contributions dont les hypothèses peuvent changer la conclusion.
+5. Ces contributions orientent les mesures prioritaires ; chaque remplacement de donnée est versionné.
 
-:::note
-Cette arborescence vaut autant pour les facteurs d'impact intrinsèques que pour les consommations électriques.
-:::
+Ex: une ACV récente d’un ordinateur ne s’applique pas automatiquement à un serveur. Une moyenne de famille compatible peut être préférable, tout en gardant une incertitude supérieure à une donnée du produit exact. Une consommation mesurée sur une semaine atypique doit aussi être replacée dans le profil annuel.
 
-## Vigilance sur la Base Empreinte
+### Couverture, sensibilité et traçabilité
 
-La Base Empreinte de l'ADEME est un référentiel officiel, mais son utilisation demande une attention particulière sur :
+Présenter la part d’activité couverte est utile même si l’impact des postes absents est inconnu. Le pourcentage de ressources inventoriées diffère du pourcentage d’impact estimé : le premier ne permet pas de déduire le second.
 
-- **la quantité de référence** : certains facteurs sont exprimés pour des quantités ou des durées spécifiques ;
-- **la durée de vie implicite** : elle peut différer de la durée réelle observée (voir [Temporalité et vieillissement](./temporalite-vieillissement-et-versionnement-des-donnees)) ;
-- **le périmètre effectivement couvert** : certains facteurs incluent ou excluent des phases ACV ;
-- **la comparabilité entre facteurs** : des facteurs de familles différentes n'ont pas toujours les mêmes conventions ;
-- **les valeurs négatives** : certains indicateurs (Water Use notamment) présentent des valeurs négatives liées à une estimation majorante des impacts de fin de vie.
+L’analyse de sensibilité fait varier les paramètres dans des bornes motivées. Si le classement des options change, la conclusion dépend de ces hypothèses. Une moyenne de notes de qualité ne fournit ni probabilité ni intervalle de confiance sur le résultat.
 
-## Hypothèses et limites
+Pour les bases publiques, conserver l’identifiant exact du jeu de données, sa version, la géographie, la technologie, les phases et les conditions de réutilisation. Le nom d’une base, y compris Base Empreinte, ne garantit pas que deux facteurs partagent la même frontière.
 
-- Une donnée plus détaillée n'est pas automatiquement meilleure si sa traçabilité est faible. La matrice de robustesse intègre cette nuance.
-- Le score de robustesse est une aide à la décision, pas un résultat automatique. Le contexte de l'évaluation peut justifier de s'écarter du score le plus élevé.
-- La matrice devra être enrichie et outillée dans les itérations suivantes, notamment pour formaliser les arbitrages sur les indicateurs non climatiques.
+## Statut de la grille
 
-## Données mobilisées
+La procédure de frontière, quantification et restitution est notamment décrite dans la spécification SCI[^ref-1], pour le carbone logiciel. La grille à six dimensions ci-dessus est une convention D4B. Les facteurs disponibles et leurs limites sont suivis dans le [registre des hypothèses](../references/registre-des-hypotheses-et-valeurs-par-defaut).
 
-- Toutes les données mobilisées dans les cas d'usage
-- Métadonnées de source et de version
-- `digital4better/data` -- documentation des facteurs et de leur origine
+## Correspondance avec les critères RCP
 
-## Sources
+La grille D4B reste une convention de lecture. Les six critères du RCP parent portent sur la représentativité géographique, temporelle et technologique, la complétude, l’incertitude et la cohérence méthodologique. Le nombre de dimensions est identique, leur contenu ne l’est pas.[^rcp-parent]
 
-- ISO 14040 / ISO 14044 (exigences de qualité des données)
-- Référentiel ADEME / ARCEP -- Base Empreinte
-- Pathfinder Framework (PACT) -- data quality guidelines
-- IMEC NetZero -- data quality tiers
-- [digital4better/data](https://github.com/digital4better/data)
+Dans les deux grilles, géographie et temporalité reposent sur les mêmes preuves. La description physique correspond à la représentativité technologique, le périmètre à la complétude, et la méthode à la cohérence. La traçabilité D4B étaye chaque contrôle mais ne remplace pas l’analyse d’incertitude. Une moyenne de notes n’est ni une certification ni une marge d’erreur statistique.
+
+[^rcp-parent]: ADEME, [RCP services numériques, version 2, juin 2026](https://librairie.ademe.fr/societe-et-politiques-publiques/9418-methodologie-d-evaluation-environnementale-basee-sur-l-analyse-du-cycle-de-vie-acv-pour-un-service-numerique.html), p. 20–21.
+
+[^ref-1]: [spécification SCI](https://sci.greensoftware.foundation/). Documentation en ligne, version non figée.
+
+[^corpus-pcf]: IBM, [Assessment of carbon footprint life cycles](https://www.ibm.com/downloads/documents/us-en/107a02e95ac8f59e), 2024, sections « What does IBM provide? », « Understanding IBM’s PCF report » et « Intended uses and limitations ».

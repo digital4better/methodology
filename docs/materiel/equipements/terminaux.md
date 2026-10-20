@@ -1,22 +1,8 @@
 # Terminaux
 
-## Résumé
+Cette section couvre les smartphones, ordinateurs portables et de bureau, tablettes et terminaux comparables. Elle relie l'impact intrinsèque de l'équipement, sa consommation en usage et leur répartition entre services.
 
-Cette section couvre les terminaux utilisés par les utilisateurs finaux, notamment :
-
-- smartphones ;
-- laptops ;
-- desktops ;
-- tablettes ;
-- autres terminaux courants quand ils sont méthodologiquement proches.
-
-Elle modélise à la fois :
-
-- l'impact intrinsèque de l'équipement complet ;
-- l'impact opérationnel lié à son usage ;
-- la répartition des impacts entre plusieurs services ou usages.
-
-Les terminaux concentrent souvent une part importante des impacts dans les usages grand public et bureautiques, en particulier lorsque leur fabrication domine la phase d'usage.
+Les terminaux peuvent représenter une part importante des impacts des usages grand public et bureautiques, notamment lorsque la fabrication domine l'usage énergétique. Cette part dépend du scénario étudié.
 
 ## Caractéristiques
 
@@ -31,157 +17,108 @@ Les terminaux concentrent souvent une part importante des impacts dans les usage
 
 ## Principe de modélisation
 
-La méthode privilégie une approche par archétypes de terminaux quand l'inventaire détaillé n'est pas disponible, car elle correspond à la réalité des données souvent accessibles. Quand la composition est connue, elle peut être raffinée à partir des chapitres composants.
+Une configuration type calculée par composants représente le terminal lorsque l’inventaire détaillé manque. Une composition connue permet d'affiner le calcul à partir des chapitres composants.[^source-2][^donnees-modele]
 
-Le calcul repose sur trois idées :
-
-- rattacher l'utilisateur à un type de terminal cohérent ;
-- annualiser l'impact intrinsèque sur la durée de vie ;
-- allouer seulement la part du terminal effectivement mobilisée par le service étudié.
-
-Cette logique est centrale pour les services web, mobiles ou les usages bureautiques.
+Le calcul rattache l'utilisateur à un type de terminal, annualise son impact intrinsèque sur sa durée de vie, puis attribue la part mobilisée par le service. Cette logique s'applique aux usages web, mobiles et bureautiques.
 
 ## Impact intrinsèque (fabrication)
 
 ### Méthode de calcul
 
-L'impact intrinsèque d'un terminal peut être estimé :
+| Données disponibles | Représentation retenue |
+| --- | --- |
+| Catégorie ou gamme connue | Archétype documenté de smartphone, ordinateur portable, ordinateur de bureau ou tablette. |
+| Principaux composants connus | Inventaire détaillé des composants du terminal. |
+| Composition partielle | Modèle hybride : composants identifiés et forfait structurel sans recouvrement. |
 
-- à partir d'un archétype documenté de smartphone, laptop, desktop ou tablette ;
-- à partir d'une composition détaillée si les principaux composants sont connus ;
-- ou via un modèle hybride mêlant composants identifiés et forfait structurel.
+La fabrication représente souvent une part importante du résultat. Sa dominance dépend toutefois de l'usage et du mix électrique retenus.
 
-Dans la plupart des usages, la fabrication du terminal représente une part importante, voire dominante, du résultat final.
+### Quand une donnée manque {#complétion-automatique}
 
-### Complétion automatique
+Une caractéristique absente peut être estimée à partir d’un terminal de même catégorie, gamme et format. Seule la donnée manquante est remplacée ; les caractéristiques déjà connues restent prioritaires.
 
-Quand les données manquent, la méthode recommande :
+| Situation | Exemple fictif |
+| --- | --- |
+| **Au départ** | Le portable possède **16 Go de RAM et un SSD de 512 Go**. La capacité de sa batterie est inconnue. |
+| **Référence choisie** | Un profil documenté de portable comparable indique **50 Wh de batterie**. Cette valeur est supposée pour l’exemple. |
+| **Dans le calcul** | La RAM et le SSD restent inchangés. La batterie est modélisée avec **50 Wh estimés**, sans présenter cette capacité comme une caractéristique mesurée du portable. |
 
-1. de rattacher le terminal à une catégorie cohérente ;
-2. d'utiliser un archétype par gamme ou par profil d'usage ;
-3. de compléter les composants manquants par des valeurs d'archétype ;
-4. de documenter explicitement le niveau de confiance.
+Si seule la catégorie « portable » est connue, le calcul peut reposer sur un profil complet de portable. La source du profil et les valeurs remplacées restent identifiables dans le résultat.
 
 ### Fin de vie
 
-La fin de vie est généralement intégrée dans les facteurs intrinsèques des terminaux ou de leurs archétypes. Quand ce n'est pas le cas, cette absence doit être documentée, sans tenter de la recréer artificiellement à partir de données trop fragiles.
+La couverture du transport, de l’assemblage et de la fin de vie dépend de chaque inventaire. Le modèle de fabrication ne garantit pas leur inclusion. Sans facteur compatible, ces phases restent explicitement non évaluées.
 
 ## Impact opérationnel (usage)
 
 ### Profil de consommation
 
-Le profil de consommation dépend :
+La consommation dépend du terminal, de la charge de travail, du temps d'écran et des composants sollicités, notamment le calcul, le réseau et la batterie. Sans mesure directe, un profil simplifié distingue :
 
-- du type de terminal ;
-- de l'intensité d'usage ;
-- du temps d'activation de l'écran ;
-- des composants sollicités, notamment calcul, réseau et batterie.
-
-Quand aucune mesure directe n'existe, un profil simplifié peut distinguer au minimum :
-
-- veille ou faible activité ;
-- usage moyen ;
-- usage intensif.
+<dl className="model-profiles">
+  <div><dt>Veille ou faible activité</dt><dd>Le terminal reste peu sollicité.</dd></div>
+  <div><dt>Usage moyen</dt><dd>Le profil représente l’activité courante du scénario.</dd></div>
+  <div><dt>Usage intensif</dt><dd>Le profil représente une sollicitation soutenue des composants.</dd></div>
+</dl>
 
 ### Facteurs d'ajustement
 
-Les principaux facteurs d'ajustement sont :
-
-- la part d'usage du service étudié sur le terminal ;
-- le nombre d'heures d'utilisation réelles ;
-- le partage entre usages personnels et professionnels ;
-- les hypothèses de renouvellement ou de prolongation de durée de vie.
+Les heures d'utilisation et la part du service déterminent la consommation attribuée. Le partage entre activités personnelles et professionnelles précise le périmètre. Les hypothèses de renouvellement ou de prolongation de vie influencent l'allocation de l'impact intrinsèque.
 
 ## Allocation et annualisation
 
-Les terminaux sont des équipements fortement mutualisés entre usages. Leur impact doit donc être :
+L'impact intrinsèque du terminal est annualisé sur sa durée de vie, puis alloué à la part d'usage attribuable au service. Cette répartition suit [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts). Une mauvaise attribution entre activités peut fortement fausser le résultat.
 
-- annualisé sur leur durée de vie ;
-- alloué selon la part d'usage réellement attribuable au service étudié ;
-- cohérent avec les règles générales décrites dans [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts).
+<span id="impact-intrinsèque-annuel-fabrication-transport-fin-de-vie" />
+<span id="impact-opérationnel-annuel-usage-8hjour-france" />
 
-Une mauvaise allocation des terminaux peut fausser fortement le résultat d'un cas d'usage.
+## Exemple de configuration {#ordres-de-grandeur}
 
-## Ordres de grandeur
+Un portable fictif assemble les composants suivants. Le tableau utilise le même calcul que l’illustration, sans reprendre les anciens forfaits d’équipement.
 
-Les tableaux ci-dessous présentent les impacts intrinsèques annualisés et la consommation électrique des principaux types de terminaux, issus du référentiel `digital4better/data`.
+| Composant | Fabrication (kg CO₂e) |
+|---|---:|
+| CPU | 21,77 |
+| Mémoire | 44,46 |
+| Stockage | 29,56 |
+| Écran | 40,82 |
+| Batterie | 3,64 |
+| Structure | 8,00 |
+| **Total** | **148,26** |
 
-### Impact intrinsèque annuel (fabrication, transport, fin de vie)
-
-| Terminal | GWP (kg CO₂ eq./an) | ADPe (mg Sb eq./an) | WU (m³ eq./an) | AP (mol H+ eq./an) | Puissance (W) |
-|---|---|---|---|---|---|
-| **Smartphone** | 31,9 | 1,13 | 53 | 0,15 | 1 |
-| **Tablette** | 28,1 | 1,49 | 57 | 0,18 | 7,5 |
-| **Laptop** | 37,2 | 1,90 | 167 | 0,23 | 75 |
-| **Desktop (personnel)** | 44,8 | 3,66 | 360 | 0,30 | 175 |
-| **Desktop (professionnel)** | 35,3 | 3,28 | 357 | 0,24 | 175 |
-| **Écran** | 11,6 | 1,95 | 123 | 0,08 | 55 |
-
-Source : `digital4better/data/equipment/embodied.csv`, facteurs par seconde annualisés (×365,25×86 400).
-
-:::note[Lecture]
-Ces valeurs correspondent à l'impact intrinsèque annualisé sur la durée de vie de référence du référentiel. Si la durée de vie réelle diffère, une correction proportionnelle $TL/RL$ doit être appliquée (voir [Temporalité et vieillissement](../../regles/temporalite-vieillissement-et-versionnement-des-donnees)).
-:::
-
-### Impact opérationnel annuel (usage 8h/jour, France)
-
-| Terminal | Énergie (kWh/an) | GWP opérationnel (kg CO₂ eq./an) | Part intrinsèque dans le total |
-|---|---|---|---|
-| **Smartphone** | 2,9 | 0,1 | ~99 % |
-| **Tablette** | 21,9 | 0,8 | ~97 % |
-| **Laptop** | 219 | 7,8 | ~83 % |
-| **Desktop + écran** | 672 | 23,8 | ~60 % |
-
-:::note[Dominance de l'intrinsèque]
-Pour les terminaux mobiles (smartphone, tablette), l'impact intrinsèque domine très largement (&gt;95 %). Pour les desktops, l'impact opérationnel devient significatif, surtout dans les pays à mix carboné élevé.
-:::
-
-## Simulateur
-
-Le simulateur ci-dessous assemble les modeles parametriques de chaque composant (CPU, RAM, stockage, ecran, batterie, structure) pour calculer l'impact total d'un terminal. Les predefinis (smartphone, laptop, desktop...) chargent des configurations types modifiables.
-
-import { TerminalPlayGround } from '@site/src/components/terminal-playground';
-
-<TerminalPlayGround lang="fr" />
+La configuration, les hypothèses et l’annualisation sont détaillées dans [Modélisation d’un équipement](../../modelisation/modelisation-d-un-equipement). Ce résultat partiel GWP n’est pas une ACV produit validée. Les autres indicateurs restent non évalués pour cet assemblage.
 
 ## Hypothèses & limites
 
 ### Hypothèses retenues
 
-- un archétype de terminal bien choisi est préférable à une précision fictive ;
-- la durée de vie et la part d'usage sont souvent les variables les plus structurantes ;
-- la fabrication du terminal pèse fréquemment davantage que l'usage énergétique direct.
+Un archétype représentatif est préférable à une précision fictive. La durée de vie et la part d'usage sont souvent déterminantes. La fabrication pèse fréquemment davantage que l'énergie d'usage directe, mais cette part reste à évaluer dans le scénario étudié.
 
 ### Limitations connues
 
-- les usages sont difficiles à attribuer précisément quand un même terminal sert à plusieurs activités ;
-- les inventaires détaillés sont rares en pratique ;
-- les données de consommation réelle varient fortement selon les comportements et les réglages.
+Les activités simultanées compliquent l'attribution des impacts. Les inventaires détaillés sont rares et les consommations varient selon les comportements et les réglages.
 
 ### Perspectives
 
-- affiner les archétypes terminaux par profil d'usage ;
-- mieux lier les facteurs terminal aux composants détaillés ;
-- proposer un simulateur pour certains terminaux ou profils d'usage quand les paramètres d'entrée seront suffisamment stabilisés.
+Les améliorations portent sur des archétypes adaptés aux profils d'usage, leur lien avec les composants détaillés et la calibration du simulateur sur des inventaires et mesures identifiés.
+
+## Exemple interactif {#simulateur}
+
+Le simulateur ci-dessous assemble les modèles paramétriques de chaque composant (CPU, RAM, stockage, écran, batterie, structure) pour calculer l'impact total d'un terminal. Les prédéfinis (smartphone, laptop, desktop...) chargent des configurations types modifiables.
+
+import { TerminalPlayGround } from '@site/src/components/terminal-playground';
+
+<div className="inline-example">
+
+<TerminalPlayGround lang="fr" />
+
+</div>
 
 ## Application
 
-Cette section est mobilisée directement dans :
+[Service web](../../cas-d-usage/services/service-web) utilise la part terminal des usages web ; [Applications natives](../../cas-d-usage/services/mobile), celle des applications natives. [Parc informatique](../../cas-d-usage/environnements/parc-informatique) consolide les impacts d'un ensemble de terminaux.
 
-- [Service web](../../cas-d-usage/services/service-web), pour la part terminal des usages web ;
-- [Mobile](../../cas-d-usage/services/mobile), pour les applications natives ;
-- [Parc informatique](../../cas-d-usage/environnements/parc-informatique), pour l'évaluation d'un ensemble de terminaux.
+[^source-2]: Resilio / Aguaro, [Les impacts environnementaux des équipements informatiques](https://alliancegreenit.org/media/ressource-projet-greenit/resilio-aguaro-whitepaper-rdb-vs-pcf-fr-20241025-web.pdf), octobre 2024. Voir le [corpus documentaire](../../references/sources-et-corpus).
 
-## Références
 
-### Données mobilisées
-
-- `digital4better/data/data/hardware/devices.*`
-- `digital4better/data/data/hardware/laptops.*`
-- `digital4better/data/data/hardware/mobiles.*`
-- `digital4better/data/data/equipment/*`
-
-### Sources
-
-- corpus `inputs/md`
-- `inputs/md/les-impacts-environnementaux-des-equipements-informatiques.md`
+[^donnees-modele]: Convention D4B, configurations illustratives `d4b-components-illustration-2026.10.19`. Paramètres, frontières et sources dans le [registre](../../references/registre-des-hypotheses-et-valeurs-par-defaut#parametres-composants). Les anciens forfaits ne sont pas utilisés pour ce calcul.

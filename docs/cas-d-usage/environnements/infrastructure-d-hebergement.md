@@ -1,160 +1,86 @@
-# Infrastructure d'hébergement
+# Infrastructure d’hébergement
 
-## Résumé
+Ce cas couvre les serveurs, le stockage et le réseau interne d’un site dont l’inventaire est connu. Il permet d’évaluer le site entier ou une part réservée à un service. Le cas [Cloud](./cloud) traite des ressources publiques dont le matériel est inconnu.
 
-Ce chapitre évalue l'empreinte environnementale des infrastructures d'hébergement maîtrisées : salles serveurs on-premise, datacenters privés, environnements hybrides. La méthode relie les ressources techniques réellement utilisées (serveurs, stockage, réseau) à leur empreinte via une décomposition bottom-up par composant, ajustée par les caractéristiques du site (PUE, mix électrique, WUE).
+## Préparer les données
 
-Le cloud public opaque est traité dans le chapitre [Cloud](./cloud).
-
-### Périmètre évalué
-
-```mermaid
-flowchart TD
-    subgraph Infrastructure d'hébergement
-        subgraph Équipements IT
-            SRV[Serveurs<br>CPU, RAM, stockage]
-            NET[Réseau interne<br>switches, routeurs]
-            STO[Stockage<br>baies, NAS, SAN]
-        end
-        subgraph Site
-            PUE[PUE<br>refroidissement,<br>alimentation]
-            LOC[Localisation<br>mix électrique]
-            WUE[WUE<br>consommation eau]
-        end
-    end
-
-    SRV --> PUE
-    NET --> PUE
-    STO --> PUE
-    PUE --> LOC
-
-    style SRV fill:#264653,color:#fff
-    style NET fill:#2a9d8f,color:#fff
-    style STO fill:#e9c46a,color:#000
-    style PUE fill:#f4a261,color:#000
-    style LOC fill:#e76f51,color:#fff
-```
-
-## Paramètres d'entrée
-
-| Paramètre | Obligatoire | Source typique |
+| Donnée | Unité | Frontière |
 |---|---|---|
-| Inventaire matériel (serveurs, stockage, réseau) | Oui | CMDB, monitoring |
-| Localisation du site | Oui | Adresse du datacenter |
-| PUE | Recommandé (1,58 par défaut) | Relevé site ou déclaration opérateur |
-| Mix électrique | Oui | `digital4better/data/factor/*` (pays, mois) |
-| Durée de vie des équipements | Oui | Politique de renouvellement ou [calcul durée de vie réelle](../../regles/temporalite-vieillissement-et-versionnement-des-donnees) |
-| WUE | Optionnel | Relevé site (si disponible) |
-| REF (part d'énergie renouvelable) | Optionnel | Contrat opérateur |
+| Inventaire et fabrication | Équipements, kg CO₂e | Inclure les équipements de stockage et réseau |
+| Énergie IT annuelle | kWh | Avant refroidissement et pertes du site |
+| PUE | Sans unité | Même site et même période que l’énergie IT |
+| Part réservée au service | % | Allocation documentée, distincte de la charge CPU |
+| Eau directe consommée | L/kWh IT | Facultative ; inconnue si non mesurée |
 
-### Règle d'allocation
+<span id="comprendre-le-calcul" />
 
-L'allocation dépend du niveau d'observation :
+L’énergie totale vaut `énergie IT × PUE`. Le PUE ne multiplie ni la fabrication, ni l’énergie des terminaux utilisateurs. Un compteur couvrant déjà tout le site inclut les auxiliaires ; une seconde application du PUE les compterait deux fois.
 
-| Donnée disponible | Approche | Allocation |
-|---|---|---|
-| Inventaire physique complet | Bottom-up par composant | Temporelle (durée d'usage / durée de vie) |
-| Ressources techniques (vCPU, RAM, stockage) | Par capacité réservée | vCPU, RAM Go, stockage To |
-| Seul le service consommé | Approche système | Unité fonctionnelle (Go.an, vCPU.h) |
+## Méthode détaillée du site au service
 
-### Risque de double comptage
+### Consolider l’inventaire physique
 
-- Ne pas compter le datacenter à la fois comme infrastructure **et** comme service cloud ;
-- Ne pas additionner serveurs du parc et serveurs de l'infrastructure sans frontière claire ;
-- Voir [Double comptabilisation](../../regles/double-comptabilisation).
-
-## Principe de calcul
-
-### Étape 1 : inventaire des ressources
-
-**On-premise** : inventaire physique depuis la CMDB (type, modèle, config CPU/RAM/stockage de chaque serveur).
-
-**Hybride / partiellement observable** : conversion des ressources provisionnées (vCPU, Go RAM, To stockage) en composants équivalents via les modèles paramétriques.
-
-### Étape 2 : impact intrinsèque (bottom-up)
-
-Chaque serveur est décomposé en composants :
+L’inventaire distingue serveurs, stockage, équipements réseau et installations du site. Chaque groupe est décrit par sa quantité, son énergie IT sur la période et sa fabrication unitaire avec sa durée de vie. Les équipements de redondance et de secours font partie de la capacité mise à disposition, même s’ils travaillent peu.
 
 $$
-\begin{align*}
-&I_{emb_{serveur}} = N_{cpu} \times I_{cpu} + I_{ram} + I_{stockage} + I_{structurel}
-\end{align*}
+I_{service}=a\left[PUE\,f_{électricité}\sum_i q_i E_iT+\sum_i q_iM_i\frac{T}{L_i}\right]
 $$
 
-Avec les modèles paramétriques détaillés dans [Serveurs](../../materiel/equipements/serveurs) et [Modélisation d'un équipement](../../modelisation/modelisation-d-un-equipement).
+$a$ représente ici une part uniforme des ressources réservées. Dans une infrastructure hétérogène, des clés distinctes peuvent être nécessaires pour CPU, RAM, stockage et réseau. La somme des parts allouées ne doit pas excéder l’inventaire total ; les capacités vacantes doivent rester identifiables.
 
-### Étape 3 : impact opérationnel (avec PUE)
-
-$$
-\begin{align*}
-&I_{ope_{i}} = E_{IT} \times PUE \times IF_{i,pays}\htmlClass{unit}{[U_i]}\\
-Avec\\
-&E_{IT} = \sum_{k} P_k \times D_{usage_k}\htmlClass{unit}{[kWh]}\\
-&PUE = \text{Power Usage Effectiveness (1,58 par défaut)}\\
-&IF_{i,pays} = \text{Facteur d'impact électrique du pays}\\
-\end{align*}
-$$
-
-Si le site dispose d'un REF (Renewable Energy Factor), l'impact opérationnel est ajusté :
-
-$$
-\begin{align*}
-&I_{ope_{i}} = E_{IT} \times PUE \times \left( REF \times IF^{renouv}_{i,pays} + (1 - REF) \times IF_{i,pays} \right)
-\end{align*}
-$$
-
-### Étape 4 : agrégation
-
-$$
-\begin{align*}
-&I_{infra_{i}} = \sum_{k=1}^{n} I_{emb_{k,i}} + I_{ope_{i}}\htmlClass{unit}{[U_i]}
-\end{align*}
-$$
-
-## Application concrète
-
-**Cas : salle serveur d'une ETI (10 serveurs, France, PUE 1,8)**
-
-| Composant | Détail | GWP emb. total | GWP emb./an (5 ans) |
-|---|---|---|---|
-| 10 serveurs (2 CPU 10nm 400mm², 256 Go DDR5, 4 To SSD) | Bottom-up par composant | 10 × 275 = 2 750 | 550 |
-| Réseau (5 switches) | Archétype | 5 × 30 = 150 | 30 |
-| **Total intrinsèque** | | | **580 kgCO₂e/an** |
-
-| Opérationnel | Détail | Valeur |
-|---|---|---|
-| Consommation IT | 10 serveurs × 400 W moyen × 8 766 h | 35 064 kWh/an |
-| Consommation totale (× PUE 1,8) | | 63 115 kWh/an |
-| GWP opérationnel (France, 35 gCO₂e/kWh) | | **2 209 kgCO₂e/an** |
-
-| **Total annuel** | **2 789 kgCO₂e/an** |
+| Donnée disponible | Conversion correcte |
 |---|---|
-| Part intrinsèque | 21 % |
-| Part opérationnelle | 79 % |
+| Énergie des équipements IT | Multiplier par le PUE compatible du site |
+| Énergie totale du site | Utiliser directement, sans nouveau PUE |
+| Puissances et temps par état | Additionner watts × heures, puis convertir en kWh |
+| Part réservée au service | Appliquer la clé documentée, distincte de l’utilisation CPU |
 
-:::note[Lecture]
-Contrairement au parc bureautique où l'intrinsèque domine, l'infrastructure d'hébergement est dominée par l'**opérationnel** (79 %) car les serveurs fonctionnent 24h/24. En France (mix bas carbone), c'est déjà le cas. Dans un pays à mix carboné (Pologne : 700 gCO₂e/kWh), l'opérationnel représenterait ~97 %. Le PUE de 1,8 (vieillissant) amplifie encore l'opérationnel ; un PUE de 1,2 (moderne) réduirait l'opérationnel de 33 %.
-:::
+### Eau et autres installations
 
-## Hypothèses et limites
+Si le WUE représente des litres d’eau consommée par kWh IT, $V_{eau}=E_{IT}\times WUE$. L’interprétation dépend de la grandeur décrite par la source, consommation ou prélèvement, et de sa période, année entière ou saison. L’eau directe du site ne remplace pas l’empreinte hydrique de l’électricité ou de la fabrication.
 
-- La précision varie fortement entre on-premise (inventaire détaillé possible) et colocation (souvent partiel).
-- Le PUE n'est pas toujours disponible au bon niveau géographique ; la valeur mondiale moyenne (1,58) est utilisée par défaut.
-- Le WUE est rarement publié et reste optionnel dans cette itération.
-- L'inférence de matériel depuis des ressources cloud provisionnées est traitée dans le chapitre [Cloud](./cloud).
-- Les équipements réseau du datacenter sont souvent évalués avec des archétypes car leur composition détaillée est rarement connue.
+### Colocation, mutualisation et disponibilité
 
-## Données mobilisées
+En colocation, le compteur peut inclure un rack, une salle ou le site entier. Sa frontière doit correspondre à celle du PUE et à la part des services concernés. Une charge CPU faible n’implique pas une puissance nulle : mémoire, ventilateurs, stockage et alimentation continuent à fonctionner.
 
-- Inventaire matériel (CMDB, monitoring)
-- Modèles paramétriques composants : Green Cloud Computing (UBA 2021)
-- `digital4better/data` → `data/cloud/*`, `data/equipment/*`, `data/factor/*`
+L’allocation au temps de réservation convient à une capacité dédiée. Pour une capacité mutualisée, les clés par ressource et la répartition du repos sont explicites. Une redondance destinée à garantir la disponibilité doit être incluse dans le service qui en bénéficie.
 
-## Sources
+La fabrication du bâtiment, des onduleurs et du refroidissement nécessite des inventaires et des durées propres. Le PUE couvre leur effet sur l’électricité d’exploitation, pas leur fabrication. Ces inventaires ne sont donc pas inclus dans un PUE.
 
-- ISO 14040 / ISO 14044
-- Référentiel ADEME / ARCEP (RCP mère)
-- Green Cloud Computing, UBA, 2021 (coefficients composants, approche par composant datacenter)
-- [Uptime Institute](https://journal.uptimeinstitute.com/global-pues-are-they-going-anywhere/) (PUE mondial)
-- [Modélisation d'un équipement](../../modelisation/modelisation-d-un-equipement) (méthode bottom-up)
-- [digital4better/data](https://github.com/digital4better/data)
+### Vérifier la cohérence
+
+La cohérence du calcul s’apprécie par rapprochement du total IT avec les compteurs et du total site avec la consommation facturée, à frontières documentées. Des périodes ou unités différentes peuvent expliquer un écart sans gain d’efficacité. Le cas [Cloud](./cloud) et les règles de [virtualisation](../../regles/prise-en-compte-des-couches-logicielles-et-de-la-virtualisation) précisent le traitement du matériel virtualisé.
+
+## Périmètre à compléter
+
+La fabrication du bâtiment, des groupes froids et des dispositifs de secours nécessite un inventaire distinct. L’eau directe reste exprimée en litres ; elle ne s’additionne pas à un indicateur d’eau caractérisé en m³ équivalents. Voir [Datacenter](../../materiel/reseau-et-infrastructure/datacenter).
+
+<span id="règles-et-sources" />
+
+Pour cadrer le résultat : [périmètre et unité d’analyse](../../fondations/perimetre-frontieres-services-tiers-et-unite-d-analyse), [allocation](../../regles/allocation-et-partage-des-impacts) et [double comptage](../../regles/double-comptabilisation).
+
+Les facteurs électriques sont issus de l’instantané D4B 2025[^ref-1]. Les activités et données d’hébergement préremplies sont des hypothèses de l’exercice. Les facteurs et conventions sont consultables sous le simulateur.
+
+<span id="lire-leffet-des-paramètres" />
+
+Un passage du PUE de 1,8 à 1,2 diminue d’un tiers l’énergie de site, à énergie IT constante. La fabrication reste identique. Une baisse de charge CPU ne justifie pas, à elle seule, une baisse proportionnelle de l’énergie ou de l’allocation.
+
+## Exemple interactif {#simuler-votre-situation}
+
+Cet exemple met en application les calculs et les limites présentés ci-dessus.
+
+Le scénario prérempli comporte dix serveurs et cinq switches. Les consommations et fabrications sont supposées pour l’exercice.
+
+Ex: dix serveurs à 400 W et cinq switches à 30 W consomment `(10 × 0,4 + 5 × 0,03) × 8 760 = 36 354 kWh IT/an`. Avec un PUE de 1,8, le site consomme **65 437,2 kWh/an**.
+
+L’exercice suppose 275 kg CO₂e de fabrication par serveur, 30 kg par switch et cinq ans de vie. La fabrication allouée vaut 580 kg/an. Avec le facteur France 2025, le sous-total est **2 669,22 kg CO₂e/an**.
+
+import { ScenarioPlayground } from '@site/src/components/scenario-playground';
+
+<div className="inline-example">
+
+<ScenarioPlayground kind="hosting" lang="fr" />
+
+</div>
+
+[^ref-1]: Digital4Better, [instantané D4B 2025](https://github.com/digital4better/data/blob/77cae4a58fadd5deb3b8d4e5577020da08f780d8/data/factor/country-yearly.csv). Instantané 77cae4a, données 2025 ; revue du 16 octobre 2026.

@@ -1,214 +1,130 @@
-# Mobile
+---
+sidebar_label: Applications natives
+---
 
-## Résumé
+import { MethodIllustration } from '@site/src/components/method-illustrations';
 
-Ce chapitre sert à évaluer un service numérique consommé via une application mobile native ou un usage mobile dominant. Il accorde une attention particulière au terminal, au réseau d'accès mobile et au partage du smartphone entre plusieurs usages.
+# Applications natives : mobiles et ordinateurs
 
-### Périmètre évalué
+Une [application native](../../references/glossaire#application-native) s’exécute sur un smartphone, une tablette ou un ordinateur. Son évaluation relie distribution, activité du terminal, réseaux et hébergement éventuel. La fonction de référence peut être une consultation de compte, un trajet calculé ou un document produit, à service comparable.
 
-Le périmètre couvre :
+Le même cadre couvre les applications installées hybrides ou multiplateformes. Leur langage ne détermine pas leur impact : les ressources réellement mobilisées font foi. Le contenu exécuté dans une vue web suit [Service web](./service-web), sans ajouter deux évaluations complètes du même parcours.
 
-- le terminal mobile lui-même
-- les flux réseau, en distinguant si possible Wi-Fi et réseau d'accès mobile
-- l'infrastructure d'hébergement du service
+## Préparer les données
 
-Ce cas d’usage est adapté aux applications mobiles natives, mais peut aussi servir pour des usages web mobile lorsque la part du terminal et du réseau mobile est structurante.
+| Activité | Données nécessaires |
+|---|---|
+| Sessions | Nombre, durée active, octets échangés |
+| Installations | Nombre de téléchargements et poids réellement téléchargé |
+| Mises à jour | Nombre et poids des téléchargements, différentiels si disponibles |
+| Terminal | Famille mobile ou ordinateur, système, puissance et durée de vie |
+| Infrastructure | Énergie et fabrication allouées à l’application |
 
-## Paramètres d'entrée
+Les notifications, SDK, publicités et appels tiers appartiennent aux flux observés ou à un inventaire séparé. La part cellulaire décrit le réseau utilisé : un smartphone en Wi-Fi relève du trajet fixe, tandis qu’un ordinateur peut utiliser une connexion cellulaire.
 
-- Le nombre d'utilisateurs, sessions ou événements clés
-- Le temps moyen passé dans l'application
-- Les volumes de données transférés
-- Le poids du package d'installation et des mises à jour, ainsi que leur fréquence
-- Le volume ou le nombre de notifications push quand elles font partie du service
-- La répartition Wi-Fi / réseau mobile si elle est connue
-- La répartition smartphone / tablette si elle est connue
-- La répartition géographique de l'audience
-- Les grandes caractéristiques de l'hébergement
+<span id="comprendre-le-calcul" />
 
-### Dépendances tierces
+Les transferts valent `sessions × Mo/session + installations × Mo/installation + mises à jour × Mo/mise à jour`. La division par 1 000 donne des Go décimaux.
 
-Les applications mobiles embarquent souvent de nombreux SDK et services tiers : analytics, push, authentification, publicité, cartographie, paiement, IA ou stockage externe. Ces dépendances doivent être recensées, car elles déplacent parfois une grande partie du traitement hors du backend principal.
+Le profil moyen applique un facteur de fabrication déjà alloué par seconde. En mode personnalisé, la fabrication est répartie sur le temps actif rapporté à la durée de vie calendaire. Son électricité est calculée à partir de la puissance moyenne du profil. L’écran, les capteurs et les traitements intensifs peuvent nécessiter des profils distincts.
 
-### Règle d'allocation
+## Méthode détaillée et cas particuliers
 
-La question d'allocation la plus importante concerne le terminal. Un smartphone sert simultanément à de nombreux usages ; il faut donc n'imputer au service étudié qu'une fraction cohérente du temps ou de l'activité de l'équipement.
+### Séparer distribution, sessions et arrière-plan
 
-### Risque de double comptage
+Pour $N$ sessions, $n_i$ installations et $n_u$ mises à jour, le volume transféré en Go est :
 
-Le double comptage peut survenir si :
+$$
+G=\frac{N s_s+n_i s_i+n_u s_u}{1000}
+$$
 
-- l'application est comptée à la fois comme usage mobile et comme service web identique
-- des SDK tiers sont comptés séparément alors que leurs flux sont déjà inclus dans le volume global mesuré
+Les tailles $s_s,s_i,s_u$ sont en Mo réellement téléchargés. Une mise à jour différentielle ne représente pas nécessairement le poids complet du package. Un utilisateur conservant une version ancienne ne reçoit pas automatiquement toutes les mises à jour.
 
-### Hypothèses temporelles
+Le temps actif vaut $H=N t/3600$. Le profil moyen sélectionné fournit une puissance et une fabrication allouée par seconde. Pour un profil personnalisé, la fabrication se répartit sur la durée de vie calendaire. Des mesures distinctes décrivent les fonctions fortement consommatrices : caméra, GPS, rendu 3D ou inférence locale. Une moyenne smartphone ne les décrit pas fidèlement.
 
-Les usages mobiles sont souvent cycliques, avec des fréquences d’ouverture et des durées de session très variables. La période d'observation doit donc être documentée, notamment si l'on extrapole un comportement journalier à une année.
+| Activité | Mesure à privilégier | Traitement |
+|---|---|---|
+| Premier lancement | Téléchargement, décompression, initialisation | Ajouter aux sessions ou isoler un parcours |
+| Cache local | Octets réellement transférés, durée et taille du stockage | Ne pas déduire deux fois les hits de cache |
+| Notifications et synchronisation | Réveils, octets, temps CPU et énergie en arrière-plan | Ajouter une activité distincte |
+| SDK et services tiers | Appels, publicités, télémétrie, cartographie | Inclure dans les flux ou inventorier séparément |
+| Infrastructure | Énergie et fabrication allouées | Inclure le repos et les ressources réservées |
 
-## Principe
+<MethodIllustration kind="native-app" lang="fr" />
 
-1. Définir l'unité fonctionnelle, par exemple une session mobile ou un utilisateur actif sur une période.
-2. Estimer la part terminal à partir du temps d'usage et du partage du smartphone entre usages.
-3. Estimer la part réseau en distinguant autant que possible LAN et RAN.
-4. Estimer la part infrastructure à partir de l'environnement d'hébergement.
-5. Agréger les couches en évitant les doubles comptes entre réseau et hébergement.
+### Spécificités mobiles et ordinateurs {#specificites-mobiles-et-ordinateurs}
 
-## Évaluation des impacts
+La décomposition reste commune ; les observations diffèrent selon la plateforme.
 
-### Spécificités d'un service mobile natif
+| Point observé | Applications mobiles | Applications sur ordinateur |
+|---|---|---|
+| Terminal et affichage | Smartphone ou tablette, luminosité, écran actif ou éteint | Portable ou fixe, écran intégré ou externe, périphériques mobilisés |
+| Traitements locaux | GPS, caméra, capteurs, rendu et inférence locale | Calcul CPU/GPU, rendu, indexation et traitements de fichiers |
+| Arrière-plan | Notifications, synchronisations et restrictions iOS/Android | Services résidents, synchronisations, veille et gestion d’énergie du système |
+| Distribution | Package adapté au terminal, store, mises à jour différentielles | Installateur, store ou déploiement d’entreprise ; téléchargements et caches effectivement utilisés |
 
-Un service mobile natif ne se résume pas à un écran plus petit qu'un service web. Il présente plusieurs spécificités qui changent la modélisation :
+**Sur mobile**, l’activation des radios, des capteurs et les réveils du terminal peuvent contribuer au-delà du seul volume de données. Les conditions de réseau, de luminosité et d’usage des capteurs accompagnent donc les mesures.[^energie-mobile] Les restrictions d’arrière-plan du système influencent l’activité réellement exécutée : une synchronisation programmée n’équivaut pas toujours à une synchronisation réalisée.[^arriere-plan-android]
 
-- il est développé pour un système d'exploitation donné, comme `iOS` ou `Android`
-- il mobilise des fonctions propres au terminal, par exemple notifications, caméra, GPS ou capteurs
-- il suppose souvent une phase d'installation initiale depuis un store
-- il peut générer des mises à jour régulières du package applicatif
-- il peut être utilisé avec ou sans connexion réseau selon les fonctions activées
+**Sur ordinateur**, une application ouverte n’est pas nécessairement active en continu. Le scénario distingue travail, attente, traitements en arrière-plan et veille ; la gestion d’énergie peut limiter une application inactive.[^energie-mac] Les écrans ou périphériques déjà inclus dans le profil ne sont pas ajoutés une seconde fois.
 
-Ces spécificités expliquent pourquoi la méthode doit intégrer non seulement les sessions d'usage, mais aussi les téléchargements initiaux, les mises à jour et le partage du terminal entre plusieurs usages.
+Un fonctionnement hors ligne conserve les calculs et le stockage locaux. Seuls les transferts et traitements distants réellement absents sont exclus. La conception, les tests et la maintenance suivent le [cycle de vie du service](../../fondations/principes-acv-appliques-au-numerique), au-delà de cet exemple d’exploitation.
 
-Dans l'état actuel de la méthode, cela conduit à distinguer au moins deux familles de flux :
+### Mesurer le surcoût d’une fonction et traiter les usages simultanés
 
-- les flux d'utilisation courante pendant les sessions
-- les flux de distribution, c'est-à-dire installation, mises à jour et notifications
+La comparaison repose sur des mesures répétées avec et sans la fonction, à luminosité, réseau, batterie et état thermique comparables. Une différence énergétique mesure un surcoût dans ce protocole ; elle ne répartit pas automatiquement la fabrication ni l’énergie commune du terminal.
 
-### Terminaux
+Une session combinant audio, navigation et écran nécessite une règle d’allocation des ressources communes. La somme attribuée aux applications ne doit pas dépasser l’inventaire du terminal. Le temps d’arrière-plan ne peut pas être assimilé sans correction à un écran allumé.
 
-Le terminal est souvent la couche dominante d'un service mobile. La méthode historique repose sur des profils d'utilisateurs établis à partir des analytics, puis rapprochés d'archétypes de terminaux.
+Le simulateur n’ajoute pas automatiquement ces activités. Lorsqu’elles sont significatives, leur estimation constitue un complément explicite au sous-total. Une application hybride partageant du contenu web doit éviter de compter deux fois le même parcours.
 
-Les variables les plus utiles sont :
+### Audience, notifications et continuité avec le modèle historique
 
-- le système d'exploitation ou la grande famille d'équipement
-- le temps d'utilisation annuel ou par session
-- le nombre d'utilisateurs ou de sessions
-- la répartition entre smartphone, tablette et autres terminaux mobiles
+L’inventaire distingue les systèmes et leurs versions : iOS et Android sur mobile, Windows, macOS ou Linux sur ordinateur. Les pays et les familles de terminaux complètent ces groupes. Le nombre de sessions mesure une activité ; le nombre d’utilisateurs décrit une population. La répartition des sessions par pays n’est assimilable à celle des utilisateurs que si leur fréquence d’usage est comparable.
 
-Cette modélisation permet d'imputer :
+Pour les notifications, le volume dépend de la population ayant accepté leur réception, du nombre effectivement délivré et de leur taille. Un taux d’acceptation déjà inclus dans le nombre délivré ne s’applique pas une seconde fois. L’évolution de l’audience pendant l’année influence aussi les mises à jour reçues. Le poids d’un package adapté au terminal peut différer du poids annoncé sur le store.
 
-- une part d'impact embarqué, annualisée sur la durée de vie de l'équipement
-- une part d'impact d'usage, liée à la consommation électrique pendant le temps d'utilisation
+Le modèle historique mobile décrit séparément distribution, sessions et hébergement. L’extension aux ordinateurs conserve cette décomposition, avec des profils matériels, des activités et des données de distribution propres à chaque plateforme. Ses conversions binaires et son allocation d’une consommation annuelle [TEC](../../references/glossaire#tec) restent distinctes des Mo décimaux et des puissances moyennes de l’exemple ci-dessous. Une reprise de résultats nécessite ces métadonnées ; les deux calculs ne sont pas présentés comme équivalents.
 
-Elle reste compatible avec un niveau de détail modeste, à condition de documenter clairement l'archétype retenu pour chaque profil.
+### Choisir l’unité de restitution
 
-En pratique, deux niveaux de précision peuvent coexister :
+Le total de période additionne la distribution, les sessions et l’infrastructure. Un impact par session peut inclure une part de distribution, mais ce choix doit être annoncé. Une comparaison fonctionnelle porte sur une tâche accomplie, à taux de réussite, qualité et disponibilité constants.
 
-- des facteurs génériques par type d'équipement, par exemple `smartphone` et `tablette`
-- des facteurs spécifiques quand un modèle connu peut être rattaché à une donnée constructeur ou à un référentiel plus précis
+## Périmètre à compléter
 
-La méthode actuelle sait aussi croiser ces profils avec la géographie de l'audience. On peut ainsi affecter à chaque pays ou région :
+Le calcul ne déduit pas l’énergie réelle d’une application à partir du seul type de terminal. Les valeurs préremplies sont un exercice ; des mesures de parcours représentatifs permettent de les remplacer. Les facteurs réseau sont à renseigner et les services tiers non inventoriés restent exclus.
 
-- une part de l'audience
-- un type de terminal générique
-- ou, si l'information existe, un modèle plus précis
+Une audience variée se décrit par profils de terminaux, réseaux et pays distincts. Les usages simultanés demandent une règle d’allocation qui ne dépasse pas l’impact total du terminal. Un même parcours ne s’additionne pas à sa propre évaluation dans [Service web](./service-web).
 
-### Réseau
+<span id="règles-et-sources" />
 
-Le réseau d'un service mobile diffère de celui d'un service web sur un point important : il faut souvent intégrer des flux supplémentaires liés à l'installation et aux mises à jour de l'application.
+Pour cadrer le résultat : [périmètre et unité d’analyse](../../fondations/perimetre-frontieres-services-tiers-et-unite-d-analyse), [allocation](../../regles/allocation-et-partage-des-impacts) et [double comptage](../../regles/double-comptabilisation).
 
-La méthode recommande donc de distinguer au minimum :
+Les facteurs électriques sont issus de l’instantané D4B 2025[^ref-1]. Les activités et données d’hébergement préremplies sont des hypothèses de l’exercice. Les facteurs et conventions sont consultables sous le simulateur.
 
-- les flux de téléchargement initial du package
-- les flux de mise à jour
-- les flux d'usage courant pendant les sessions
-- les flux liés aux notifications push quand ils sont significatifs
+<span id="lire-leffet-des-paramètres" />
 
-Elle recommande aussi de séparer autant que possible :
+Le poids des mises à jour et les transferts par session contribuent séparément au trafic dans le simulateur. Réduire la durée d’une session n’est un progrès comparable que si la même fonction est accomplie.
 
-- le réseau d'accès mobile
-- le réseau fixe ou Wi-Fi
+L’énergie d’hébergement reste une entrée indépendante. Elle ne diminue pas automatiquement avec les octets transférés ou le temps d’écran.
 
-Cette distinction est importante, car les facteurs de réseau et les hypothèses d'usage ne sont pas les mêmes. Quand la répartition exacte n'est pas connue, une hypothèse de mix réseau peut être utilisée, mais elle doit apparaître explicitement.
+## Exemple interactif {#simuler-votre-situation}
 
-Le modèle de calcul actuellement utilisé distingue aussi :
+Le choix du terminal illustre une application mobile ou sur ordinateur. Le smartphone présélectionné reste un scénario pédagogique ; changer de profil ne mesure pas la consommation réelle de l’application.
 
-- un réseau d'utilisation, lié aux sessions
-- un réseau de distribution, lié à l'installation, aux mises à jour et aux notifications
+Ex: 10 000 sessions à 2 Mo, 1 000 installations à 50 Mo et 2 000 mises à jour à 20 Mo donnent **110 Go**. À trois minutes actives par session, le temps terminal vaut **500 h**.
 
-Pour les flux de distribution, le calcul peut être segmenté sur plusieurs distances successives, par exemple :
+import { ScenarioPlayground } from '@site/src/components/scenario-playground';
 
-1. de l'utilisateur à la frontière réseau la plus proche
-2. de frontière à frontière
-3. de la frontière au centre de données ou au point d'origine du service
+<div className="inline-example">
 
-Cette segmentation permet de mieux tenir compte de la géographie de l'audience, de la localisation de l'hébergement et du rôle éventuel du cache ou du CDN.
+<ScenarioPlayground kind="mobile" lang="fr" />
 
-### Hébergement
+</div>
 
-Pour la partie hébergement, le service mobile suit une logique proche d'un service web : il faut relier les sessions, appels API et volumes de données à une infrastructure d'exécution.
+[^ref-1]: Digital4Better, [instantané D4B 2025](https://github.com/digital4better/data/blob/77cae4a58fadd5deb3b8d4e5577020da08f780d8/data/factor/country-yearly.csv). Instantané 77cae4a, données 2025 ; revue du 16 octobre 2026.
 
-Deux niveaux d'entrée sont possibles :
+[^energie-mobile]: Apple, [Energy Efficiency Guide for iOS Apps, « Fundamental Concepts »](https://developer.apple.com/library/archive/documentation/Performance/Conceptual/EnergyGuide-iOS/FundamentalConcepts.html), mise à jour du 13 septembre 2016, sections « Networking operations », « Location » et « Fixed Cost and Dynamic Cost ». Guide archivé ; principes physiques, sans reprise de ses coefficients numériques.
 
-- un niveau détaillé, avec des machines ou des environnements connus
-- un niveau plus forfaitaire, avec des profils de serveurs ou de machines virtuelles
+[^arriere-plan-android]: Google, [Background tasks overview](https://developer.android.com/develop/background-work/background-tasks), mise à jour du 26 février 2026, sections « Terminology » et « Task scheduling APIs ». Les règles d’exécution dépendent de la version du système.
 
-L'évaluation doit alors tenir compte :
-
-- du temps de sollicitation des serveurs
-- du niveau de mise en cache
-- du `PUE` du site d'hébergement, ou d'une valeur par défaut documentée si l'information manque
-- du facteur d'électricité associé à la zone concernée
-
-Le modèle actuel utilise aussi des archétypes simples de machines virtuelles, par exemple `petite`, `moyenne` et `grande VM`, avec :
-
-- une consommation annuelle de référence
-- un impact embarqué annualisé
-- un taux d'allocation à l'application
-- un taux d'allocation à la plateforme évaluée
-
-Cette approche est utile quand l'infrastructure réelle n'est pas décrite assez finement pour faire une modélisation détaillée par composant.
-
-### Répartition des couches
-
-Comme pour les autres services numériques, le résultat final agrège trois couches principales :
-
-- les terminaux utilisateurs
-- le réseau
-- les environnements d'hébergement
-
-L'allocation des terminaux et de l'hébergement est généralement pilotée par la durée d'utilisation. L'allocation du réseau est plutôt pilotée par les volumes transférés.
-
-Le modèle actuellement en usage ajoute une lecture plus fine de ces couches en distinguant, à l'intérieur du réseau :
-
-- les flux de consultation
-- les flux de distribution
-- la part évitée ou déplacée par le cache ou le CDN quand un `hit ratio` est disponible
-
-## Hypothèses & limites
-
-### Hypothèses retenues
-
-Ce cas d’usage est sensible au partage du terminal entre usages et au manque de visibilité sur les traitements côté système d'exploitation, notifications, synchronisations ou SDK tiers. Le réseau d'accès mobile reste aussi un poste incertain selon la qualité des données disponibles.
-
-### Limitations connues
-
-Quelques limites spécifiques doivent être gardées en tête :
-
-- les téléchargements depuis les stores restent difficiles à observer précisément
-- les mises à jour automatiques peuvent être importantes sans apparaître dans les analytics applicatives
-- les profils utilisateurs sont des archétypes, pas des équipements réellement observés un par un
-- la consommation côté terminal dépend fortement du matériel, de la luminosité, du réseau et des fonctions mobilisées
-- la distribution géographique de l'audience influence fortement les impacts réseau, surtout si l'hébergement est éloigné
-- le rôle du cache et des stores est souvent approché par hypothèses plutôt que mesuré directement
-
-## Références
-
-### Données mobilisées
-
-- `digital4better/data`: familles `data/hardware/*`, `data/equipment/*`, `data/factor/*`, `data/energy/*`
-- Données d'usage mobile
-- Hypothèses de répartition entre Wi-Fi et réseau mobile
-- Selon l'hébergement, éventuelle mobilisation de `data/cloud/*`
-- Données analytics sur OS, sessions, durées d'usage, téléchargements et mises à jour quand elles existent
-- Archétypes de terminaux mobiles et hypothèses de durée de vie
-- Répartition géographique de l'audience et localisation du centre de données
-- Paramètres de distribution : poids du package, nombre d'installations, nombre de versions, notifications et `opt-in`
-- Paramètres de cache ou de `hit ratio` quand ils existent
-- Profils d'hébergement de type VM et taux d'allocation à l'application
-
-### Sources
-
-- ADEME / Arcep
-- Note méthodologique interne sur les services mobiles natifs
-- Modèle de calcul interne des applications mobiles
-- Corpus `inputs/md`
-- [digital4better/data](https://github.com/digital4better/data)
+[^energie-mac]: Apple, [Energy Efficiency Guide for Mac Apps, « Extend App Nap »](https://developer.apple.com/library/archive/documentation/Performance/Conceptual/power_efficiency_guidelines_osx/AppNap.html), mise à jour du 13 septembre 2016, guide archivé, sections « What App Nap Does » et « How App Nap Works ». Exemple de gestion de l’inactivité sur macOS, sans généralisation aux autres systèmes.

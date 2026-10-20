@@ -1,109 +1,55 @@
-# Vue d'ensemble et objectifs
+# Évaluer un service numérique
 
-## En bref
+Cette méthodologie relie les usages numériques aux équipements, à l’énergie et aux impacts environnementaux qu’ils mobilisent. Elle explique comment construire un calcul, vérifier ses hypothèses et interpréter ses limites.
 
-Cette méthodologie propose un cadre d'évaluation des impacts environnementaux du numérique conçu pour être à la fois lisible par un public non spécialiste et suffisamment robuste pour des usages d'analyse, de cadrage ou de pilotage.
+## Comment se construit une évaluation {#passer-dune-question-à-un-résultat}
 
-Elle repose sur une posture principalement attributionnelle. Son ambition n'est pas de produire une valeur unique valable en tout contexte, mais d'expliquer comment construire une évaluation transparente, argumentée et comparable.
+L’[unité fonctionnelle](./references/glossaire.md#unite-fonctionnelle) précise le service rendu, sa quantité et la qualité attendue. Le calcul relie ce service aux ressources mobilisées, puis additionne leurs impacts pour chaque indicateur. Le résultat dépend des postes couverts et des hypothèses retenues.
 
-## Pourquoi cette méthodologie existe
+<figure className="assessment-example">
+<figcaption>Exemple : les consultations d’un site pendant un mois</figcaption>
+<ol>
+<li><strong>L’usage étudié</strong><div><p><b>100 000 consultations d’une minute.</b> L’exemple porte sur les terminaux et l’hébergement, pendant cette période.</p></div></li>
+<li><strong>Les ressources associées</strong><div><p>Ces consultations représentent <b>1 666,67 heures d’usage des terminaux</b>. Le scénario suppose aussi 100 kWh d’électricité informatique alloués à l’hébergement. Le modèle tient compte de la fabrication des équipements et de l’électricité consommée.</p></div></li>
+<li><strong>Le résultat et ses limites</strong><div><p className="assessment-example-result"><b>33,57 <span>kg CO₂e</span></b><span>Sous-total pour le mois étudié</span></p><p>Ce résultat illustre l’indicateur climat avec les hypothèses de l’exemple. <b>Le réseau et les services tiers ne sont pas évalués</b> : ce n’est pas l’empreinte complète du service.</p></div></li>
+</ol>
+</figure>
 
-Les impacts environnementaux du numérique sont souvent présentés soit sous forme de messages très simplifiés, soit sous forme de modèles opaques difficiles à relire. Entre ces deux extrêmes, il manque souvent une documentation qui :
+Les paramètres de cet exemple sont détaillés dans [le calcul reproductible d’un service](./modelisation/modelisation-d-un-service#exemple-reproductible). Ils ne constituent pas des valeurs par défaut.
 
-- explicite les hypothèses ;
-- distingue ce qui relève des données, des conventions et des choix de modélisation ;
-- permette de passer des objets matériels à des cas d'usage concrets ;
-- reste compatible avec un enrichissement progressif des données et des modèles.
+L’approche est principalement **attributionnelle** : elle répartit des impacts entre des usages. Elle ne prédit pas automatiquement les conséquences physiques d’une décision. Une comparaison demande la même fonction, une qualité de service comparable et des frontières cohérentes.
 
-Cette documentation vise à combler cet espace.
+## Trouver la bonne explication
 
-## À qui elle s'adresse
+| Section | Quand la consulter |
+|---|---|
+| [Fondations](./fondations/principes-acv-appliques-au-numerique) | Définir ce que l’on mesure, les phases du cycle de vie et les indicateurs |
+| [Règles](./regles/allocation-et-partage-des-impacts) | Partager les impacts, éviter les doubles comptes, qualifier les données |
+| [Modélisation](./modelisation/modelisation-d-un-service) | Assembler les contributions d’un équipement ou d’un service |
+| [Matériel](./materiel/vue-d-ensemble-du-materiel) | Comprendre les facteurs et les modèles physiques |
+| [Références](./references/sources-et-corpus) | Retrouver les sources, versions et hypothèses |
 
-Cette méthode s'adresse principalement à trois profils, chacun pouvant suivre un parcours de lecture adapté :
+Les pages conceptuelles donnent le principe et un exemple. Les modèles techniques détaillent les entrées et les équations. Les cas d’usage permettent de les appliquer. Les formules, hypothèses et exemples restent visibles dans le fil de lecture.
 
-### Découverte — comprendre les grands déterminants
+## Lire un résultat correctement
 
-Pour les personnes qui veulent comprendre les grands déterminants des impacts du numérique sans entrer immédiatement dans les équations :
+Un résultat doit conserver son unité, sa période, son périmètre et ses sources. **Un poste non évalué n’est pas nul.** Les simulateurs de cas d’usage calculent actuellement le climat ; les autres indicateurs du référentiel demandent des facteurs compatibles avant agrégation.
 
-1. Cette page (Vue d'ensemble)
-2. [Principes ACV appliqués au numérique](fondations/principes-acv-appliques-au-numerique)
-3. [Périmètre, frontières et unité d'analyse](fondations/perimetre-frontieres-services-tiers-et-unite-d-analyse)
-4. [Vue d'ensemble du matériel](materiel/vue-d-ensemble-du-materiel)
-5. Un cas d'usage au choix (ex. [IA générative](cas-d-usage/services/ia-generative))
+Les données électriques utilisées sont versionnées dans [Digital4Better Open Data](https://digital4better.github.io/data/). Le choix d’autres facteurs repose sur la [qualité des données](./regles/qualite-des-donnees-et-matrice-de-robustesse). Les points restant à documenter figurent dans le [registre des hypothèses](./references/registre-des-hypotheses-et-valeurs-par-defaut).
 
-### Cadrage — définir ou challenger une évaluation
+## Parcours de lecture {#choisir-votre-point-de-départ}
 
-Pour les praticiens qui doivent construire, relire ou challenger une évaluation :
+Les cas d’usage constituent des points d’entrée selon l’activité étudiée. Chaque page présente le périmètre, les données, les calculs et leurs limites, puis les illustre par des exemples.
 
-1. L'ensemble des [Fondations](fondations/principes-acv-appliques-au-numerique)
-2. L'ensemble des [Règles](regles/allocation-et-partage-des-impacts)
-3. [Stratégies de modélisation](modelisation/strategies-de-modelisation) et [Modélisation d'un service](modelisation/modelisation-d-un-service)
-4. Les chapitres [Matériel](materiel/vue-d-ensemble-du-materiel) concernés
-5. Le cas d'usage cible
+import Link from '@docusaurus/Link';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 
-### Implémentation — construire un modèle ou consolider des données
-
-Pour les équipes qui ont besoin de construire un modèle de calcul :
-
-1. [Impacts de la consommation d'énergie](fondations/impacts-de-la-consommation-d-energie)
-2. [Allocation et partage des impacts](regles/allocation-et-partage-des-impacts)
-3. [Double comptabilisation](regles/double-comptabilisation)
-4. [Qualité des données et matrice de robustesse](regles/qualite-des-donnees-et-matrice-de-robustesse)
-5. [Hypothèses, valeurs par défaut et hiérarchie des sources](regles/hypotheses-valeurs-par-defaut-et-hierarchie-des-sources)
-6. Les chapitres [Matériel](materiel/vue-d-ensemble-du-materiel) pertinents
-7. Le [Registre des hypothèses et valeurs par défaut](references/registre-des-hypotheses-et-valeurs-par-defaut)
-
-## Ce que couvre la méthodologie
-
-Le corpus couvre :
-
-- les fondations méthodologiques d'une ACV appliquée au numérique ;
-- les règles transverses nécessaires au calcul et à l'interprétation ;
-- le matériel, depuis les matériaux jusqu'aux infrastructures ;
-- les principaux cas d'usage retenus pour cette première itération.
-
-## La logique d'ensemble
-
-La documentation est organisée du plus transversal au plus appliqué :
-
-| Section | Rôle | Question à laquelle elle répond |
-|---|---|---|
-| **Fondations** | Bases conceptuelles | Que veut-on mesurer et pourquoi ? |
-| **Règles** | Règles de calcul et traitement des données | Comment éviter les erreurs de calcul ou d'interprétation ? |
-| **Modélisation** | Composition des équipements et services | Comment transformer un objet d'étude en modèle calculable ? |
-| **Matériel** | Composants, équipements et infrastructures | Sur quels éléments physiques repose le modèle ? |
-| **Cas d'usage** | Environnements et services concrets | Comment assembler le tout dans un contexte réel ? |
-| **Références** | Cadre documentaire et gouvernance | Où trouver les données, les hypothèses et les sources ? |
-
-## Conventions de lecture
-
-Chaque page de la méthodologie suit une structure commune :
-
-- **En bref** : résumé de l'objectif du module ;
-- les concepts précèdent toujours les formules ;
-- **Hypothèses et limites** : les simplifications et choix sont rendus visibles ;
-- **Données mobilisées** : les référentiels de données attendus ;
-- **Sources** : les textes de référence.
-
-## Hypothèses et limites
-
-- La méthode est volontairement modulaire. Certains chapitres restent explicatifs dans cette itération, notamment dans la section `Matériaux`.
-- Les exemples et valeurs présentées ici ne remplacent pas une lecture critique des sources ni la vérification du contexte d'étude.
-- Les résultats produits avec cette méthode doivent toujours être lus avec leur périmètre, leur qualité de données et leurs hypothèses.
-
-## Données mobilisées
-
-- Référentiel canonique : [`digital4better/data`](https://github.com/digital4better/data)
-- Familles de données les plus mobilisées dans cette méthode :
-  - `data/factor/*`
-  - `data/energy/*`
-  - `data/cloud/*`
-  - `data/hardware/*`
-  - `data/equipment/*`
-
-## Sources
-
-- ISO 14040/14044
-- Référentiel ADEME / ARCEP sur les services numériques
-- Corpus documentaire converti dans `inputs/md`
-- [digital4better/data](https://github.com/digital4better/data)
+<div className="case-cards">
+<Link to={useBaseUrl('v2-beta/cas-d-usage/environnements/parc-informatique')}><strong>Parc informatique</strong><span>Inventaire, consommation et durée de vie.</span></Link>
+<Link to={useBaseUrl('v2-beta/cas-d-usage/environnements/infrastructure-d-hebergement')}><strong>Hébergement</strong><span>Serveurs, mutualisation et fonctionnement du site.</span></Link>
+<Link to={useBaseUrl('v2-beta/cas-d-usage/environnements/cloud')}><strong>Cloud</strong><span>Ressources réservées, stockage et région.</span></Link>
+<Link to={useBaseUrl('v2-beta/cas-d-usage/services/service-web')}><strong>Service web</strong><span>Parcours, transferts et hébergement.</span></Link>
+<Link to={useBaseUrl('v2-beta/cas-d-usage/services/mail')}><strong>Mail</strong><span>Envoi, lecture et conservation.</span></Link>
+<Link to={useBaseUrl('v2-beta/cas-d-usage/services/mobile')}><strong>Applications natives</strong><span>Mobile et ordinateur : sessions, installations et mises à jour.</span></Link>
+<Link to={useBaseUrl('v2-beta/cas-d-usage/services/ia-generative')}><strong>IA générative</strong><span>Entraînement, texte, image, vidéo et audio.</span></Link>
+</div>

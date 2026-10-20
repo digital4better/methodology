@@ -1,87 +1,36 @@
 # Matériaux critiques
 
-## En bref
+Les matériaux d’un équipement n’ont pas tous le même impact. Leur contribution dépend des quantités, des procédés de production et de l’indicateur retenu. La criticité décrit principalement un risque d’approvisionnement ; elle ne remplace pas une évaluation environnementale.
 
-Un smartphone contient plus de 50 métaux différents, dont plusieurs sont considérés comme critiques par l'Union européenne. Ces matériaux sont présents en très faibles quantités — quelques milligrammes à quelques grammes — mais leur extraction et leur raffinage concentrent des impacts environnementaux disproportionnés par rapport à leur masse. Cette section rend visible ce que les facteurs agrégés d'équipements masquent souvent : la réalité physique et géopolitique des chaînes d'approvisionnement du numérique.
+## Distinguer trois questions
 
-## Ce qu'il y a vraiment dans un équipement numérique
+| Question | Ce qu’elle renseigne | Ce qu’elle ne démontre pas |
+|---|---|---|
+| Quelle quantité est présente ? | L’inventaire physique du produit | Sa contribution aux impacts |
+| Quels impacts produit sa chaîne de fabrication ? | Extraction, transformation et autres procédés inclus | Le risque de rupture d’approvisionnement |
+| Le matériau est-il critique ? | Importance économique et risque d’approvisionnement | Un impact carbone ou hydrique élevé par définition |
 
-### Composition type d'un smartphone (~180 g)
+La méthode européenne de criticité repose principalement sur l’importance économique et le risque d’approvisionnement. Concentration, substitution et recyclage interviennent dans cette analyse. Voir la Commission européenne[^ref-1].
 
-| Matériau | Quantité typique | Fonction | Indicateur le plus impacté |
-|---|---|---|---|
-| **Cuivre** | ~15 g | Circuits imprimés, connecteurs, câblage | ADPe, CTUe |
-| **Aluminium** | ~25 g | Boîtier, dissipation thermique | GWP (énergie de fusion) |
-| **Fer / acier** | ~10 g | Structure, composants magnétiques | GWP |
-| **Cobalt** | ~8 g | Cathode batterie (LiCoO₂) | ADPe, CTUe, CTUh |
-| **Lithium** | ~1 g | Batterie | WU, ADPe |
-| **Or** | ~0,03 g | Connecteurs, bonding | ADPe (très fort par kg) |
-| **Argent** | ~0,3 g | Contacts, soudures | ADPe |
-| **Tantale** | ~0,04 g | Condensateurs | ADPe |
-| **Indium** | ~0,01 g | Écran tactile (ITO) | ADPe |
-| **Gallium** | traces | Semi-conducteurs (GaN, GaAs) | ADPe |
-| **Terres rares** | ~1 g | Aimants, vibreur, haut-parleur | ADPe, CTUe |
-| **Silicium** | ~1 g | Puces (via procédés semi-conducteurs) | GWP, WU (via fabrication) |
-| **Plastiques** | ~40 g | Boîtier, isolation, connecteurs | GWP |
-| **Verre** | ~30 g | Écran | GWP |
+## Relier les matériaux aux équipements
 
-Sources : UNEP 2013[^1], Nuss & Eckelman 2014[^2], estimations industrielles.
+Le cuivre intervient notamment dans les circuits et le câblage, l’or dans certains contacts, et le lithium dans les batteries rechargeables concernées. Leur contribution environnementale dépend de la chaîne réellement représentée dans l’inventaire. Une faible masse peut contribuer fortement à un indicateur de ressources ; elle ne suffit pas à établir un pourcentage d’impact.[^ref-2]
 
-[^1]: UNEP, 2013. Metal Recycling: Opportunities, Limits, Infrastructure.
-[^2]: Nuss & Eckelman, 2014. [Life Cycle Assessment of Metals: A Scientific Synthesis](https://doi.org/10.1371/journal.pone.0101298). PLOS ONE.
+Ex: comparer deux batteries demande leur capacité, leur chimie et des inventaires compatibles. Remplacer un matériau ne démontre pas à lui seul un gain global : masse, durée de vie et procédés peuvent également changer.
 
-:::note[Le paradoxe de la masse]
-Les métaux critiques représentent moins de 5 % de la masse d'un smartphone mais peuvent concentrer plus de 50 % de l'indicateur ADPe (épuisement des ressources). C'est pourquoi une lecture purement massique des impacts est trompeuse.
-:::
+Les modèles [Batterie](../composants/alimentation-et-batterie), [Affichage](../composants/affichage) et [Éléments structurels](../composants/elements-structurels) relient ces questions aux composants. Un inventaire de métaux ne s’ajoute pas à un facteur d’équipement qui inclut déjà leur fabrication.
 
-## Pourquoi ces matériaux sont « critiques »
+## Choisir les données utilisables
 
-La criticité combine quatre dimensions :
+Une composition doit identifier le produit, la masse de chaque matériau, la forme chimique et les parties non décrites. Un facteur par kilogramme doit préciser les procédés, la part de matière secondaire et la règle d’allocation. Les anciennes compositions illustratives et plages de GWP non vérifiées ne servent pas de valeurs par défaut dans la v2.
 
-```mermaid
-flowchart TD
-    CRIT[Matériau<br>critique] --- IMP[Importance<br>fonctionnelle]
-    CRIT --- GEO[Concentration<br>géographique]
-    CRIT --- SUB[Difficulté de<br>substitution]
-    CRIT --- ENV[Pression<br>environnementale]
+L’ADPe décrit l’épuisement des ressources abiotiques selon une méthode de caractérisation. Les résultats dépendent fortement de cette méthode et de sa version. Un facteur appliqué à un flux d’extraction n’est pas l’empreinte d’un kilogramme de métal raffiné acheté.
 
-    style CRIT fill:#264653,color:#fff
-    style IMP fill:#2a9d8f,color:#fff
-    style GEO fill:#e9c46a,color:#000
-    style SUB fill:#f4a261,color:#000
-    style ENV fill:#e76f51,color:#fff
-```
+### Comparer deux versions historiques de facteurs ADP
 
-| Dimension | Exemples concrets |
-|---|---|
-| **Importance fonctionnelle** | Le cobalt est indispensable aux batteries Li-ion actuelles ; le tantale aux condensateurs miniaturisés |
-| **Concentration géographique** | 70 % du cobalt mondial vient de la RDC ; 60 % des terres rares sont raffinées en Chine ; 90 % du gallium est produit en Chine |
-| **Difficulté de substitution** | L'indium dans les écrans tactiles ITO n'a pas de substitut direct à coût comparable |
-| **Pression environnementale** | L'extraction du lithium dans le triangle ABC (Argentine, Bolivie, Chili) consomme ~2 000 m³ d'eau par tonne |
+Les valeurs ci-dessous illustrent la sensibilité à la méthode. Elles ne constituent pas un catalogue de facteurs produit et ne doivent pas être mélangées dans une même évaluation.
 
-## Impacts environnementaux par famille de matériau
-
-### Facteurs d'impact des métaux (GWP)
-
-| Métal | GWP (kg CO₂ eq. / kg) | Ordre de grandeur | Source |
-|---|---|---|---|
-| **Or** | 16 000 – 19 000 | Très élevé (extraction et raffinage très énergivores) | Nuss & Eckelman 2014[^2] |
-| **Tantale** | 150 – 200 | Élevé | Nuss & Eckelman 2014[^2] |
-| **Cobalt** | 8 – 10 | Modéré à élevé | Nuss & Eckelman 2014[^2] |
-| **Cuivre** | 3 – 5 | Modéré | Ecoinvent 3.x |
-| **Aluminium** | 8 – 12 | Modéré à élevé (électrolyse) | Ecoinvent 3.x |
-| **Lithium** (carbonate) | 5 – 15 | Variable selon la source (saumure vs roche) | Kelly et al. 2021[^3] |
-| **Terres rares** (oxydes) | 30 – 50 | Élevé (procédés chimiques intensifs) | Zaimes et al. 2015[^4] |
-| **Indium** | 150 – 300 | Élevé (sous-produit du zinc, faible concentration) | Nuss & Eckelman 2014[^2] |
-
-[^3]: Kelly et al., 2021. Energy, greenhouse gas, and water life cycle analysis of lithium carbonate and lithium hydroxide monohydrate. Resources, Conservation and Recycling, 175.
-[^4]: Zaimes et al., 2015. Environmental Life Cycle Perspective on Rare Earth Oxide Production. ACS Sustainable Chemistry & Engineering.
-
-### Facteurs de caractérisation ADPe
-
-L'indicateur ADPe (épuisement des ressources abiotiques) est particulièrement sensible aux métaux rares. Les facteurs de caractérisation varient fortement selon la méthode LCIA utilisée :
-
-| Matière | ADPe (CML historique) | ADPe (EF v2.0) | Unité | Lecture |
+| Matière | ADP (ILCD CF v1.0.10, août 2016) | ADP (ILCD CF EF-v2.0, mars 2019) | Unité | Lecture |
 |---|---|---|---|---|
 | **Indium** | 5,55E+02 | 6,89E-03 | kg Sb eq. / kg | Très sensible à la méthode |
 | **Or** | 3,60E+01 | 5,20E+01 | kg Sb eq. / kg | Fort impact quelle que soit la méthode |
@@ -91,60 +40,32 @@ L'indicateur ADPe (épuisement des ressources abiotiques) est particulièrement 
 | **Lithium** | 1,33E-02 | 1,15E-05 | kg Sb eq. / kg | À lire avec la chaîne batterie |
 | **Cuivre** | 2,50E-03 | 1,37E-03 | kg Sb eq. / kg | Structurant par les volumes |
 
-Source : Green Cloud Computing (UBA, 2021), facteurs ILCD/CML et EF v2.0.
+Source : annexe de Green Cloud Computing (UBA, 2021), tables ILCD CF v1.0.10 (août 2016) et ILCD CF EF-v2.0 (mars 2019), vérifiées dans le corpus. Il s'agit de facteurs de caractérisation de flux d'extraction, pas d'impacts ACV par kg de matériau raffiné acheté. Leur application demande la correspondance exacte du flux élémentaire.[^ref-3]
 
-:::note[Prudence sur l'ADPe]
-L'écart entre les deux colonnes ADPe montre que le choix de la méthode LCIA change radicalement les résultats pour certains métaux (facteur 1 000 pour le tantale !). C'est pourquoi la méthode D4B documente toujours la méthode LCIA utilisée.
-:::
+## Interpréter le recyclage
 
-## Lecture par indicateur
+Collecte, récupération du métal et qualité de la matière obtenue décrivent trois aspects distincts. Un rendement de séparation industriel ne décrit pas le taux global de recyclage en fin de vie. Les crédits éventuels dépendent de la convention d’allocation retenue ; ils ne sont pas soustraits automatiquement.
 
-| Indicateur | Ce que les matériaux critiques éclairent |
-|---|---|
-| **ADPe** | Pourquoi de très faibles masses (mg de tantale, d'indium, d'or) pèsent fortement dans l'épuisement des ressources |
-| **WU** | Les tensions eau liées à l'extraction du lithium (évaporation de saumures), du cuivre (mines à ciel ouvert) et des terres rares (procédés chimiques) |
-| **CTUe, CTUh** | La toxicité des procédés d'extraction et de raffinage (acides, solvants, rejets miniers) |
-| **GWP** | L'énergie intensive de l'extraction de l'or, de l'aluminium (électrolyse) et du raffinage des terres rares |
+Le calcul repose sur un [modèle d’équipement](../../modelisation/modelisation-d-un-equipement) alimenté par des données compatibles et rattaché au cas d’usage concerné. Cette page sert à interpréter les résultats, pas à calculer une empreinte matière avec des coefficients universels.
 
-## Fin de vie et recyclage
+## Passer d’une composition à un inventaire
 
-La fin de vie des matériaux critiques pose des questions spécifiques :
+| Famille | Présence possible | Question méthodologique |
+|---|---|---|
+| Métaux conducteurs | Cuivre des pistes et câbles, or et argent de certains contacts | Masse, pureté, production primaire ou secondaire |
+| Matériaux des batteries | Lithium, graphite, cobalt ou nickel selon la chimie | Cellule ou pack, capacité et formulation exacte |
+| Semi-conducteurs | Silicium et matériaux des étapes de fabrication | Distinguer masse finale et intrants de procédé |
+| Affichage et aimants | Indium ou terres rares selon la technologie | Identifier la technologie avant d’appliquer un facteur |
+| Structures | Acier, aluminium, verre et polymères | Masse, alliage, recyclé et procédés de transformation |
 
-| Question | Réponse typique |
-|---|---|
-| Le matériau est-il récupéré ? | Très variable : &gt;90 % pour le cuivre et l'or, &lt;5 % pour le gallium, l'indium et les terres rares |
-| Avec quel rendement réel ? | Souvent bien inférieur au taux théorique de collecte |
-| Dans quelle qualité ? | Le « downcycling » est fréquent (alliage dégradé plutôt que métal pur) |
-| Reste-t-il une dépendance aux approvisionnements primaires ? | Oui pour la grande majorité des métaux critiques du numérique |
+Cette liste guide la collecte ; elle ne fournit pas une composition moyenne universelle. Une nomenclature partielle ne décrit ni les consommables de procédé ni les pertes de production. Les masses finales seules peuvent donc sous-estimer des flux amont.
 
-## Rôle dans les impacts aval
+Pour chaque matière, conserver une référence de composition, la quantité et le facteur compatible. Additionner les contributions caractérisées dans une même méthode et une même unité. Les résultats GWP, ADPe, eau ou toxicité peuvent mettre en évidence des matières différentes : ni la rareté ni la faible masse ne prédisent seules l’indicateur dominant.
 
-Les matériaux critiques n'ont pas d'impact opérationnel autonome, mais ils éclairent :
+Ex: un inventaire de cuivre de câble doit couvrir la forme achetée et les transformations nécessaires. Un facteur d’extraction de minerai ne remplace pas le facteur de production du conducteur. Si une ACV de câble inclut déjà ces étapes, l’extraction ne constitue pas un poste supplémentaire.
 
-- pourquoi certains composants (batteries, écrans, cartes électroniques) ont des impacts non intuitifs au regard de leur masse ;
-- pourquoi les résultats multicritères peuvent diverger fortement d'une lecture purement carbone ;
-- pourquoi le numérique ne peut pas être compris uniquement à travers sa consommation électrique.
+[^ref-1]: [Commission européenne](https://single-market-economy.ec.europa.eu/sectors/raw-materials/areas-specific-interest/critical-raw-materials_en).
 
-Cette section sert de clé d'interprétation pour [Alimentation et batterie](../composants/alimentation-et-batterie), [Affichage](../composants/affichage) et [Éléments structurels](../composants/elements-structurels).
+[^ref-2]: [Nuss et Eckelman, Life Cycle Assessment of Metals: A Scientific Synthesis, 2014](https://doi.org/10.1371/journal.pone.0101298).
 
-## Hypothèses et limites
-
-- Cette section est explicative, pas un modèle de calcul détaillé matière par matière. Les facteurs d'impact sont des repères, pas des valeurs canoniques D4B.
-- Les facteurs ADPe varient fortement selon la méthode LCIA retenue (CML, EF v2.0, etc.).
-- Les compositions d'équipements sont des ordres de grandeur typiques ; la variabilité entre modèles est importante.
-- Les listes officielles de matières critiques évoluent (la liste UE est révisée tous les 3 ans).
-
-## Données mobilisées
-
-- `digital4better/data` → `data/hardware/*`, `data/equipment/*` (facteurs agrégés incluant les matériaux)
-- Littérature sur les facteurs d'impact des métaux
-
-## Sources
-
-- UNEP, 2013. Metal Recycling: Opportunities, Limits, Infrastructure.
-- Nuss & Eckelman, 2014. [Life Cycle Assessment of Metals](https://doi.org/10.1371/journal.pone.0101298). PLOS ONE.
-- Kelly et al., 2021. Energy, greenhouse gas, and water life cycle analysis of lithium carbonate and lithium hydroxide monohydrate.
-- Zaimes et al., 2015. Environmental Life Cycle Perspective on Rare Earth Oxide Production.
-- Green Cloud Computing, UBA, 2021 (facteurs de caractérisation ADPe).
-- [EU Critical Raw Materials Act 2024](https://single-market-economy.ec.europa.eu/sectors/raw-materials/areas-specific-interest/critical-raw-materials_en)
-- [IEA, 2025. Global Critical Minerals Outlook](https://www.iea.org/reports/global-critical-minerals-outlook-2025)
+[^ref-3]: [Green Cloud Computing, UBA](https://www.umweltbundesamt.de/publikationen/green-cloud-computing).

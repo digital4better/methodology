@@ -18,7 +18,12 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "test:calculations": "node scripts/test-calculations.cjs",
+    "audit:docs": "node scripts/audit-documentation.cjs",
+    "test:footnotes": "node scripts/check-footnotes.cjs",
+    "test:versioning": "node scripts/check-versioning.cjs",
+    "test:models": "node scripts/review-models.cjs"
   },
   "dependencies": {
     "@docusaurus/core": "^3.9.2",

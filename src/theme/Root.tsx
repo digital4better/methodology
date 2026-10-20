@@ -14,31 +14,31 @@ const theme = createTheme({
       lineHeight: "2.5rem",
     },
     subtitle: {
-      color: "#444444",
+      color: "var(--ifm-font-color-base)",
       fontSize: "1.25rem",
       fontWeight: "normal",
     },
     table: {
-      color: "#444444",
+      color: "var(--ifm-font-color-base)",
       fontSize: "0.875rem",
     },
     body: {
-      color: "#444444",
+      color: "var(--ifm-font-color-base)",
       fontSize: "0.875rem",
     },
     label: {
-      color: "#888888",
+      color: "var(--ifm-color-emphasis-700)",
       fontSize: "0.75rem",
     },
   },
   palette: {
     background: {
-      primary: "#f5f5f5",
-      secondary: "#003878",
-      paper: "#ffffff",
+      primary: "var(--ifm-background-color)",
+      secondary: "#173b73",
+      paper: "var(--ifm-background-surface-color)",
     },
     border: {
-      primary: "#e7e7e7",
+      primary: "var(--ifm-color-emphasis-300)",
     },
   },
 });

@@ -1,0 +1,118 @@
+{
+  "source": "https://raw.githubusercontent.com/digital4better/data/77cae4a58fadd5deb3b8d4e5577020da08f780d8/data/equipment/embodied.csv",
+  "commit": "77cae4a58fadd5deb3b8d4e5577020da08f780d8",
+  "retrieved": "2026-10-16",
+  "unit": "per second of reference lifetime; upstream indicator units must be checked",
+  "equipment": {
+    "computer": {
+      "gwp": 1.36e-06,
+      "ap": 8.81e-09,
+      "ctue": 3.15e-05,
+      "ctuh-c": 4.39e-16,
+      "ir": 2.28e-06,
+      "ctuh-nc": 2.12e-14,
+      "pm": 5.07e-14,
+      "wu": 9.26e-06,
+      "adpe": 1.05e-10
+    },
+    "desktop_personal": {
+      "gwp": 1.42e-06,
+      "ap": 9.65e-09,
+      "ctue": 3.63e-05,
+      "ctuh-c": 5.34e-16,
+      "ir": 5.54e-06,
+      "ctuh-nc": 2.54e-14,
+      "pm": 5.5e-14,
+      "wu": 1.14e-05,
+      "adpe": 1.16e-10
+    },
+    "desktop_professional": {
+      "gwp": 1.12e-06,
+      "ap": 7.64e-09,
+      "ctue": 3.15e-05,
+      "ctuh-c": 4.3e-16,
+      "ir": 2.92e-06,
+      "ctuh-nc": 2.21e-14,
+      "pm": 4.47e-14,
+      "wu": 1.13e-05,
+      "adpe": 1.04e-10
+    },
+    "laptop": {
+      "gwp": 1.18e-06,
+      "ap": 7.2e-09,
+      "ctue": 2.55e-05,
+      "ctuh-c": 2.93e-16,
+      "ir": 4.75e-07,
+      "ctuh-nc": 1.35e-14,
+      "pm": 4.08e-14,
+      "wu": 5.28e-06,
+      "adpe": 6.03e-11
+    },
+    "screen": {
+      "gwp": 3.69e-07,
+      "ap": 2.57e-09,
+      "ctue": 6.6e-06,
+      "ctuh-c": 1.75e-16,
+      "ir": 7.62e-07,
+      "ctuh-nc": 8.9e-15,
+      "pm": 1.58e-14,
+      "wu": 3.89e-06,
+      "adpe": 6.19e-11
+    },
+    "smartphone": {
+      "gwp": 1.01e-06,
+      "ap": 4.7e-09,
+      "ctue": 1.46e-05,
+      "ctuh-c": 2.04e-16,
+      "ir": 1.8e-07,
+      "ctuh-nc": 7.48e-15,
+      "pm": 2.62e-14,
+      "wu": 1.69e-06,
+      "adpe": 3.59e-11
+    },
+    "tablet": {
+      "gwp": 8.91e-07,
+      "ap": 5.55e-09,
+      "ctue": 1.83e-05,
+      "ctuh-c": 9.66e-14,
+      "ir": 3.4e-07,
+      "ctuh-nc": 9.36e-15,
+      "pm": 3.1e-14,
+      "wu": 1.81e-06,
+      "adpe": 4.71e-11
+    },
+    "vm_large": {
+      "gwp": 5.71e-06,
+      "ap": 3.17e-08,
+      "ctue": 7.83e-05,
+      "ctuh-c": 1.29e-15,
+      "ir": 8.47e-06,
+      "ctuh-nc": 4.22e-14,
+      "pm": 1.85e-13,
+      "wu": 2.35e-05,
+      "adpe": 1.34e-10
+    },
+    "vm_medium": {
+      "gwp": 9.51e-07,
+      "ap": 5.3e-09,
+      "ctue": 1.31e-05,
+      "ctuh-c": 2.15e-16,
+      "ir": 1.41e-06,
+      "ctuh-nc": 7.04e-15,
+      "pm": 3.08e-14,
+      "wu": 3.9e-06,
+      "adpe": 2.23e-11
+    },
+    "vm_small": {
+      "gwp": 1.2e-07,
+      "ap": 6.69e-10,
+      "ctue": 1.66e-06,
+      "ctuh-c": 2.74e-17,
+      "ir": 1.8e-07,
+      "ctuh-nc": 8.94e-16,
+      "pm": 3.9e-15,
+      "wu": 5.01e-07,
+      "adpe": 2.86e-12
+    }
+  }
+}

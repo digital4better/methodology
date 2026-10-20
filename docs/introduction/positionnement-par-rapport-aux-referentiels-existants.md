@@ -1,77 +1,54 @@
 # Positionnement par rapport aux référentiels existants
 
-## En bref
-
-Cette méthode n'est ni une rupture totale ni une simple synthèse. Elle reprend des acquis solides de plusieurs référentiels et les assemble dans une structure plus modulaire, plus explicite sur les hypothèses et plus progressive dans la lecture. Cette page clarifie ce qui est repris, ce qui est adapté et ce qui est nouveau.
+Cette méthode conserve une lecture par fondations, règles, modèles, matériel et cas d’usage. Les RCP précisent les exigences d’une étude sur un périmètre donné ; D4B les utilise pour améliorer son cadre et rendre ses choix explicites, sans revendiquer une conformité globale.
 
 ## Cartographie des référentiels
 
-Le paysage des méthodologies d'évaluation environnementale du numérique est riche mais fragmenté. Le tableau ci-dessous positionne les principaux référentiels selon leur couverture :
+Le paysage des méthodologies d'évaluation environnementale du numérique est riche mais fragmenté. Le tableau ci-dessous positionne les principaux référentiels selon leur couverture[^donnees-modele] :
 
 | Référentiel | Couverture | Forces | Limites |
 |---|---|---|---|
 | **ADEME / ARCEP (RCP mère)** | Services numériques FR | Cadre normatif officiel, multicritère, 3 tiers | Granularité limitée pour certains équipements, centré France |
-| **Boavizta** | Matériel (composants, équipements) | Décomposition matérielle fine, open source | Couverture partielle des cas d'usage, pas de cadrage service |
-| **GreenIT** | Sensibilisation, cas d'usage concrets | Pédagogie, sobriété numérique | Peu de formalisme méthodologique |
-| **Green Software Foundation (SCI)** | Intensité carbone logicielle | Frontières explicites, unité d'analyse claire | Mono-indicateur (carbone), peu de matériel |
-| **PAIA (MIT)** | Électronique grand public | Modèle paramétrique transparent | Centré produit, pas de service |
-| **IMEC NetZero** | Semi-conducteurs, composants | Profondeur technique sur la fabrication | Très spécialisé, peu accessible |
-| **Cloud Carbon Footprint** | Cloud (IaaS) | Coefficients de puissance par composant, open source | Mono-indicateur (carbone), centré cloud |
+| **Boavizta** | Matériel (composants, équipements) | Décomposition matérielle fine, open source | Couverture partielle des cas d'usage, pas de cadrage service [^source-1]|
+| **GreenIT** | Sensibilisation, cas d'usage concrets | Pédagogie, sobriété numérique | Documents de nature différente selon la publication |
+| **Green Software Foundation (SCI)** | Intensité carbone logicielle | Frontières explicites, unité d'analyse claire | Mono-indicateur carbone ; fabrication du matériel incluse selon allocation [^source-2]|
+| **PAIA (MIT)** | Électronique grand public | Modèle paramétrique produit | Centré produit, pas de service |
+| **IMEC NetZero** | Semi-conducteurs, composants | Profondeur technique sur la fabrication | Spécialisé ; accès et inventaires à vérifier [^source-5]|
+| **Cloud Carbon Footprint** | Cloud (IaaS) | Coefficients de puissance par composant, open source | Mono-indicateur (carbone), centré cloud [^source-3]|
 | **UBA Green Cloud Computing** | Cloud et datacenters | Allocation par ressources virtuelles, multicritère | Centré Allemagne, approche datacenter |
+
+Cette cartographie décrit des usages complémentaires, pas un classement de précision ni une certification de conformité. La [revue datée des sources](../references/sources-et-corpus) précise notamment les apports récents de SCI for AI et des modèles composants.
 
 ## Ce que cette méthode reprend
 
-### Du cadre ADEME / ARCEP
-
-- Le **cadrage ACV** appliqué au numérique (ISO 14040/14044) ;
-- la lecture **multicritère** à 9 indicateurs mid-point ;
-- la structuration en **trois tiers** : terminaux, réseaux, centres informatiques ;
-- la distinction **approche équipement / approche système** selon le niveau de maîtrise du périmètre.
-
-### De Boavizta
-
-- L'attention à la **décomposition matérielle** : la chaîne matériaux → composants → équipements ;
-- la logique **composant vers équipement** plutôt que facteur forfaitaire unique ;
-- l'importance de distinguer **modèles explicatifs et facteurs forfaitaires** ;
-- la transparence des données et le choix de l'**open source**.
-
-### Du Green Cloud Computing (UBA)
-
-- L'**allocation par ressources virtuelles** (vCPU, vDisk, vNIC) pour les environnements virtualisés ;
-- la prise en compte de l'**infrastructure support** (PUE, refroidissement) via une allocation composite ;
-- l'approche **multicritère** (GWP, ADP, CED, eau).
-
-### De la Green Software Foundation (SCI)
-
-- Le besoin de **frontières explicites** pour chaque évaluation ;
-- la clarification de l'**unité d'analyse** et son lien avec la fonction rendue ;
-- la relation directe entre **usage, infrastructure et impact**.
-
-### De GreenIT
-
-- L'attention aux **cas d'usage concrets** et au parcours utilisateur ;
-- l'importance de la **sobriété** comme levier de réduction ;
-- la nécessité d'un **discours accessible** au-delà des spécialistes ACV.
+| Référentiel | Apports repris dans la méthodologie |
+|---|---|
+| <span id="du-cadre-ademe--arcep" /> **ADEME / ARCEP** | Cadrage **ACV** selon ISO 14040/14044. Lecture **multicritère**, avec neuf indicateurs D4B et une [correspondance explicitée avec le RCP 2026](../fondations/indicateurs-environnementaux.md). Trois tiers : terminaux, réseaux et centres informatiques. Approche équipement ou système selon la maîtrise du périmètre. |
+| <span id="de-boavizta" /> **Boavizta** | Décomposition **matériaux → composants → équipements** et calcul de l’équipement à partir de ses composants. Distinction entre modèles explicatifs et facteurs forfaitaires. Transparence des données et **open source**. |
+| <span id="du-green-cloud-computing-uba" /> **UBA Green Cloud Computing** | **Allocation par ressources virtuelles** (vCPU, vDisk, vNIC). Prise en compte de l’infrastructure support, dont le refroidissement et le PUE, par une allocation composite. Lecture multicritère : GWP, ADP, CED et eau. |
+| <span id="de-la-green-software-foundation-sci" /> **Green Software Foundation (SCI)** | **Frontières explicites** et unité d’analyse reliée à la fonction rendue. Relation entre usage, infrastructure et impact. |
+| <span id="de-greenit" /> **GreenIT** | **Cas d’usage concrets** et parcours utilisateur. Sobriété comme levier de réduction. Explications accessibles au-delà des spécialistes ACV. |
 
 ## Ce que cette méthode adapte
 
-| Dimension | Ce qui existe | Ce que cette méthode fait différemment |
+| Sujet | Articulation avec les RCP | Choix D4B conservé |
 |---|---|---|
-| **Structure documentaire** | Souvent monolithique ou implicite | Séparation explicite en Fondations, Règles, Modélisation, Matériel, Cas d'usage |
-| **Allocation** | Souvent implicite dans les facteurs | Règles d'allocation documentées et justifiées ([Allocation](../regles/allocation-et-partage-des-impacts)) |
-| **Double comptabilisation** | Rarement traitée formellement | Matrice de frontière et protocole de vérification ([Double comptabilisation](../regles/double-comptabilisation)) |
-| **Qualité des données** | Souvent absente ou binaire | Matrice de robustesse à 6 dimensions ([Qualité des données](../regles/qualite-des-donnees-et-matrice-de-robustesse)) |
-| **Temporalité** | Peu explicitée | 4 dimensions temporelles, correction TL/RL, versionnement ([Temporalité](../regles/temporalite-vieillissement-et-versionnement-des-donnees)) |
-| **Matériaux** | Absents ou réduits à un facteur | Section dédiée (semi-conducteurs, matériaux critiques) en amont des composants |
-| **Hypothèses** | Dispersées ou cachées | Registre central unique ([Registre](../references/registre-des-hypotheses-et-valeurs-par-defaut)) |
+| Périmètre | Application complète et période explicite | Calculs par page, session ou requête, à agréger |
+| Indicateurs | Seize catégories EF dans le RCP parent 2026 | Neuf indicateurs ; couverture et manques indiqués |
+| Réseau | Part fixe et part variable dans les RCP FAI/applicatif | Exemple par Go ; différence documentée |
+| Cloud | Facteurs par unité de service et règles d’allocation propres | Estimation par ressources lorsque pertinente, sans équivalence automatique |
+| Qualité | Six critères dans le RCP parent | Grille D4B distincte, avec correspondance expliquée |
+| IA | Périmètre temporel applicatif à distinguer du cycle de vie du modèle | Entraînement, médias et limites conservés |
+
+Ces différences sont détaillées dans les pages concernées. Un apport documentaire compatible peut être intégré directement. Un changement de formule, de facteur ou de score demande une analyse séparée de ses effets sur les résultats.[^rcp-parent][^rcp-app]
 
 ## Ce qui la différencie
 
 1. **Architecture modulaire** conçue pour plusieurs profils de lecture (découverte, cadrage, implémentation).
 2. **Registre central** d'hypothèses et de valeurs par défaut, évitant la dispersion.
-3. **Lien explicite** avec le référentiel de données [`digital4better/data`](https://github.com/digital4better/data) comme source canonique versionnée.
+3. **Lien explicite** avec le référentiel de données `digital4better/data` comme source canonique versionnée.[^ref-1]
 4. **Chaîne matérielle complète** : matériaux → composants → équipements → infrastructure → service.
-5. **Couches méthodologiques rendues visibles** : allocation, double comptabilisation, robustesse, temporalité — souvent implicites ailleurs.
+5. **Couches méthodologiques rendues visibles** : allocation, double comptabilisation, robustesse, temporalité.
 
 ## Hypothèses et limites
 
@@ -79,16 +56,18 @@ Le paysage des méthodologies d'évaluation environnementale du numérique est r
 - Les convergences et divergences devront être enrichies au fil des révisions, notamment lorsque de nouveaux référentiels seront publiés.
 - Certains référentiels (PAIA, IMEC) couvrent des périmètres très spécialisés qui ne sont que partiellement repris dans cette méthode.
 
-## Données mobilisées
+[^rcp-parent]: ADEME, [RCP services numériques, version 2, juin 2026](https://librairie.ademe.fr/societe-et-politiques-publiques/9418-methodologie-d-evaluation-environnementale-basee-sur-l-analyse-du-cycle-de-vie-acv-pour-un-service-numerique.html), p. 13–25.
 
-- Corpus de référence `inputs/md` (Pathfinder Framework, Green Cloud Computing UBA, PAIA)
-- Documentation Boavizta et SCI
+[^rcp-app]: ADEME, [RCP des applicatifs numériques, juin 2026](https://librairie.ademe.fr/economie-circulaire-et-dechets/9434-referentiel-par-categorie-de-produit-rcp-des-applicatifs-numeriques.html), p. 13–16, 24–35, 54.
 
-## Sources
+[^source-1]: [Boavizta Documentation](https://doc.api.boavizta.org/) Documentation en ligne, version non figée.
 
-- [Boavizta Documentation](https://doc.api.boavizta.org/)
-- [Green Software Foundation SCI](https://sci.greensoftware.foundation/)
-- [Cloud Carbon Footprint](https://www.cloudcarbonfootprint.org/docs/methodology/)
-- Référentiel ADEME / ARCEP sur les services numériques
-- [IMEC NetZero](https://www.imec-int.com/en/expertise/netzero)
-- Corpus `inputs/md`
+[^source-2]: [Green Software Foundation SCI](https://sci.greensoftware.foundation/) Documentation en ligne, version non figée.
+
+[^source-3]: [Cloud Carbon Footprint](https://www.cloudcarbonfootprint.org/docs/methodology/) Documentation en ligne, version non figée.
+
+[^source-5]: [IMEC NetZero](https://www.imec-int.com/en/expertise/cmos-advanced/sustainable-semiconductor-technologies-and-systems-ssts) Documentation en ligne, version non figée.
+
+[^ref-1]: Digital4Better, [`digital4better/data`](https://github.com/digital4better/data). Catalogue évolutif ; utiliser un commit pour figer les facteurs.
+
+[^donnees-modele]: Corpus de référence : Pathfinder Framework, Green Cloud Computing (UBA, 2021) et PAIA ; documentation Boavizta et SCI. Les versions et périmètres sont détaillés dans [Sources et corpus](../references/sources-et-corpus).

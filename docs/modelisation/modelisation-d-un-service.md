@@ -1,164 +1,78 @@
-# Modélisation d'un service
+# Modéliser un service
 
-## Résumé
+Un service mobilise des terminaux, des réseaux, un hébergement et parfois des services tiers. Le modèle relie les activités observées à ces ressources, puis additionne leurs impacts dans une unité commune.
 
-Modéliser un service numérique consiste à le décomposer en couches fonctionnelles et techniques, puis à rattacher chaque couche aux composants, équipements et infrastructures qui rendent effectivement le service.
+La fonction rendue constitue le point de départ : consulter un compte, envoyer un message ou générer une image. Une requête technique peut servir d’unité de calcul, mais ne garantit pas à elle seule l’équivalence de deux services.
 
-Cette page sert de charnière entre le socle `Matériel` et les `Cas d'usage`. Elle explique comment passer d'un service observé à un modèle calculable.
+## Couvrir les étapes du logiciel
 
-## Principe
+La décomposition terminal, réseau, hébergement et tiers s’applique aussi aux ressources utilisées pour concevoir, tester, déployer, maintenir et retirer le service. Le RCP applicatif décrit ces étapes ; le RCP parent demande de considérer les travaux de développement spécifiques, dont l’entraînement d’un modèle.[^rcp-app][^rcp-parent]
 
-Un service n'est pas évalué comme une entité abstraite isolée. Il est évalué à partir des équipements et infrastructures qu'il mobilise et de la façon dont l'usage est réparti entre eux.
+| Activité | Ressources à rechercher | Vigilance |
+|---|---|---|
+| Conception, développement et tests | Postes de travail, CI, environnements de test, jeux de données | Répartir les moyens communs entre projets |
+| Exploitation et maintenance | Production, supervision, sauvegardes, support technique | Inclure les tâches en arrière-plan et la capacité réservée |
+| Retrait du service | Migration, archivage, suppression | Distinguer retrait du logiciel et fin de vie des équipements |
 
-La décomposition doit répondre à trois questions :
+Ces activités complètent l’inventaire dans les mêmes quatre contributions ; elles ne créent pas un cinquième poste à additionner si les ressources sont déjà comptées. Les moyens humains sont recommandés dans le RCP applicatif, avec un périmètre à préciser. Les exemples interactifs restent centrés sur l’usage décrit et n’inventorient pas automatiquement ces étapes.
 
-1. **Quelle fonction** rend le service ?
-2. **Quelles couches** sont nécessaires à cette fonction ?
-3. **Comment l'usage** du service est-il alloué à ces couches ?
-
-## Décomposition en couches
-
-### Architecture type
+## Décomposer le périmètre
 
 ```mermaid
-flowchart TD
-    USER[Utilisateur] --> TERM[Couche terminal<br>smartphone, laptop, tablette]
-    TERM --> NET[Couche réseau<br>LAN, WAN, mobile, CDN]
-    NET --> INFRA[Couche infrastructure<br>serveurs, stockage, datacenter]
-    INFRA --> TIERS[Services tiers<br>APIs, SaaS, modèles IA]
-
-    style USER fill:#264653,color:#fff
-    style TERM fill:#2a9d8f,color:#fff
-    style NET fill:#e9c46a,color:#000
-    style INFRA fill:#f4a261,color:#000
-    style TIERS fill:#e76f51,color:#fff
+flowchart LR
+    T[Terminaux] --> R[Réseaux]
+    R --> H[Hébergement]
+    H --> S[Services tiers]
 ```
 
-### Détail des couches
-
-| Couche | Ce qu'elle couvre | Stratégie de modélisation typique | Règle d'allocation typique |
-|---|---|---|---|
-| **Terminal** | Équipements utilisateurs (smartphone, laptop, desktop, tablette) | Facteur d'équipement ou archétype | Temporelle ($D_{usage}$ / durée de vie) |
-| **Réseau** | LAN, WAN, mobile (RAN), CDN, transit | Approche système (facteur par Go/km) | Volumétrique (octets transférés × distance) |
-| **Infrastructure** | Serveurs, stockage, datacenter, cloud | Bottom-up composant, inférence depuis l'usage, ou approche système | Par capacité réservée (vCPU, RAM, stockage) ou temporelle |
-| **Services tiers** | APIs, SaaS, modèles IA externes | Approche système ou forfait documenté | Selon l'unité la plus proche (requêtes, tokens, Go) |
-
-Chaque couche mobilise une [stratégie de modélisation](./strategies-de-modelisation) et une [règle d'allocation](../regles/allocation-et-partage-des-impacts) qui doivent être explicites.
-
-## Paramètres d'entrée
-
-| Paramètre | Rôle | Exemples |
+| Couche | Donnée d’activité | Choix à documenter |
 |---|---|---|
-| **Unité d'analyse** | Rapporter le résultat à une grandeur compréhensible | Page vue, message, requête, token, session, utilisateur/an |
-| **Données d'usage** | Quantifier la sollicitation du service | Nombre de vues, sessions, messages, tokens générés, volume transféré |
-| **Hypothèses terminaux** | Caractériser le mix d'équipements utilisateurs | % mobile / desktop, archétypes retenus, durée de session |
-| **Hypothèses réseau** | Caractériser les flux de données | Volume par page/requête, distances, part fixe/mobile, taux de cache CDN |
-| **Hypothèses infrastructure** | Caractériser les ressources serveur | Nombre de VM, vCPU, RAM, stockage, PUE, localisation, provider |
-| **Dépendances tierces** | Identifier les services externes | APIs critiques, SaaS intégrés, modèles IA, CDN |
+| Terminal | Temps actif et profil matériel | Allocation entre usages simultanés |
+| Réseau | Octets réellement transférés | Segments et frontière du facteur |
+| Hébergement | Ressources réservées, énergie | Capacité partagée, repos et PUE |
+| Services tiers | Activité ou contribution allouée | Inclusion dans les mesures existantes |
 
-## Formule d'agrégation
+Un service peut utiliser plusieurs réseaux ou sites. Le schéma décrit des contributions, pas un trajet physique imposé.
 
-L'impact d'un service est la somme des impacts alloués à chaque couche :
+## Assembler les contributions
 
-$$
-\begin{align*}
-&I_{service_i} = I_{terminal_i} + I_{reseau_i} + I_{infrastructure_i} + I_{tiers_i}\htmlClass{unit}{[U_i]}\\
-Avec \\
-&I_{terminal_i} = \text{Impact alloué à la couche terminal}\htmlClass{unit}{[U_i]}\\
-&I_{reseau_i} = \text{Impact alloué à la couche réseau}\htmlClass{unit}{[U_i]}\\
-&I_{infrastructure_i} = \text{Impact alloué à la couche infrastructure}\htmlClass{unit}{[U_i]}\\
-&I_{tiers_i} = \text{Impact alloué aux services tiers}\htmlClass{unit}{[U_i]}\\
-\end{align*}
-$$
-
-Chaque terme se décompose en impact intrinsèque + impact opérationnel :
+Pour chaque indicateur, le résultat est la somme des contributions compatibles :
 
 $$
-\begin{align*}
-&I_{couche_i} = I_{emb_{couche_i}} + I_{ope_{couche_i}}
-\end{align*}
+I_{service}=I_{terminal}+I_{reseau}+I_{hebergement}+I_{tiers}
 $$
 
-:::note[Pas toutes les couches à chaque fois]
-Cette écriture n'impose pas que toutes les couches soient présentes dans tous les cas d'usage. Elle sert à rendre explicite ce qui est inclus, exclu ou estimé. Une couche absente doit être documentée comme exclusion (voir [Double comptabilisation](../regles/double-comptabilisation)).
-:::
+Chaque terme peut contenir de la fabrication allouée et des impacts d’exploitation. L’addition suppose des phases couvertes compatibles. Un facteur de service complet ne s’ajoute pas aux mêmes équipements déjà inventoriés.
 
-## Application concrète
+Un facteur réseau en kg CO₂e/Go s’applique au volume en Go. Le modèle réseau D4B utilise des facteurs par Go·km : le volume est alors multiplié par la distance estimée de chaque segment. Un facteur déjà ramené au trajet par Go ne reçoit pas ce multiplicateur une seconde fois. Une absence de données reste une contribution non évaluée.
 
-**Cas : modéliser un service de messagerie (mail)**
+## Exemple reproductible
 
-```mermaid
-flowchart TD
-    subgraph "Service Mail"
-        U[Utilisateur] --> T[Terminal<br>laptop ou smartphone]
-        T --> R[Réseau<br>WAN fixe/mobile]
-        R --> S[Serveur mail<br>cloud ou on-premise]
-        S --> ST[Stockage<br>boîtes mail]
-    end
+Dans [Service web](../cas-d-usage/services/service-web), le mode « Paramètres personnalisés » permet de représenter le scénario suivant : 100 000 vues de 60 secondes, terminal à 40 W, fabrication de 200 kg CO₂e sur cinq ans, 100 kWh IT alloués, PUE 1,2 et 20 kg de fabrication d’hébergement déjà allouée. Le pays d’usage et celui du site sont la France.
 
-    T -.->|allocation temporelle<br>durée de session| IT[Impact terminal]
-    R -.->|allocation volumétrique<br>taille message × distance| IR[Impact réseau]
-    S -.->|allocation par capacité<br>ou temporelle| IS[Impact serveur]
-    ST -.->|allocation par volume<br>Go × durée| IST[Impact stockage]
+| Poste | Calcul | Résultat |
+|---|---|---:|
+| Temps terminal | 100 000 × 60 / 3 600 | 1 666,67 h |
+| Fabrication terminal | 200 × (100 000 × 60 / 3 600) / (5 × 8 760) | 7,61035 kg CO₂e |
+| Énergie terminal | (100 000 × 60 / 3 600) × 40 / 1 000 | 66,6667 kWh |
+| Énergie hébergement | 100 × 1,2 | 120 kWh |
+| Émissions électriques | (66,6667 + 120) × 0,0319271 | 5,95973 kg CO₂e |
+| Fabrication hébergement | Entrée allouée | 20 kg CO₂e |
+| **Sous-total** | Calcul avec valeurs non arrondies | **33,57008 kg CO₂e** |
 
-    style U fill:#264653,color:#fff
-    style T fill:#2a9d8f,color:#fff
-    style R fill:#e9c46a,color:#000
-    style S fill:#f4a261,color:#000
-    style ST fill:#e76f51,color:#fff
-```
+Les paramètres matériels sont supposés pour l’exercice. Le facteur électrique provient de l’instantané D4B France 2025[^ref-1]. Le réseau et les tiers restent non évalués : ce sous-total n’est pas l’empreinte complète du service.
 
-| Couche | Unité d'entrée | Stratégie | Allocation | Impact par message (GWP, ordre de grandeur) |
-|---|---|---|---|---|
-| **Terminal** | 2 min de session | Facteur d'équipement (archétype smartphone) | Temporelle | ~0,1 g CO₂ eq. |
-| **Réseau** | 0,5 Mo transféré, 500 km | Approche système (facteur réseau mixte) | Volumétrique | ~0,01 g CO₂ eq. |
-| **Serveur** | 1 vCPU × 2 s de traitement | Inférence depuis l'usage | Par capacité | ~0,05 g CO₂ eq. |
-| **Stockage** | 0,5 Mo × 1 an | Approche système | Par volume × durée | ~0,02 g CO₂ eq. |
-| **Total** | | | | **~0,2 g CO₂ eq. / message** |
+## Appliquer les règles utiles
 
-:::note[Ordres de grandeur]
-Ces valeurs sont des ordres de grandeur illustratifs. Les résultats réels dépendent du contexte (mix électrique, PUE, archétype terminal, durée de stockage). Le détail des calculs pour le mail est dans [Mail](../cas-d-usage/services/mail).
-:::
+1. La [frontière et l’unité](../fondations/perimetre-frontieres-services-tiers-et-unite-d-analyse) définissent ce qui est évalué.
+2. La [stratégie](./strategies-de-modelisation) dépend des données disponibles.
+3. La répartition des ressources relève de l’[allocation](../regles/allocation-et-partage-des-impacts).
+4. L’interprétation repose sur l’absence de [doubles comptes](../regles/double-comptabilisation) et sur la [qualité des données](../regles/qualite-des-donnees-et-matrice-de-robustesse).
 
-## Protocole de modélisation d'un service
+Les cas [Mail](../cas-d-usage/services/mail), [Applications natives](../cas-d-usage/services/mobile) et [IA](../cas-d-usage/services/ia-generative) adaptent cette chaîne à leurs activités. [Cloud](../cas-d-usage/environnements/cloud) et [Hébergement](../cas-d-usage/environnements/infrastructure-d-hebergement) détaillent la couche serveur. Le [Parc](../cas-d-usage/environnements/parc-informatique) évalue l’inventaire physique ; ses résultats ne s’ajoutent pas directement aux usages qui consomment ce même parc.
 
-1. **Définir l'unité d'analyse** : page vue, message, requête, token, etc.
-2. **Identifier les couches** mobilisées par le service.
-3. **Choisir la stratégie de modélisation** pour chaque couche (voir [Stratégies](./strategies-de-modelisation)).
-4. **Choisir la règle d'allocation** pour chaque couche (voir [Allocation](../regles/allocation-et-partage-des-impacts)).
-5. **Identifier les services tiers** et décider de leur inclusion ou exclusion (voir [Périmètre](../fondations/perimetre-frontieres-services-tiers-et-unite-d-analyse)).
-6. **Calculer l'impact** couche par couche, puis agréger.
-7. **Vérifier le double comptage** si d'autres évaluations portent sur les mêmes ressources.
-8. **Documenter** les hypothèses, les exclusions et le niveau de confiance.
+[^rcp-app]: ADEME, [RCP des applicatifs numériques, juin 2026](https://librairie.ademe.fr/economie-circulaire-et-dechets/9434-referentiel-par-categorie-de-produit-rcp-des-applicatifs-numeriques.html), p. 14–15, 38–40.
 
-## Cas d'usage couverts par la méthode
+[^rcp-parent]: ADEME, [RCP services numériques, version 2, juin 2026](https://librairie.ademe.fr/societe-et-politiques-publiques/9418-methodologie-d-evaluation-environnementale-basee-sur-l-analyse-du-cycle-de-vie-acv-pour-un-service-numerique.html), p. 13–15.
 
-Cette page structure directement la logique des cas d'usage suivants :
-
-| Cas d'usage | Couches principales | Spécificité |
-|---|---|---|
-| [Service web](../cas-d-usage/services/service-web) | Terminal + réseau + hébergement | Unité = page vue, agrégation par service |
-| [Mail](../cas-d-usage/services/mail) | Terminal + réseau + serveur + stockage | Unité = message, stockage longue durée |
-| [Mobile](../cas-d-usage/services/mobile) | Terminal mobile + réseau mobile + hébergement | Unité = écran, réseau dominé par le mobile |
-| [IA générative](../cas-d-usage/services/ia-generative) | GPU/serveur + réseau + terminal | Unité = requête ou token, infrastructure GPU intensive |
-| [Cloud](../cas-d-usage/environnements/cloud) | Infrastructure cloud | Unité = vCPU.h, Go.mois, requêtes |
-
-## Hypothèses et limites
-
-- Une décomposition par couches rend le service plus lisible et plus traçable, mais toutes les couches ne sont pas observables avec le même niveau de précision.
-- Une décomposition trop fine peut devenir spéculative si les données d'usage manquent ; une décomposition trop grossière masque les zones d'incertitude et les leviers d'action.
-- Les services tiers restent souvent la partie la plus opaque du périmètre.
-- Il vaut mieux expliciter une exclusion ou une approximation que laisser une dépendance implicite.
-
-## Données mobilisées
-
-- Données d'usage du service
-- Données réseau ou infrastructure
-- `digital4better/data` → `data/cloud/*`, `data/factor/*`, `data/equipment/*`
-
-## Sources
-
-- ISO 14040 / ISO 14044
-- Référentiel ADEME / ARCEP (RCP mère)
-- Corpus `inputs/md`
-- [digital4better/data](https://github.com/digital4better/data)
+[^ref-1]: Digital4Better, [instantané D4B France 2025](https://github.com/digital4better/data/blob/77cae4a58fadd5deb3b8d4e5577020da08f780d8/data/factor/country-yearly.csv). Instantané 77cae4a, données 2025 ; revue du 16 octobre 2026.

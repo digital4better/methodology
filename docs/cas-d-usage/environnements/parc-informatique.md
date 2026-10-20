@@ -1,131 +1,106 @@
 # Parc informatique
 
-## Résumé
+import { MethodIllustration } from '@site/src/components/method-illustrations';
 
-Le parc informatique est l'ensemble des équipements numériques détenus ou gérés par une organisation. L'évaluation repose sur un inventaire, une décomposition bottom-up par composant quand elle est possible, et une agrégation des impacts par équipement. C'est le cas d'usage le plus direct de la méthode : chaque équipement est évalué individuellement, puis les résultats sont sommés.
+Évaluer un parc consiste à additionner les équipements présents sur une période, leur fabrication allouée et leur électricité d’usage. L’inventaire physique en constitue la base : une machine virtuelle ne constitue pas un équipement supplémentaire.
 
-### Périmètre évalué
+## Préparer les données
 
-```mermaid
-flowchart LR
-    subgraph Parc informatique
-        T[Terminaux<br>laptops, smartphones,<br>tablettes, desktops]
-        R[Réseau<br>switches, routeurs,<br>points d'accès Wi-Fi]
-        S[Serveurs<br>on-premise,<br>salles serveurs]
-        SP[Spécifiques<br>terminaux de paiement,<br>imprimantes, IoT]
-    end
-
-    style T fill:#264653,color:#fff
-    style R fill:#2a9d8f,color:#fff
-    style S fill:#e9c46a,color:#000
-    style SP fill:#f4a261,color:#000
-```
-
-Exclusions (conformément au RCP Systèmes d'information) : claviers, souris, périphériques de saisie de masse négligeable, chargeurs.
-
-:::note[Machines virtuelles]
-Les VM ne sont pas des équipements du parc. Si l'organisation utilise des VM, c'est le **support physique** (serveur) qui est inventorié. Les VM sont une règle d'allocation, pas un objet matériel (voir [Couches logicielles et virtualisation](../../regles/prise-en-compte-des-couches-logicielles-et-de-la-virtualisation)).
-:::
-
-## Paramètres d'entrée
-
-| Paramètre | Obligatoire | Source typique |
+| Donnée | Où la trouver | Point à vérifier |
 |---|---|---|
-| Inventaire d'équipements | Oui | CMDB, gestion de flotte, listing RH |
-| Période d'évaluation | Oui | Année civile, exercice fiscal |
-| Type/modèle de chaque équipement | Recommandé | CMDB, fiches techniques |
-| Durée de vie nominale ou réelle | Oui | Politique de l'organisation ou [calcul de durée de vie réelle](../../regles/temporalite-vieillissement-et-versionnement-des-donnees) |
-| Durée d'utilisation quotidienne | Recommandé | Estimation par profil (bureau 8h, serveur 24h) |
-| Pays d'usage | Oui | Localisation des sites |
+| Nombre et modèle d’équipements | Inventaire, CMDB | Présence sur la période, équipements partagés |
+| Fabrication par équipement | ACV produit ou modèle documenté | Phases et indicateurs couverts |
+| Durée de vie | Suivi des renouvellements | Durée observée ou hypothèse explicite |
+| Électricité annuelle | Mesure ou puissance × durée | Actif, veille et arrêt |
 
-### Règle d'allocation
+<span id="comprendre-le-calcul" />
 
-L'allocation est **égale à 1** pour un équipement du parc : il est 100 % dédié à l'organisation.
+Pour chaque famille :
 
-Exceptions documentées :
-- équipement en stock pendant une partie de la période → allocation au prorata de la durée d'utilisation effective ;
-- équipement partagé entre deux entités → allocation au prorata documenté.
+- fabrication allouée = nombre × fabrication unitaire × période / durée de vie.
+- électricité = nombre × consommation annuelle unitaire × période.
+- impact d’usage = électricité × facteur électrique du pays.
 
-### Risque de double comptage
+## Méthode détaillée d’inventaire et d’allocation
 
-- Ne pas compter un serveur à la fois dans le parc **et** dans une infrastructure d'hébergement évaluée séparément ;
-- Ne pas compter des VM comme des équipements si leur support physique est déjà dans l'inventaire ;
-- Voir [Double comptabilisation](../../regles/double-comptabilisation).
+L’inventaire distingue famille, quantité, localisation d’usage, date de mise en service, durée de vie et données d’énergie. Un même groupe réunit uniquement des équipements dont les facteurs sont compatibles. Une donnée produit spécifique peut remplacer une moyenne de famille après vérification de ses phases et de son unité.
 
-## Principe de calcul
-
-### Impact du parc = somme des impacts des équipements
+Pour une période $T$ en années et des groupes $i$ :
 
 $$
-\begin{align*}
-&I_{parc_{i}} = \sum_{k=1}^{n} \left( I_{emb_{k,i}} + I_{ope_{k,i}} \right)\htmlClass{unit}{[U_i]}
-\end{align*}
+I_{parc}=\sum_i q_i\left(M_i\frac{T_i}{L_i}+E_iT_i f_i\right)
 $$
 
-Chaque équipement est évalué selon la [modélisation bottom-up](../../modelisation/modelisation-d-un-equipement) :
+$q_i$ est la quantité, $M_i$ la fabrication par unité, $L_i$ la durée de vie, $E_i$ l’énergie annuelle et $T_i$ le temps de présence sur la période. Le simulateur suppose tous les groupes présents pendant la même durée $T$ ; des dates différentes nécessitent des inventaires séparés.
 
-1. **Si la composition est connue** : reconstruction par composant (CPU + RAM + stockage + écran + batterie + structurel)
-2. **Si seule la famille est connue** : archétype paramétrique (config type)
-3. **En dernier recours** : facteur forfaitaire par type d'équipement
+| Situation | Traitement |
+|---|---|
+| Équipement ajouté en cours d’année | Proratiser la présence et l’énergie ou utiliser la consommation mesurée |
+| Équipement stocké ou de secours | Conserver sa part de fabrication ; adapter l’énergie à son état réel |
+| Reconditionné | Documenter première vie, remise en état et convention de transfert ; ne pas présumer une fabrication nulle |
+| Écran externe | Ajouter séparément uniquement si le facteur du poste ne l’inclut pas |
+| Serveur ou réseau partagé | Allouer sa contribution une seule fois entre les services |
 
-### Impact intrinsèque annualisé
+### États de fonctionnement et renouvellement
 
-$$
-\begin{align*}
-&I_{emb_{k,i}} = \frac{I_{total\_emb_{k,i}}}{RL_k} \times EP\htmlClass{unit}{[U_i]}\\
-Avec\\
-&I_{total\_emb_{k,i}} = \text{Impact intrinsèque total de l'équipement } k\\
-&RL_k = \text{Durée de vie réelle (ou nominale) de l'équipement } k\htmlClass{unit}{[an]}\\
-&EP = \text{Durée d'évaluation}\htmlClass{unit}{[an]}\\
-\end{align*}
-$$
+Sans mesure annuelle, $E=\sum_s W_s h_s/1000$ additionne les consommations des états actif, veille et arrêt. Les durées couvrent toute la période ; les puissances décrivent chaque état, plutôt que la seule puissance nominale.
 
-### Impact opérationnel
+<MethodIllustration kind="operating-states" lang="fr" />
 
-$$
-\begin{align*}
-&I_{ope_{k,i}} = P_k \times D_{usage_k} \times EP \times IF_{i,pays}\htmlClass{unit}{[U_i]}\\
-Avec\\
-&P_k = \text{Puissance moyenne de l'équipement } k\htmlClass{unit}{[kW]}\\
-&D_{usage_k} = \text{Durée d'usage quotidienne}\htmlClass{unit}{[h/j]}\\
-&IF_{i,pays} = \text{Facteur d'impact électrique du pays}\htmlClass{unit}{[U_i/kWh]}\\
-\end{align*}
-$$
+Un allongement de durée de vie réduit la fabrication annualisée dans une comptabilité attributionnelle. Il ne mesure pas à lui seul une fabrication physiquement évitée. Pour étudier un renouvellement, comparer les services rendus sur une même durée, en incluant consommation, réparation et éventuelles différences de performance.
 
-## Application concrète
+Cette allocation diffère d’une comptabilité des achats de l’année, qui attribue la fabrication au moment de l’acquisition. Les deux répondent à des questions différentes et ne doivent pas être additionnées.
 
-**Cas : parc d'une PME de 50 personnes (France)**
+La fin de vie, le transport et la maintenance se traitent selon le périmètre des facteurs. Une absence de données doit rester visible. Les indicateurs environnementaux s’interprètent séparément ; la fabrication et l’usage n’ont pas les mêmes contributions selon le mix électrique et l’indicateur.
 
-| Catégorie | Nombre | Type | GWP emb./an (bottom-up) | GWP opé./an | Total GWP/an |
-|---|---|---|---|---|---|
-| Laptops | 50 | CPU 7nm, 16 Go, 512 Go SSD, 14" LCD, 56 Wh | 50 × 29,2 = 1 460 | 50 × 0,8 = 40 | 1 500 |
-| Écrans externes | 30 | 27" LCD | 30 × 21,5 = 645 | 30 × 0,6 = 18 | 663 |
-| Smartphones | 50 | 4nm, 8 Go, 128 Go, OLED 6.5", 18 Wh | 50 × 28,4 = 1 420 | 50 × 0,004 = 0,2 | 1 420 |
-| Switch réseau | 3 | Archétype réseau | 3 × 15 = 45 | 3 × 1,5 = 4,5 | 50 |
-| Serveur | 2 | 2 CPU 10nm, 512 Go DDR5, 8 To SSD | 2 × 130 = 260 | 2 × 25 = 50 | 310 |
-| **Total parc** | | | **3 830** | **113** | **3 943 kgCO₂e/an** |
+## Du parc au système d’information
 
-:::note[Lecture]
-L'impact intrinsèque représente **97 %** du total pour ce parc en France (mix bas carbone). Les laptops et smartphones dominent par leur nombre, pas par leur impact unitaire. Les serveurs, bien que seulement 2, pèsent autant que 10 laptops. L'impact opérationnel est marginal grâce au mix nucléaire français.
-:::
+Le parc matériel est une partie du SI. Le RCP SI étudie le système d’information de l’organisation sur un an, avec ses services externalisés et ses moyens de support. Il inclut notamment des déplacements des personnes contribuant au SI. Les services destinés aux clients relèvent d’une étude distincte : leur périmètre ne se confond pas avec celui du SI interne.[^rcp-si]
 
-## Hypothèses et limites
+Le simulateur reste un exemple de parc. L’élargissement de l’étude au SI inclut cloud, logiciels, réseaux et support, après exclusion des recouvrements avec les équipements déjà comptés. Les exclusions propres au RCP SI ne s’appliquent pas automatiquement à une application ou à un service web.
 
-- La qualité du résultat dépend directement de l'exhaustivité et de la précision de l'inventaire.
-- Les équipements mutualisés ou virtualisés doivent être traités via leurs supports physiques, pas via les VM.
-- Les petits périphériques exclus par convention doivent rester documentés.
-- La durée d'utilisation quotidienne est souvent estimée ; elle devrait être ajustée par profil d'usage quand c'est possible.
-- Les équipements en stock doivent être traités avec une allocation explicite.
+### Équipements partagés et réemploi
 
-## Données mobilisées
+Le RCP SI propose des parts professionnelles de 57 % pour le BYOD et 85 % pour le COPE ; le second taux est présenté comme une convention incitative. Ces valeurs ne sont pas des mesures physiques universelles et ne deviennent pas des défauts D4B. L’usage professionnel retenu et sa source font partie des hypothèses documentées.
 
-- Inventaire du parc (CMDB, gestion de flotte)
-- Modèles paramétriques composants : Green Cloud Computing (UBA 2021), Kelly et al. 2021
-- `digital4better/data` → `data/equipment/*`, `data/factor/*`
+Pour le reconditionné, une première vie documentée peut entrer dans la durée totale. Une éventuelle vie future nécessite des justificatifs : un réemploi supposé ne suffit pas à réduire la fabrication allouée.
 
-## Sources
+## Périmètre à compléter
 
-- RCP Systèmes d'information (ADEME/ARCEP)
-- Green Cloud Computing, UBA, 2021 (coefficients composants)
-- [Modélisation d'un équipement](../../modelisation/modelisation-d-un-equipement) (méthode bottom-up)
-- [digital4better/data](https://github.com/digital4better/data)
+Le refroidissement de la salle serveur n’est pas inclus. Le cas [Hébergement](./infrastructure-d-hebergement) décrit cette partie ; les mêmes serveurs restent comptés une seule fois. Pour un équipement présent six mois, la période ou la part d’allocation reflète ce temps de présence. Le stockage sans usage ne supprime pas sa fabrication.
+
+<span id="règles-et-sources" />
+
+Pour cadrer le résultat : [périmètre et unité d’analyse](../../fondations/perimetre-frontieres-services-tiers-et-unite-d-analyse), [allocation](../../regles/allocation-et-partage-des-impacts) et [double comptage](../../regles/double-comptabilisation).
+
+Les facteurs électriques sont issus de l’instantané D4B 2025[^ref-1]. Les activités et données d’hébergement préremplies sont des hypothèses de l’exercice. Les facteurs et conventions sont consultables sous le simulateur.
+
+<span id="lire-leffet-des-paramètres" />
+
+Lorsque la durée de vie des portables augmente, la fabrication allouée par an diminue ; l’électricité ne change pas si l’usage reste identique. Ce calcul décrit une allocation sur la durée de vie. Il ne mesure pas, à lui seul, les émissions évitées par un achat reporté.
+
+import { InlineAllocationExample } from '@site/src/components/inline-allocation-example';
+
+<InlineAllocationExample lang="fr" />
+
+## Exemple interactif {#simuler-votre-situation}
+
+Cet exemple met en application les calculs et les limites présentés ci-dessus.
+
+Le simulateur reprend une PME fictive : 50 portables, 30 écrans, 50 smartphones, trois switches et deux serveurs. Les valeurs de fabrication sont des entrées d’exercice, pas des facteurs recommandés.
+
+Ex: 50 portables à 200 kg CO₂e de fabrication, conservés cinq ans, représentent `50 × 200 / 5 = 2 000 kg CO₂e/an` de fabrication allouée. À 70,4 kWh par portable et par an, leur consommation vaut `3 520 kWh/an`.
+
+Avec l’inventaire prérempli et le facteur France 2025, le sous-total atteint **4 133,67 kg CO₂e/an** : 3 795 kg de fabrication allouée et 338,67 kg d’usage.
+
+import { ScenarioPlayground } from '@site/src/components/scenario-playground';
+
+<div className="inline-example">
+
+<ScenarioPlayground kind="fleet" lang="fr" />
+
+</div>
+
+[^rcp-si]: ADEME, [RCP des systèmes d’information, mise à jour novembre 2024](https://librairie.ademe.fr/consommer-autrement/6649-referentiel-par-categorie-de-produit-rcp-des-systemes-d-information.html), p. 8–14.
+
+[^ref-1]: Digital4Better, [instantané D4B 2025](https://github.com/digital4better/data/blob/77cae4a58fadd5deb3b8d4e5577020da08f780d8/data/factor/country-yearly.csv). Instantané 77cae4a, données 2025 ; revue du 16 octobre 2026.

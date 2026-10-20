@@ -1,10 +1,62 @@
 {
   "version.label": {
-    "message": "Next",
+    "message": "v2 beta",
     "description": "The label for version current"
   },
   "sidebar.sidebar.category.Méthodologie appliquée": {
     "message": "Applied methodology",
     "description": "The label for category Méthodologie appliquée in sidebar sidebar"
+  },
+  "sidebar.sidebar.category.Introduction": {
+    "message": "Introduction",
+    "description": "Label for sidebar category Introduction"
+  },
+  "sidebar.sidebar.category.Fondations": {
+    "message": "Foundations",
+    "description": "Label for sidebar category Fondations"
+  },
+  "sidebar.sidebar.category.Règles": {
+    "message": "Rules",
+    "description": "Label for sidebar category Règles"
+  },
+  "sidebar.sidebar.category.Modélisation": {
+    "message": "Modeling",
+    "description": "Label for sidebar category Modélisation"
+  },
+  "sidebar.sidebar.category.Matériel": {
+    "message": "Hardware",
+    "description": "Label for sidebar category Matériel"
+  },
+  "sidebar.sidebar.category.Matériaux": {
+    "message": "Materials",
+    "description": "Label for sidebar category Matériaux"
+  },
+  "sidebar.sidebar.category.Composants": {
+    "message": "Components",
+    "description": "Label for sidebar category Composants"
+  },
+  "sidebar.sidebar.category.Équipements": {
+    "message": "Equipment",
+    "description": "Label for sidebar category Équipements"
+  },
+  "sidebar.sidebar.category.Réseau et infrastructure": {
+    "message": "Network and infrastructure",
+    "description": "Label for sidebar category Réseau et infrastructure"
+  },
+  "sidebar.sidebar.category.Cas d’usage": {
+    "message": "Use cases",
+    "description": "Label for sidebar category Cas d’usage"
+  },
+  "sidebar.sidebar.category.Environnements": {
+    "message": "Environments",
+    "description": "Label for sidebar category Environnements"
+  },
+  "sidebar.sidebar.category.Services": {
+    "message": "Services",
+    "description": "Label for sidebar category Services"
+  },
+  "sidebar.sidebar.category.Références": {
+    "message": "References",
+    "description": "Label for sidebar category Références"
   }
 }

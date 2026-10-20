@@ -1,32 +1,21 @@
+import { processorGwp, NODE_FACTORS, PROCESSOR_PACKAGING as PACKAGING_FACTORS, HARDWARE_MODELS } from "../hardware-models";
+import { COMPONENT_COLORS, PHASE_COLORS } from "../visual-palette";
+import { electricityFactor, ELECTRICITY_FACTORS } from "../electricity";
+import { ModelNotice } from "./model-notice";
+import { ImpactRow } from "./impact-row";
+import { finiteNumber } from "../calculations";
 import { Input } from "@site/src/components/input";
 import { Bar } from "@site/src/components/bar";
 import Stack from "@mui/system/Stack";
 import Box from "@mui/system/Box";
 import { useState } from "react";
-import { format, UNITS } from "@site/src/format";
+import { format as formatValue, UNITS } from "@site/src/format";
 
-/**
- * CPU/Accelerator parametric impact model
- *
- * Embodied GWP model based on Boavizta methodology + IMEC NetZero scaling:
- *   GWP_emb = die_size_cm2 × (gwp_front_end + gwp_back_end) × node_factor × units
- *
- * Front-end GWP per cm² of die (base: mature node ~28nm): ~0.82 kgCO2e/cm²
- * Back-end GWP per cm² of die: ~0.16 kgCO2e/cm²
- * Source: Green Cloud Computing UBA 2021, Intel CPU reconstruction
- *
- * Node scaling factors (relative to 28nm baseline):
- * Based on IMEC publications and energy consumption scaling per process step
- *
- * Multi-indicator scaling: ratios from d4b/data equipment factors
+/** Historical CPU model plus explicitly exploratory process/package scenarios.
+ * Accelerator profiles cover a die proxy, not a complete card inventory.
  */
 
-const COLORS = [
-  { bgcolor: "#023047", color: "white" },
-  { bgcolor: "#219ebc", color: "white" },
-  { bgcolor: "#8ecae6", color: "inherit" },
-  { bgcolor: "#ffb703", color: "inherit" },
-];
+const COLORS = COMPONENT_COLORS;
 
 type Lang = "fr" | "en";
 
@@ -34,7 +23,7 @@ const TEXT = {
   fr: {
     fields: {
       dieSize: "Surface de die (mm²)",
-      processNode: "Noeud technologique",
+      processNode: "Scénario de procédé (hypothèse)",
       units: "Nombre d'unités",
       tdp: "TDP / Puissance nominale (W)",
       usageHours: "Usage quotidien (heures)",
@@ -51,12 +40,12 @@ const TEXT = {
       total: "Total",
       gwp: "Climat (GWP)",
       wu: "Eau (WU)",
-      adpe: "Ressources (ADPe)",
+      adpe: "Ressources (ADP historique)",
       energy: "Énergie",
     },
     componentTypes: {
       cpu: "CPU",
-      gpu: "GPU datacenter",
+      gpu: "Puce accélératrice (serveur)",
       gpu_consumer: "GPU consumer",
     },
     processNodes: {
@@ -80,12 +69,12 @@ const TEXT = {
       TW: "Taïwan",
       KR: "Corée du Sud",
     },
-    note: "Modèle Boavizta : GWP = die_size × 0,0197 kgCO₂e/mm² + 9,14 kgCO₂e (base), × facteur de noeud × facteur de packaging. Facteurs de noeud dérivés des données IMEC sur l'intensité énergétique par étape de procédé.",
+    note: "GWP de référence CPU : surface × 0,0197 + 9,14 kgCO₂e (Boavizta). Les corrections de procédé et de packaging sont exploratoires, non validées par IMEC. L’eau de fabrication n’est pas calculée faute de facteur compatible avec l’eau caractérisée de l’électricité.",
   },
   en: {
     fields: {
       dieSize: "Die size (mm²)",
-      processNode: "Technology node",
+      processNode: "Process scenario (assumption)",
       units: "Number of units",
       tdp: "TDP / Nominal power (W)",
       usageHours: "Daily usage (hours)",
@@ -102,7 +91,7 @@ const TEXT = {
       total: "Total",
       gwp: "Climate (GWP)",
       wu: "Water (WU)",
-      adpe: "Resources (ADPe)",
+      adpe: "Resources (historical ADP)",
       energy: "Energy",
     },
     componentTypes: {
@@ -131,77 +120,17 @@ const TEXT = {
       TW: "Taiwan",
       KR: "South Korea",
     },
-    note: "Parametric model based on Boavizta + IMEC NetZero. Front-end: 0.82 kgCO₂e/cm², back-end: 0.16 kgCO₂e/cm² (28nm baseline). Node factors derived from IMEC data on energy intensity per process step.",
+    note: "CPU baseline GWP: area × 0.0197 + 9.14 kgCO₂e (Boavizta). Process and packaging adjustments are exploratory, not IMEC-validated. Manufacturing water is not calculated because physical water volumes cannot be added to characterized electricity water impacts.",
   },
 } as const;
 
-// Boavizta model: GWP = die_size_mm2 * die_coeff + base
-// die_coeff: impact per mm² of die (includes front-end + back-end at reference node)
-// base: PCB, packaging, connectors, assembly (fixed per unit)
-const CPU_DIE_GWP = 1.97e-2;    // kgCO2e/mm² (Boavizta)
-const CPU_BASE_GWP = 9.14;      // kgCO2e (Boavizta)
-const CPU_DIE_ADPE = 5.87e-9;   // kgSbeq/mm² (Boavizta)
-const CPU_BASE_ADPE = 2.04e-2;  // kgSbeq (Boavizta)
-const CPU_DIE_PE = 0.265;       // MJ/mm² (Boavizta)
-const CPU_BASE_PE = 156.0;      // MJ (Boavizta)
-
-// Water per mm² of die (derived from Wang et al. 2023: 8.22 L/cm² = 0.0822 L/mm²)
-const CPU_DIE_WU = 8.22e-5;     // m³/mm²
-
-// Node scaling factors (relative to 28nm = 1.0)
-// Based on IMEC publications: process step count and energy intensity scaling
-const NODE_FACTORS: Record<string, number> = {
-  "3": 2.8,
-  "4": 2.5,
-  "5": 2.2,
-  "7": 1.8,
-  "10": 1.4,
-  "14": 1.2,
-  "22": 1.05,
-  "28": 1.0,
-  "32": 0.95,
-};
-
-// Component type multipliers for back-end (packaging complexity)
-const PACKAGING_FACTORS: Record<string, number> = {
-  cpu: 1.0,
-  gpu: 1.5, // datacenter GPU with advanced packaging (2.5D interposer, HBM)
-  gpu_consumer: 1.1,
-};
+const CPU_DIE_ADPE = HARDWARE_MODELS.cpu.dieAdpe;
+const CPU_BASE_ADPE = HARDWARE_MODELS.cpu.baseAdpe;
 
 // Country electricity factors (GWP kgCO2e/kWh)
-const COUNTRY_GWP: Record<string, number> = {
-  FR: 0.0355,
-  DE: 0.377,
-  US: 0.353,
-  CN: 0.537,
-  PL: 0.704,
-  SE: 0.013,
-  TW: 0.509,
-  KR: 0.415,
-};
+const COUNTRY_GWP = electricityFactor("gwp");
 
-const COUNTRY_WU: Record<string, number> = {
-  FR: 0.0947,
-  DE: 0.0511,
-  US: 0.0673,
-  CN: 0.038,
-  PL: 0.0843,
-  SE: 0.0578,
-  TW: 0.05,
-  KR: 0.04,
-};
-
-const COUNTRY_ADPE: Record<string, number> = {
-  FR: 4.82e-7,
-  DE: 9.23e-7,
-  US: 8.0e-7,
-  CN: 7.76e-7,
-  PL: 7.77e-7,
-  SE: 4.12e-7,
-  TW: 7.5e-7,
-  KR: 6.5e-7,
-};
+const COUNTRY_ADPE = electricityFactor("adpe");
 
 const DEFAULT_DIE: Record<string, number> = {
   cpu: 200,
@@ -227,37 +156,35 @@ const resolveLang = (lang?: string): Lang => {
 export const CpuPlayGround = ({ lang: langProp }: { lang?: string }) => {
   const lang = resolveLang(langProp);
   const t = TEXT[lang];
+  const format = (value: number | undefined, units: string[]) => formatValue(value, units, lang);
 
   const [componentType, setComponentType] = useState("cpu");
   const [dieSize, setDieSize] = useState("200");
-  const [processNode, setProcessNode] = useState("7");
+  const [processNode, setProcessNode] = useState("28");
   const [units, setUnits] = useState("1");
   const [tdp, setTdp] = useState("200");
   const [usageHours, setUsageHours] = useState("24");
   const [loadFactor, setLoadFactor] = useState("50");
   const [lifetime, setLifetime] = useState("5");
-  const [country, setCountry] = useState("TW");
+  const [country, setCountry] = useState("FR");
   const [pue, setPue] = useState("1.58");
 
   // Parse inputs
-  const dieMm2 = Math.max(1, parseFloat(dieSize) || DEFAULT_DIE[componentType]);
+  const dieMm2 = Math.max(1, finiteNumber(dieSize, DEFAULT_DIE[componentType]));
   const dieCm2 = dieMm2 / 100;
   const nodeFactor = NODE_FACTORS[processNode] ?? 1.0;
   const packagingFactor = PACKAGING_FACTORS[componentType] ?? 1.0;
-  const numUnits = Math.max(1, parseInt(units) || 1);
-  const tdpW = Math.max(1, parseFloat(tdp) || DEFAULT_TDP[componentType]);
-  const hours = Math.min(24, Math.max(0, parseFloat(usageHours) || 24));
-  const load = Math.min(100, Math.max(0, parseFloat(loadFactor) || 50)) / 100;
-  const lifetimeYears = Math.max(1, parseFloat(lifetime) || 5);
-  const pueVal = Math.max(1, parseFloat(pue) || 1.58);
+  const numUnits = Math.floor(finiteNumber(units, 1));
+  const tdpW = finiteNumber(tdp, DEFAULT_TDP[componentType]);
+  const hours = Math.min(24, Math.max(0, finiteNumber(usageHours, 24)));
+  const load = Math.min(100, Math.max(0, finiteNumber(loadFactor, 50))) / 100;
+  const lifetimeYears = Math.max(1, finiteNumber(lifetime, 5));
+  const pueVal = Math.max(1, finiteNumber(pue, 1.58));
 
   // Embodied impact per unit (Boavizta model: die_size * die_coeff + base, × node_factor × packaging_factor)
-  const gwpEmbUnit = (dieMm2 * CPU_DIE_GWP + CPU_BASE_GWP) * nodeFactor * packagingFactor;
+  const gwpEmbUnit = processorGwp(dieMm2, processNode, 1, componentType);
   const gwpEmbTotal = gwpEmbUnit * numUnits;
   const gwpEmbPerYear = gwpEmbTotal / lifetimeYears;
-
-  const wuEmbUnit = (dieMm2 * CPU_DIE_WU) * nodeFactor * numUnits;
-  const wuEmbPerYear = wuEmbUnit / lifetimeYears;
 
   const adpeEmbUnit = (dieMm2 * CPU_DIE_ADPE + CPU_BASE_ADPE) * nodeFactor * packagingFactor;
   const adpeEmbTotal = adpeEmbUnit * numUnits;
@@ -266,37 +193,19 @@ export const CpuPlayGround = ({ lang: langProp }: { lang?: string }) => {
   // Operational impact per year
   const energyKwh = (tdpW * numUnits / 1000) * hours * 365.25 * load * pueVal;
   const gwpOpePerYear = energyKwh * (COUNTRY_GWP[country] ?? 0.4);
-  const wuOpePerYear = energyKwh * (COUNTRY_WU[country] ?? 0.05);
   const adpeOpePerYear = energyKwh * (COUNTRY_ADPE[country] ?? 7e-7);
 
-  const row = (label: string, emb: number, ope: number, unitArr: string[]) => {
-    const total = emb + ope;
-    return (
-      <Stack key={label} gap={0.5}>
-        <Box sx={{ typography: "body2", fontWeight: "bold" }}>{label}</Box>
-        <Stack direction="row" gap={2} sx={{ typography: "body2" }}>
-          <Box sx={{ flex: 1 }}>{t.results.embodied}: {format(emb * 1000, unitArr)}</Box>
-          <Box sx={{ flex: 1 }}>{t.results.operational}: {format(ope * 1000, unitArr)}</Box>
-          <Box sx={{ flex: 1, fontWeight: "bold" }}>{t.results.total}: {format(total * 1000, unitArr)}</Box>
-        </Stack>
-        <Bar
-          values={[
-            { label: t.results.embodied, value: Math.max(0, emb) },
-            { label: t.results.operational, value: Math.max(0, ope) },
-          ]}
-          colors={COLORS}
-          units={unitArr}
-        />
-      </Stack>
-    );
-  };
+  const row = (label: string, emb: number, ope: number, units: string[]) => (
+    <ImpactRow lang={lang} key={label} label={label} embodied={emb} operational={ope} units={units} labels={t.results} />
+  );
 
   const componentTypeOptions = Object.entries(t.componentTypes).map(([value, label]) => ({ value, label }));
   const processOptions = Object.entries(t.processNodes).map(([value, label]) => ({ value, label }));
   const countryOptions = Object.entries(t.countries).map(([value, label]) => ({ value, label }));
 
   return (
-    <Stack gap={3} sx={{ my: 2 }}>
+    <>
+    <Stack gap={3} sx={{ my: 2 }} className="methodology-simulator">
       <Stack direction="row" gap={2} sx={{ flexWrap: "wrap" }}>
         <Input type="select" label={t.fields.componentType} options={componentTypeOptions}
           value={componentType} onChange={(v) => {
@@ -304,30 +213,35 @@ export const CpuPlayGround = ({ lang: langProp }: { lang?: string }) => {
             setDieSize(String(DEFAULT_DIE[v] ?? 200));
             setTdp(String(DEFAULT_TDP[v] ?? 200));
           }} sx={{ flex: 1, minWidth: 150 }} />
-        <Input type="text" label={t.fields.dieSize} value={dieSize} onChange={setDieSize} sx={{ flex: 0.5, minWidth: 100 }} />
+        <Input type="number" label={t.fields.dieSize} value={dieSize} onChange={setDieSize} sx={{ flex: 0.5, minWidth: 100 }} />
         <Input type="select" label={t.fields.processNode} options={processOptions}
           value={processNode} onChange={setProcessNode} sx={{ flex: 1, minWidth: 150 }} />
-        <Input type="text" label={t.fields.units} value={units} onChange={setUnits} sx={{ flex: 0.3, minWidth: 60 }} />
+        <Input type="number" label={t.fields.units} value={units} onChange={setUnits} sx={{ flex: 0.3, minWidth: 60 }} />
       </Stack>
+      <details className="component-assumptions"><summary>{lang === "fr" ? "Conditions d’usage et durée de vie" : "Usage conditions and lifetime"}</summary>
       <Stack direction="row" gap={2} sx={{ flexWrap: "wrap" }}>
-        <Input type="text" label={t.fields.tdp} value={tdp} onChange={setTdp} sx={{ flex: 0.5, minWidth: 100 }} />
-        <Input type="text" label={t.fields.usageHours} value={usageHours} onChange={setUsageHours} sx={{ flex: 0.5, minWidth: 80 }} />
-        <Input type="text" label={t.fields.loadFactor} value={loadFactor} onChange={setLoadFactor} sx={{ flex: 0.5, minWidth: 80 }} />
-        <Input type="text" label={t.fields.lifetime} value={lifetime} onChange={setLifetime} sx={{ flex: 0.5, minWidth: 80 }} />
+        <Input type="number" label={t.fields.tdp} value={tdp} onChange={setTdp} sx={{ flex: 0.5, minWidth: 100 }} />
+        <Input type="number" label={t.fields.usageHours} value={usageHours} onChange={setUsageHours} sx={{ flex: 0.5, minWidth: 80 }} />
+        <Input type="number" label={t.fields.loadFactor} value={loadFactor} onChange={setLoadFactor} sx={{ flex: 0.5, minWidth: 80 }} />
+        <Input type="number" label={t.fields.lifetime} value={lifetime} onChange={setLifetime} sx={{ flex: 0.5, minWidth: 80 }} />
         <Input type="select" label={t.fields.country} options={countryOptions} value={country} onChange={setCountry} sx={{ flex: 1, minWidth: 120 }} />
-        <Input type="text" label={t.fields.pue} value={pue} onChange={setPue} sx={{ flex: 0.3, minWidth: 60 }} />
+        <Input type="number" label={t.fields.pue} value={pue} onChange={setPue} sx={{ flex: 0.3, minWidth: 60 }} />
       </Stack>
+      </details>
 
       <Box sx={{ typography: "h6" }}>{t.results.results}</Box>
 
       <Stack gap={2}>
         {row(t.results.gwp, gwpEmbPerYear, gwpOpePerYear, UNITS.gwp)}
         {row(t.results.energy, 0, energyKwh, UNITS.wh)}
-        {row(t.results.wu, wuEmbPerYear, wuOpePerYear, ["mL eq.", "L eq.", "m³ eq."])}
-        {row(t.results.adpe, adpeEmbPerYear * 1e6, adpeOpePerYear * 1e6, ["µg Sb eq.", "mg Sb eq.", "g Sb eq.", "kg Sb eq."])}
+        {row(t.results.adpe, adpeEmbPerYear, adpeOpePerYear, ["µg Sb eq.", "mg Sb eq.", "g Sb eq.", "kg Sb eq."])}
       </Stack>
 
-      <Box sx={{ typography: "caption", color: "text.secondary" }}>{t.note}</Box>
     </Stack>
+    <aside className="simulator-context">
+      <p>{t.note}</p>
+      <ModelNotice lang={lang} />
+    </aside>
+    </>
   );
 };

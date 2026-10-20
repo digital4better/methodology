@@ -1,6 +1,6 @@
 # Prise en compte des couches logicielles et de la virtualisation
 
-## En bref
+import { MethodIllustration } from '@site/src/components/method-illustrations';
 
 Le logiciel n'est pas immatériel. Sans ajouter directement de masse physique, il modifie la façon dont les ressources matérielles sont sollicitées, partagées et parfois surprovisionnées. La virtualisation, les conteneurs et les couches d'orchestration introduisent un niveau d'abstraction supplémentaire entre le service évalué et le matériel réel. La méthode doit rendre cette abstraction explicite pour que l'allocation reste traçable.
 
@@ -21,13 +21,13 @@ flowchart TD
     MW[Middleware, cache,<br>réplication, supervision] -.-> CTN
     MW -.-> OS
 
-    style HW fill:#264653,color:#fff
-    style HYP fill:#2a9d8f,color:#fff
-    style OS fill:#e9c46a,color:#000
-    style ORCH fill:#f4a261,color:#000
-    style CTN fill:#e76f51,color:#fff
-    style APP fill:#d62828,color:#fff
-    style MW fill:#6c757d,color:#fff
+    class HW d4b-navy
+    class HYP d4b-blue
+    class OS d4b-sand
+    class ORCH d4b-rose
+    class CTN d4b-coral
+    class APP d4b-coral
+    class MW d4b-slate
 ```
 
 ## Ce que cette section couvre
@@ -44,16 +44,46 @@ flowchart TD
 
 La méthode ne cherche pas à attribuer un impact matériel autonome au logiciel en tant qu'objet abstrait. Elle cherche plutôt à intégrer les effets du logiciel sur :
 
-- la **consommation d'énergie** (overhead des couches intermédiaires) ;
-- le **partage des ressources** (allocation entre services co-localisés) ;
-- la **duplication des flux** (réplication, cache, logs) ;
-- la **sollicitation de l'infrastructure support** (réseau interne, stockage partagé).
+<dl className="model-profiles">
+  <div>
+    <dt>Consommation d'énergie</dt>
+    <dd>
+
+Les couches intermédiaires consomment de l’énergie supplémentaire.
+
+    </dd>
+  </div>
+  <div>
+    <dt>Partage des ressources</dt>
+    <dd>
+
+Les impacts sont alloués entre les services co-localisés.
+
+    </dd>
+  </div>
+  <div>
+    <dt>Duplication des flux</dt>
+    <dd>
+
+La réplication, les caches et les journaux ajoutent des flux.
+
+    </dd>
+  </div>
+  <div>
+    <dt>Sollicitation de l'infrastructure support</dt>
+    <dd>
+
+Les couches logicielles sollicitent aussi le réseau interne et le stockage partagé.
+
+    </dd>
+  </div>
+</dl>
 
 :::note[Principe directeur]
 L'impact est toujours porté par le matériel physique. Les couches logicielles ne créent pas d'impact en soi ; elles déterminent comment l'impact du matériel est réparti et amplifié.
 :::
 
-## Virtualisation et mutualisation
+## Virtualisation et mutualisation {#virtualisation-et-mutualisation}
 
 ### Approche par ressources virtuelles
 
@@ -61,13 +91,15 @@ Quand plusieurs services partagent un même serveur physique via la virtualisati
 
 | Dimension | Variable | Formule d'allocation |
 |---|---|---|
-| **Calcul** (CPU) | vCPU | $A^{sv}_n = \dfrac{vCPU_n}{\sum_k vCPU_k}$ |
+| **Calcul** (CPU) | vCPU | $A^{sv}_n = \dfrac{vCPU_n}{\sum_k vCPU_k}$ [^source-5]|
 | **Stockage** | Volume disque | $A^{st}_n = \dfrac{vDisk_n}{\sum_k vDisk_k}$ |
 | **Réseau** | Bande passante | $A^{nw}_n = \dfrac{vNIC_n}{\sum_k vNIC_k}$ |
 
 :::note[vCPU et cœurs physiques]
-On considère un vCPU comme un thread d'un processeur physique. Par exemple, 8 vCPU correspondent à un processeur 4 cœurs hyperthreadés. Les ressources virtuelles totales sont généralement supérieures aux ressources physiques réelles, car la virtualisation vise à mutualiser les charges temporellement décalées.
+Un vCPU peut correspondre à un thread matériel dans certaines offres, mais la correspondance dépend du fournisseur, de l'architecture, du SMT et du surengagement. Huit vCPU ne prouvent pas une réservation de quatre cœurs physiques. Documenter cette correspondance avant toute conversion ; les ratios d'allocation entre VM doivent rester normalisés.
 :::
+
+<MethodIllustration kind="virtualization" lang="fr" />
 
 ### Allocation de l'infrastructure support
 
@@ -75,15 +107,17 @@ L'infrastructure support (refroidissement, alimentation, réseau interne) n'est 
 
 $$
 \begin{aligned}
-&A^{infra}_n = A^{sv}_n \times \frac{I_{serveurs}}{I_{dc}} + A^{st}_n \times \frac{I_{stockage}}{I_{dc}} + A^{nw}_n \times \frac{I_{réseau}}{I_{dc}} \\
+&A^{infra}_n = A^{sv}_n \times \frac{I_{serveurs}}{I_{IT}} + A^{st}_n \times \frac{I_{stockage}}{I_{IT}} + A^{nw}_n \times \frac{I_{réseau}}{I_{IT}} \\
 \text{avec} \\
 &A^{infra}_n = \text{Part d'infrastructure attribuée au service } n \\
 &I_{serveurs}, I_{stockage}, I_{réseau} = \text{Impacts respectifs des serveurs, stockage, réseau} \\
-&I_{dc} = \text{Impact total du datacenter}
+&I_{IT} = \text{Somme des impacts des trois familles IT utilisées pour la pondération}
 \end{aligned}
 $$
 
-Le PUE intervient au niveau de l'impact opérationnel global pour intégrer la consommation des équipements de support :
+Les pondérations doivent sommer à 1, sur des familles non chevauchantes. Ne pas inclure l'infrastructure support au dénominateur puis l'allouer à nouveau. Si les impacts utilisés comme poids sont nuls ou négatifs, choisir une autre clé physique documentée plutôt que diviser par zéro ou produire des parts négatives. La mémoire peut être une famille distincte, ou être incluse explicitement dans la famille serveurs.
+
+Le PUE intervient au niveau de l'impact opérationnel global pour intégrer la consommation des équipements de support :[^source-4]
 
 $$
 \begin{aligned}
@@ -96,14 +130,14 @@ $$
 
 ### Approche par composants (quand l'inventaire physique n'est pas accessible)
 
-Quand seules les ressources provisionnées sont connues (vCPU, RAM, stockage), l'impact opérationnel est estimé par composant :
+Quand seules les ressources provisionnées sont connues (vCPU, RAM, stockage), l'impact opérationnel est estimé par composant[^donnees-modele][^source-6] :
 
 $$
 \begin{aligned}
 &E_{components} = D_{usage} \times (P_{cpu} + P_{gpu} + P_{ram} + P_{storage}) \\
 \text{avec} \\
 &P_{cpu} = N_{vcpu} \times \left(P_{cpu_{min}} + \tfrac{1}{2}(P_{cpu_{max}} - P_{cpu_{min}})\right) \\
-&P_{ram} = N_{ram} \times 0{,}000392 \htmlClass{unit}{[kW/Go]} \\
+&P_{ram} = N_{ram} \times 0{,}000392 \htmlClass{unit}{[kW]} \\
 &P_{storage} = \begin{cases}
 1{,}2 \times 10^{-3} \times V_{storage} & \text{si SSD} \\
 0{,}65 \times 10^{-3} \times V_{storage} & \text{si HDD}
@@ -126,7 +160,7 @@ Les conteneurs ajoutent un niveau de granularité supplémentaire par rapport au
 - **Avantage** : overhead plus faible (pas d'OS invité complet), allocation plus fine possible
 - **Difficulté** : densité plus élevée, partage de l'OS hôte, métriques plus volatiles
 
-La même logique d'allocation par ressources virtuelles s'applique, avec les demandes de ressources (`requests`) ou les limites (`limits`) Kubernetes comme base d'allocation.
+La même logique s'applique, en distinguant demandes (`requests`), plafonds (`limits`) et consommation mesurée. Un plafond n'est pas une réservation ni une mesure. Retenir la clé adaptée à l'objectif, et attribuer explicitement la capacité inutilisée ainsi que les services de contrôle.
 
 ### Services managés et serverless
 
@@ -178,24 +212,20 @@ Impact intrinsèque annuel (GWP) par service :
 
 ## Hypothèses et limites
 
-- Les overheads logiciels (hyperviseur, OS, orchestrateur) sont rarement mesurés avec le même niveau de détail que les ressources physiques. La méthode suppose que l'overhead est implicitement inclus dans les ressources virtuelles allouées.
-- L'allocation par ressources réservées peut surestimer l'impact d'un service sous-utilisé (surprovisionnement). Une allocation par ressources effectivement consommées serait plus précise mais plus difficile à obtenir.
-- Les configurations de référence Base Empreinte (3 tailles de VM) offrent une granularité limitée. Pour des configurations intermédiaires, une interpolation documentée est acceptable.
-- Les services managés et serverless restent les plus opaques du point de vue matériel. Le niveau de confiance doit être ajusté en conséquence.
-- Les coefficients de puissance par composant (0,000392 kW/Go pour la RAM, 1,2×10⁻³ kW/To pour le SSD) proviennent de Cloud Jewels / Cloud Carbon Footprint et sont des valeurs moyennes.
+**Inventaire.** Les surcoûts logiciels sont rarement mesurés en détail. L’hyperviseur, l’OS et l’orchestrateur peuvent être inclus dans la mesure hôte ou le facteur. Sinon, leur contribution complète le calcul ou reste une lacune explicite. Le matériel des services managés et serverless est moins observable, ce qui limite la confiance dans les données.
 
-## Données mobilisées
+**Allocation.** La réservation attribue aussi la capacité immobilisée mais peu utilisée. Elle répond à une autre question que l’allocation par consommation, sans être automatiquement plus précise. Le traitement de la capacité inactive est documenté et les totaux sont conservés.
 
-- Facteurs d'impact par composant : Cloud Jewels, Cloud Carbon Footprint
-- Configurations de référence VM : Base Empreinte ADEME (NegaOctet)
-- PUE par défaut : 1,58 (Uptime Institute, moyenne mondiale)
-- `digital4better/data` → `data/cloud/*`, `data/equipment/*`
+**Configurations.** Les anciens forfaits VM sont obsolètes pour la méthode cible. Une configuration intermédiaire est calculée par composants, puis allouée, sans interpolation de ces forfaits.
 
-## Sources
+**Paramètres.** Les puissances moyennes Cloud Jewels / Cloud Carbon Footprint, notamment 0,000392 kW/Go pour la RAM et 1,2×10⁻³ kW/To pour le SSD, ne décrivent pas tous les équipements.[^source-3] Le PUE de 1,58 reste un scénario historique, pas une moyenne actuelle vérifiée.[^source-4]
 
-- ISO 14040 / ISO 14044
-- Référentiel ADEME / ARCEP sur les services numériques
-- [Cloud Carbon Footprint -- Methodology](https://www.cloudcarbonfootprint.org/docs/methodology/)
-- [Uptime Institute -- Global PUEs](https://journal.uptimeinstitute.com/global-pues-are-they-going-anywhere/)
-- Green Cloud Computing (UBA, 2021) -- allocation par ressources virtuelles
-- [digital4better/data](https://github.com/digital4better/data)
+[^source-3]: [Cloud Carbon Footprint -- Methodology](https://www.cloudcarbonfootprint.org/docs/methodology/) Documentation en ligne, version non figée.
+
+[^source-4]: [Uptime Institute -- Global PUEs](https://journal.uptimeinstitute.com/global-pues-are-they-going-anywhere/)
+
+[^source-5]: UBA, [Green Cloud Computing](https://www.umweltbundesamt.de/publikationen/green-cloud-computing), 2021. Green Cloud Computing (UBA, 2021) -- allocation par ressources virtuelles Voir le [corpus documentaire](../references/sources-et-corpus).
+
+[^source-6]: Digital4Better, [digital4better/data](https://github.com/digital4better/data) Catalogue évolutif ; utiliser un commit pour figer les facteurs.
+
+[^donnees-modele]: Facteurs d'impact par composant : Cloud Jewels, Cloud Carbon Footprint. Configurations de référence VM : Base Empreinte ADEME (NegaOctet). `digital4better/data` → `data/cloud/*`, `data/equipment/*`. [Digital4Better, catalogue de données, instantané 77cae4a](https://github.com/digital4better/data/tree/77cae4a58fadd5deb3b8d4e5577020da08f780d8). Références et portée : [Sources et corpus](../references/sources-et-corpus).

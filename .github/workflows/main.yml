@@ -2,30 +2,55 @@ name: Documentation generation
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: methodology-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v3
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - name: Checkout source and v1 reference history
+        uses: actions/checkout@v4
         with:
-          node-version: 20.x
-          registry-url: 'https://registry.npmjs.org'
-          cache: 'yarn'
+          fetch-depth: 0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.5
+          registry-url: "https://registry.npmjs.org"
+          cache: "yarn"
       - run: yarn --frozen-lockfile
-      - run: yarn build
+      - run: yarn typecheck
+      - run: yarn test:calculations
+      - run: yarn test:models
+      - run: yarn audit:docs
+      - run: yarn test:versioning
+      - name: Build v1 and v2 beta in both languages
+        run: yarn build
+      - run: yarn test:footnotes
+      - name: Check rendered links, anchors and formulas
+        run: python3 scripts/audit-built-site.py
       - name: Upload Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4
         with:
           path: "./build"
   deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
+    concurrency:
+      group: methodology-pages-deploy
+      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write
@@ -33,7 +58,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy both versions to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-

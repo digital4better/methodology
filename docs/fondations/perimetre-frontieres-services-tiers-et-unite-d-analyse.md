@@ -1,8 +1,16 @@
 # Périmètre, frontières, services tiers et unité d'analyse
 
-## En bref
+import { MethodIllustration } from '@site/src/components/method-illustrations';
 
-La qualité d'une évaluation dépend d'abord de la façon dont l'objet d'étude est défini. Cette page fixe les règles qui permettent de savoir ce qui est inclus, ce qui est exclu, et à quelle unité un résultat peut être rapporté. Une frontière mal définie produit un résultat inutilisable, quelle que soit la précision des calculs.
+La qualité d'une évaluation dépend d'abord de la façon dont l'objet d'étude est défini. Cette page fixe les règles qui permettent de savoir ce qui est inclus, ce qui est exclu, et à quelle unité un résultat peut être rapporté. Une frontière mal définie produit un résultat inutilisable, quelle que soit la précision des calculs.[^source-3]
+
+## Du calcul unitaire à l’application complète
+
+Une page vue, une session ou une requête décrit une partie de l’activité. L’évaluation de l’application couvre ses **fonctions, utilisateurs et contextes d’usage sur une période définie**.[^rcp-app]
+
+<MethodIllustration kind="application-scope" lang="fr" />
+
+La **version, la période et les exclusions** accompagnent le résultat. Si certains postes restent non évalués, le bilan reste partiel, même présenté à l’échelle de l’application.
 
 ## Définir l'objet d'étude
 
@@ -15,11 +23,11 @@ flowchart LR
     C --> D[Environnement]
     D --> E[Service numérique]
 
-    style A fill:#264653,color:#fff
-    style B fill:#2a9d8f,color:#fff
-    style C fill:#e9c46a,color:#000
-    style D fill:#f4a261,color:#000
-    style E fill:#e76f51,color:#fff
+    class A d4b-navy
+    class B d4b-blue
+    class C d4b-sand
+    class D d4b-rose
+    class E d4b-coral
 ```
 
 | Niveau | Exemples | Unité d'analyse typique |
@@ -66,7 +74,7 @@ flowchart TD
 
 ### Règles de frontière
 
-Le périmètre doit expliciter :
+Le périmètre doit expliciter[^donnees-modele] :
 
 1. **Les équipements directement mobilisés** : terminaux, serveurs, équipements réseau identifiés.
 2. **Les infrastructures considérées** : datacenter, réseau WAN/LAN, CDN.
@@ -83,8 +91,8 @@ Le RCP mère distingue deux approches complémentaires :
 
 | Approche | Principe | Quand l'utiliser | Précision |
 |---|---|---|---|
-| **Équipement** | Chaque équipement est inventorié et caractérisé individuellement | Périmètre maîtrisé par l'organisation | Élevée |
-| **Système** | Un ensemble d'équipements est assimilé à un système fermé avec des facteurs agrégés | Périmètre non maîtrisé (réseau opérateur, cloud externe) | Moyenne |
+| **Équipement** | Chaque équipement est inventorié et caractérisé individuellement | Périmètre maîtrisé par l'organisation | Dépend de la représentativité des mesures et facteurs |
+| **Système** | Un ensemble d'équipements est assimilé à un système fermé avec des facteurs agrégés | Périmètre non maîtrisé (réseau opérateur, cloud externe) | Dépend de la représentativité du facteur agrégé |
 
 La méthode privilégie l'approche équipement sur le périmètre maîtrisé et l'approche système sur le périmètre non maîtrisé, conformément aux recommandations du RCP mère.
 
@@ -92,23 +100,43 @@ La méthode privilégie l'approche équipement sur le périmètre maîtrisé et 
 
 ### Quand inclure un service tiers
 
-Les services tiers doivent être inclus lorsqu'ils sont **indispensables à la fonction étudiée** :
+Un service tiers est inclus s’il est **nécessaire à la fonction ou exécuté dans le scénario**, même s’il est externalisé. Son évaluation avec une unité compatible est privilégiée ; à défaut, l’estimation et les données manquantes sont explicitées.
 
-- une API critique pour le fonctionnement de l'application ;
-- un SaaS intégré au parcours utilisateur ;
-- un fournisseur de modèle dans un service d'IA (ex. : API OpenAI dans un service utilisant GPT) ;
-- une couche de distribution ou de cache nécessaire à la délivrance du service (CDN, DNS).
+<MethodIllustration kind="third-party-scope" lang="fr" />
 
 ### Quand exclure un service tiers
 
-Un service tiers peut être exclu lorsqu'il est :
+Trois situations sont à distinguer :
 
-- hors fonction principale (analytics, publicité, A/B testing) ;
-- trop mal défini pour être intégré sans introduire plus d'incertitude que d'information ;
-- déjà évalué dans un autre périmètre (voir [Double comptabilisation](../regles/double-comptabilisation)).
+<dl className="model-profiles">
+  <div>
+    <dt>Hors périmètre et sans contribution au scénario</dt>
+    <dd>
+
+Le service peut être exclu, avec justification.
+
+    </dd>
+  </div>
+  <div>
+    <dt>Impact impossible à chiffrer</dt>
+    <dd>
+
+Le service figure dans l’étude avec la mention **« impact non évalué »**. Le résultat est incomplet ; cet impact n’est pas considéré comme nul.
+
+    </dd>
+  </div>
+  <div>
+    <dt>Déjà compté dans une autre contribution</dt>
+    <dd>
+
+Son impact n’est pas ajouté une seconde fois. Voir la [double comptabilisation](../regles/double-comptabilisation.md).
+
+    </dd>
+  </div>
+</dl>
 
 :::note[Documentation des exclusions]
-Toute exclusion doit être documentée dans la section « Hypothèses et limites » de l'évaluation, avec sa justification et une estimation qualitative de l'impact manquant (négligeable, significatif, inconnu).
+**Toute exclusion est justifiée** dans les « Hypothèses et limites ». Un poste non évalué y est également signalé, avec son importance estimée : négligeable, significative ou inconnue.
 :::
 
 ### Arbre de décision pour les services tiers
@@ -117,33 +145,35 @@ Toute exclusion doit être documentée dans la section « Hypothèses et limites
 flowchart TD
     A[Service tiers identifié] --> B{Indispensable à la<br>fonction étudiée ?}
     B -- oui --> C{Données disponibles<br>ou estimables ?}
-    B -- non --> D[Exclure et documenter]
+    B -- non --> H{Exécuté dans le<br>scénario étudié ?}
+    H -- oui --> C
+    H -- non --> D[Exclure et documenter]
     C -- oui --> E[Inclure dans le périmètre]
-    C -- non --> F{Impact estimé<br>significatif ?}
-    F -- oui --> G[Inclure avec estimation<br>forfaitaire documentée]
-    F -- non --> D
+    C -- non --> U[Conserver dans le périmètre<br>Signaler la lacune et étudier la sensibilité]
 ```
 
 ## Unité d'analyse
 
 L'unité d'analyse doit être :
 
-- **compréhensible** par un relecteur non spécialiste ;
-- **stable** dans le temps pour permettre des comparaisons ;
-- **reliée à la fonction rendue** par le service ou l'équipement ;
+- **compréhensible** par un relecteur non spécialiste.
+- **stable** dans le temps pour permettre des comparaisons.
+- **reliée à la fonction rendue** par le service ou l'équipement.
 - **compatible** avec les données disponibles.
+
+Le **temps d’usage du terminal**, le **temps serveur** et le **nombre d’utilisateurs uniques** décrivent des grandeurs différentes. Ils ne se substituent pas les uns aux autres.
 
 ### Exemples par cas d'usage
 
 | Cas d'usage | Unités d'analyse possibles | Unité recommandée |
 |---|---|---|
-| **Parc informatique** | Par équipement, par collaborateur, par année | Par parc sur une année |
-| **Infrastructure d'hébergement** | Par serveur, par rack, par datacenter | Par infrastructure sur une année |
-| **Service web** | Par page vue, par session, par visite, par service | Par page vue, agrégé par service |
-| **Mail** | Par message envoyé/reçu, par boîte, par année | Par message, agrégé par service |
-| **Mobile** | Par écran, par session, par téléchargement | Par écran, agrégé par service |
-| **IA générative** | Par entraînement, par inférence, par token | Par requête d'inférence, par entraînement |
-| **Cloud** | Par vCPU.h, par Go.mois, par service | Par unité cloud facturée |
+| [**Parc informatique**](../cas-d-usage/environnements/parc-informatique.md) | Par équipement, par collaborateur, par année | Par parc sur une année |
+| [**Infrastructure d'hébergement**](../cas-d-usage/environnements/infrastructure-d-hebergement.md) | Par serveur, par rack, par datacenter | Par infrastructure sur une année |
+| [**Service web**](../cas-d-usage/services/service-web.md) | Par page vue, par session, par visite, par service | Par page vue, agrégé par service |
+| [**Mail**](../cas-d-usage/services/mail.md) | Par message envoyé/reçu, par boîte, par année | Par message, agrégé par service |
+| [**Applications natives**](../cas-d-usage/services/mobile.md) | Par écran, par session, par téléchargement | Par écran, agrégé par service |
+| [**IA générative**](../cas-d-usage/services/ia-generative.md) | Par entraînement, par inférence, par token | Par requête d'inférence, par entraînement |
+| [**Cloud**](../cas-d-usage/environnements/cloud.md) | Par vCPU.h, par Go.mois, par service | Par unité cloud facturée |
 
 La méthode ne suppose pas une unité unique pour tout le corpus. Elle impose en revanche d'**expliciter l'unité retenue** pour chaque évaluation et de vérifier sa cohérence avec les règles d'allocation (voir [Allocation et partage des impacts](../regles/allocation-et-partage-des-impacts)).
 
@@ -158,7 +188,7 @@ La méthode ne suppose pas une unité unique pour tout le corpus. Elle impose en
 | CDN | Oui | Distribution des contenus statiques |
 | Serveurs d'hébergement (cloud) | Oui | Traitement des requêtes et stockage |
 | API de paiement (Stripe) | Oui | Indispensable à la fonction d'achat |
-| Analytics (Google Analytics) | Non | Hors fonction principale, impact marginal |
+| Analytics (Google Analytics) | Oui si exécuté | Requêtes, scripts et traitement du parcours réel ; mesurer ou signaler la lacune |
 | Réseau interne du datacenter | Oui | Inclus forfaitairement via le facteur datacenter |
 | Backoffice ERP | Non | Hors périmètre du service web front-end |
 
@@ -168,17 +198,11 @@ La méthode ne suppose pas une unité unique pour tout le corpus. Elle impose en
 
 - Les services tiers sont souvent opaques ; leur prise en compte repose fréquemment sur des estimations ou des forfaits.
 - Deux évaluations portant sur des périmètres différents ne doivent pas être comparées sans relecture des frontières.
-- L'approche système, si elle est plus praticable pour les périmètres non maîtrisés, introduit une incertitude plus élevée que l'approche équipement.
+- L'approche système, si elle est plus praticable pour les périmètres non maîtrisés, peut être moins détaillée ; la qualité dépend de la représentativité du facteur et ne se déduit pas du seul niveau de granularité.
 - Le choix de l'unité d'analyse influence directement l'interprétation. Une page vue très lourde aura un impact unitaire élevé ; un service global sur une année lissera les variations.
 
-## Données mobilisées
+[^rcp-app]: ADEME, [RCP des applicatifs numériques, juin 2026](https://librairie.ademe.fr/economie-circulaire-et-dechets/9434-referentiel-par-categorie-de-produit-rcp-des-applicatifs-numeriques.html), p. 13–16, 19–21, 38–40. Le RCP prévoit une période d’un an par défaut et un périmètre applicatif incluant les moyens de développement. Une agrégation de parcours ne suffit pas à établir sa couverture complète.
 
-- `digital4better/data` → `data/cloud/*`, `data/factor/*`, `data/equipment/*`
-- Métadonnées de périmètre de chaque cas d'usage
+[^source-3]: [SCI -- Software Carbon Intensity](https://sci.greensoftware.foundation/) Documentation en ligne, version non figée.
 
-## Sources
-
-- ISO 14040 / ISO 14044
-- Référentiel ADEME / ARCEP sur les services numériques (RCP mère)
-- [SCI -- Software Carbon Intensity](https://sci.greensoftware.foundation/)
-- Corpus `inputs/md`
+[^donnees-modele]: `digital4better/data` → `data/cloud/*`, `data/factor/*`, `data/equipment/*`. Métadonnées de périmètre de chaque cas d'usage. [Digital4Better, catalogue de données, instantané 77cae4a](https://github.com/digital4better/data/tree/77cae4a58fadd5deb3b8d4e5577020da08f780d8).

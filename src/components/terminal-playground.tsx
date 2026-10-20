@@ -1,9 +1,15 @@
+import configurations from "../data/hardware-configurations.json";
+import { processorGwp as cpuGwp, memoryGwp as ramGwp, storageGwp, displayGwp, batteryGwp, terminalPower as devicePower, STRUCTURAL_GWP } from "../hardware-models";
+import { HARDWARE_COLORS, PHASE_COLORS } from "../visual-palette";
+import { electricityFactor, ELECTRICITY_FACTORS } from "../electricity";
+import { ModelNotice } from "./model-notice";
+import { finiteNumber } from "../calculations";
 import { Input } from "@site/src/components/input";
 import { Bar } from "@site/src/components/bar";
 import Stack from "@mui/system/Stack";
 import Box from "@mui/system/Box";
 import { useState } from "react";
-import { format, UNITS } from "@site/src/format";
+import { format as formatValue, UNITS } from "@site/src/format";
 
 /**
  * Terminal (device) parametric impact model — assembles components
@@ -12,15 +18,6 @@ import { format, UNITS } from "@site/src/format";
  * Each component uses its own parametric model (Boavizta coefficients).
  * The total is the sum of all component impacts.
  */
-
-const COLORS = [
-  { bgcolor: "#264653", color: "white" },
-  { bgcolor: "#2a9d8f", color: "white" },
-  { bgcolor: "#e9c46a", color: "inherit" },
-  { bgcolor: "#f4a261", color: "inherit" },
-  { bgcolor: "#e76f51", color: "white" },
-  { bgcolor: "#6c757d", color: "white" },
-];
 
 type Lang = "fr" | "en";
 
@@ -55,7 +52,7 @@ const TEXT = {
       battery: "Batterie",
       structural: "Structure",
       operational: "Impact operationnel annuel",
-      energy: "Energie annuelle",
+      energy: "Électricité annuelle d’usage",
       total: "Total annuel (intrinseque + operationnel)",
     },
     presets: {
@@ -70,7 +67,7 @@ const TEXT = {
     screenTechs: { lcd: "LCD / IPS", oled: "OLED / AMOLED" },
     batteryChems: { lco: "LCO (smartphone)", nmc: "NMC (laptop)" },
     countries: { FR: "France", DE: "Allemagne", US: "Etats-Unis", CN: "Chine", PL: "Pologne", SE: "Suede" },
-    note: "Assemblage de modeles Boavizta (CPU, RAM, SSD) + modeles parametriques (ecran, batterie, structure). L'impact total est la somme des composants.",
+    note: "Assemblage des modèles CPU, RAM et SSD historiques et de scénarios pour l’écran, la batterie et la structure. Les hypothèses de composition ne représentent pas une ACV du modèle commercial choisi.",
   },
   en: {
     fields: {
@@ -102,7 +99,7 @@ const TEXT = {
       battery: "Battery",
       structural: "Structure",
       operational: "Annual operational impact",
-      energy: "Annual energy",
+      energy: "Annual operational electricity",
       total: "Annual total (embodied + operational)",
     },
     presets: {
@@ -117,69 +114,14 @@ const TEXT = {
     screenTechs: { lcd: "LCD / IPS", oled: "OLED / AMOLED" },
     batteryChems: { lco: "LCO (smartphone)", nmc: "NMC (laptop)" },
     countries: { FR: "France", DE: "Germany", US: "United States", CN: "China", PL: "Poland", SE: "Sweden" },
-    note: "Assembly of Boavizta models (CPU, RAM, SSD) + parametric models (display, battery, structure). Total = sum of components.",
+    note: "Combines historical CPU, RAM and SSD models with display, battery and structural scenarios. Composition assumptions do not represent an LCA of the selected commercial model.",
   },
 } as const;
 
-// --- Component models (simplified inline versions) ---
+const PRESETS: Record<string, Record<string, string>> = configurations.terminals;
+const structuralGwp = (deviceType: string) => STRUCTURAL_GWP[deviceType] ?? STRUCTURAL_GWP.custom;
 
-// CPU: Boavizta - GWP = die_mm2 * 0.0197 + 9.14, × node factor
-const NODE_FACTORS: Record<number, number> = { 3: 2.8, 4: 2.5, 5: 2.2, 7: 1.8, 10: 1.4, 14: 1.2, 22: 1.05, 28: 1.0 };
-const cpuGwp = (dieMm2: number, nodeNm: number) => {
-  const nf = NODE_FACTORS[nodeNm] ?? 1.0;
-  return (dieMm2 * 0.0197 + 9.14) * nf;
-};
-
-// RAM: Boavizta - GWP = (cap/density) * 2.20 + 5.22
-const RAM_DENSITY: Record<string, number> = { ddr4: 0.625, ddr5: 1.0 };
-const ramGwp = (capGB: number, type: string) => {
-  const d = RAM_DENSITY[type] ?? 0.625;
-  return (capGB / d) * 2.20 + 5.22;
-};
-
-// Storage: Boavizta
-const storageGwp = (capGB: number, type: string) => {
-  if (type === "hdd") return 31.11;
-  return (capGB / 48.5) * 2.20 + 6.34;
-};
-
-// Display: area-based
-const displayGwp = (diagInch: number, tech: string) => {
-  const gwpCm2: Record<string, number> = { lcd: 0.07, oled: 0.12 };
-  const base: Record<string, number> = { lcd: 3.0, oled: 2.5 };
-  const area = diagInch * diagInch * 2.896;
-  return area * (gwpCm2[tech] ?? 0.07) + (base[tech] ?? 3.0);
-};
-
-// Battery: capacity-based
-const batteryGwp = (capWh: number, chem: string) => {
-  const gwpKwh: Record<string, number> = { lco: 75, nmc: 65 };
-  return (capWh / 1000) * (gwpKwh[chem] ?? 65);
-};
-
-// Structural: PCB, chassis, connectors
-const structuralGwp = (deviceType: string) => {
-  const factors: Record<string, number> = { smartphone: 4, tablet: 5, laptop: 8, desktop: 12, custom: 8 };
-  return factors[deviceType] ?? 8;
-};
-
-// Power
-const devicePower = (cpuTdp: number, diagInch: number, screenTech: string) => {
-  const screenPower = diagInch * diagInch * 2.896 * (screenTech === "oled" ? 0.002 : 0.003);
-  return cpuTdp * 0.5 + screenPower + 2;
-};
-
-// Presets
-const PRESETS: Record<string, Record<string, string>> = {
-  smartphone: { cpuDie: "100", cpuNode: "4", cpuTdp: "5", ram: "8", ramType: "ddr5", storage: "128", storageType: "ssd_nvme", screenDiag: "6.5", screenTech: "oled", battery: "18", batteryChem: "lco", lifetime: "3", usageHours: "4" },
-  tablet: { cpuDie: "100", cpuNode: "4", cpuTdp: "8", ram: "8", ramType: "ddr5", storage: "256", storageType: "ssd_nvme", screenDiag: "11", screenTech: "lcd", battery: "30", batteryChem: "nmc", lifetime: "4", usageHours: "4" },
-  laptop: { cpuDie: "150", cpuNode: "7", cpuTdp: "28", ram: "16", ramType: "ddr5", storage: "512", storageType: "ssd_nvme", screenDiag: "14", screenTech: "lcd", battery: "56", batteryChem: "nmc", lifetime: "5", usageHours: "8" },
-  desktop: { cpuDie: "200", cpuNode: "10", cpuTdp: "65", ram: "32", ramType: "ddr4", storage: "1000", storageType: "ssd_nvme", screenDiag: "27", screenTech: "lcd", battery: "0", batteryChem: "nmc", lifetime: "6", usageHours: "8" },
-};
-
-const COUNTRY_GWP: Record<string, number> = {
-  FR: 0.0355, DE: 0.377, US: 0.353, CN: 0.537, PL: 0.704, SE: 0.013,
-};
+const COUNTRY_GWP = electricityFactor("gwp");
 
 const normalizeLang = (lang?: string): Lang =>
   lang?.toLowerCase().startsWith("fr") ? "fr" : "en";
@@ -192,8 +134,10 @@ const resolveLang = (lang?: string): Lang => {
 export const TerminalPlayGround = ({ lang: langProp }: { lang?: string }) => {
   const lang = resolveLang(langProp);
   const t = TEXT[lang];
+  const format = (value: number | undefined, units: string[]) => formatValue(value, units, lang);
 
   const [preset, setPreset] = useState("laptop");
+  const [deviceType, setDeviceType] = useState("laptop");
   const [cpuDie, setCpuDie] = useState("150");
   const [cpuNode, setCpuNode] = useState("7");
   const [cpuTdp, setCpuTdp] = useState("28");
@@ -213,6 +157,7 @@ export const TerminalPlayGround = ({ lang: langProp }: { lang?: string }) => {
     setPreset(p);
     const v = PRESETS[p];
     if (!v) return;
+    setDeviceType(p);
     setCpuDie(v.cpuDie); setCpuNode(v.cpuNode); setCpuTdp(v.cpuTdp);
     setRam(v.ram); setRamType(v.ramType);
     setStorage(v.storage); setStorageType(v.storageType);
@@ -221,15 +166,15 @@ export const TerminalPlayGround = ({ lang: langProp }: { lang?: string }) => {
     setLifetime(v.lifetime); setUsageHours(v.usageHours);
   };
 
-  const dieMm2 = parseFloat(cpuDie) || 150;
-  const nodeNm = parseInt(cpuNode) || 7;
-  const tdpW = parseFloat(cpuTdp) || 28;
-  const ramGB = parseFloat(ram) || 16;
-  const storGB = parseFloat(storage) || 512;
-  const diagIn = parseFloat(screenDiag) || 14;
-  const batWh = parseFloat(battery) || 0;
-  const years = Math.max(1, parseFloat(lifetime) || 5);
-  const hours = Math.min(24, Math.max(0, parseFloat(usageHours) || 8));
+  const dieMm2 = finiteNumber(cpuDie, 150);
+  const nodeNm = Math.floor(finiteNumber(cpuNode, 7));
+  const tdpW = finiteNumber(cpuTdp, 28);
+  const ramGB = finiteNumber(ram, 16);
+  const storGB = finiteNumber(storage, 512);
+  const diagIn = finiteNumber(screenDiag, 14);
+  const batWh = finiteNumber(battery, 0);
+  const years = Math.max(1, finiteNumber(lifetime, 5));
+  const hours = Math.min(24, Math.max(0, finiteNumber(usageHours, 8)));
 
   // Component GWP (embodied, total over lifetime)
   const gwpCpu = cpuGwp(dieMm2, nodeNm);
@@ -237,7 +182,7 @@ export const TerminalPlayGround = ({ lang: langProp }: { lang?: string }) => {
   const gwpStor = storageGwp(storGB, storageType);
   const gwpDisp = displayGwp(diagIn, screenTech);
   const gwpBat = batWh > 0 ? batteryGwp(batWh, batteryChem) : 0;
-  const gwpStruct = structuralGwp(preset);
+  const gwpStruct = structuralGwp(deviceType);
   const gwpEmbTotal = gwpCpu + gwpRam + gwpStor + gwpDisp + gwpBat + gwpStruct;
   const gwpEmbPerYear = gwpEmbTotal / years;
 
@@ -247,6 +192,7 @@ export const TerminalPlayGround = ({ lang: langProp }: { lang?: string }) => {
   const gwpOpePerYear = energyKwh * (COUNTRY_GWP[country] ?? 0.4);
   const gwpTotalPerYear = gwpEmbPerYear + gwpOpePerYear;
 
+  const COLORS = [HARDWARE_COLORS.cpu, HARDWARE_COLORS.ram, HARDWARE_COLORS.storage, HARDWARE_COLORS.display, HARDWARE_COLORS.battery, HARDWARE_COLORS.enclosure];
   const components = [
     { label: t.results.cpu, value: gwpCpu },
     { label: t.results.ram, value: gwpRam },
@@ -265,39 +211,41 @@ export const TerminalPlayGround = ({ lang: langProp }: { lang?: string }) => {
   const countryOptions = Object.entries(t.countries).map(([v, l]) => ({ value: v, label: l }));
 
   return (
-    <Stack gap={3} sx={{ my: 2 }}>
+    <>
+    <Stack gap={3} sx={{ my: 2 }} className="methodology-simulator">
       <Input type="select" label={t.fields.preset} options={presetOptions} value={preset} onChange={applyPreset} sx={{ maxWidth: 250 }} />
-
+      <details className="component-assumptions"><summary>{lang === "fr" ? "Personnaliser les composants" : "Customize components"}</summary>
       <Stack direction="row" gap={2} sx={{ flexWrap: "wrap" }}>
-        <Input type="text" label={t.fields.cpuDie} value={cpuDie} onChange={(v) => { setCpuDie(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 80 }} />
+        <Input type="number" label={t.fields.cpuDie} value={cpuDie} onChange={(v) => { setCpuDie(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 80 }} />
         <Input type="select" label={t.fields.cpuNode} options={nodeOptions} value={cpuNode} onChange={(v) => { setCpuNode(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 80 }} />
-        <Input type="text" label={t.fields.cpuTdp} value={cpuTdp} onChange={(v) => { setCpuTdp(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 80 }} />
-        <Input type="text" label={t.fields.ram} value={ram} onChange={(v) => { setRam(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 60 }} />
+        <Input type="number" label={t.fields.cpuTdp} value={cpuTdp} onChange={(v) => { setCpuTdp(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 80 }} />
+        <Input type="number" label={t.fields.ram} value={ram} onChange={(v) => { setRam(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 60 }} />
         <Input type="select" label={t.fields.ramType} options={ramTypeOptions} value={ramType} onChange={(v) => { setRamType(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 100 }} />
       </Stack>
       <Stack direction="row" gap={2} sx={{ flexWrap: "wrap" }}>
-        <Input type="text" label={t.fields.storage} value={storage} onChange={(v) => { setStorage(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 80 }} />
+        <Input type="number" label={t.fields.storage} value={storage} onChange={(v) => { setStorage(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 80 }} />
         <Input type="select" label={t.fields.storageType} options={storTypeOptions} value={storageType} onChange={(v) => { setStorageType(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 100 }} />
-        <Input type="text" label={t.fields.screenDiag} value={screenDiag} onChange={(v) => { setScreenDiag(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 80 }} />
+        <Input type="number" label={t.fields.screenDiag} value={screenDiag} onChange={(v) => { setScreenDiag(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 80 }} />
         <Input type="select" label={t.fields.screenTech} options={screenOptions} value={screenTech} onChange={(v) => { setScreenTech(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 100 }} />
-        <Input type="text" label={t.fields.battery} value={battery} onChange={(v) => { setBattery(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 80 }} />
+        <Input type="number" label={t.fields.battery} value={battery} onChange={(v) => { setBattery(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 80 }} />
         <Input type="select" label={t.fields.batteryChem} options={batOptions} value={batteryChem} onChange={(v) => { setBatteryChem(v); setPreset("custom"); }} sx={{ flex: 0.5, minWidth: 120 }} />
       </Stack>
+      </details>
       <Stack direction="row" gap={2} sx={{ flexWrap: "wrap" }}>
-        <Input type="text" label={t.fields.lifetime} value={lifetime} onChange={setLifetime} sx={{ flex: 0.5, minWidth: 80 }} />
-        <Input type="text" label={t.fields.usageHours} value={usageHours} onChange={setUsageHours} sx={{ flex: 0.5, minWidth: 80 }} />
+        <Input type="number" label={t.fields.lifetime} value={lifetime} onChange={setLifetime} sx={{ flex: 0.5, minWidth: 80 }} />
+        <Input type="number" label={t.fields.usageHours} value={usageHours} onChange={setUsageHours} sx={{ flex: 0.5, minWidth: 80 }} />
         <Input type="select" label={t.fields.country} options={countryOptions} value={country} onChange={setCountry} sx={{ flex: 1, minWidth: 120 }} />
       </Stack>
 
       <Box sx={{ typography: "h6" }}>{t.results.results}</Box>
 
-      <Stack direction="row" gap={4} sx={{ typography: "body2" }}>
+      <Stack direction="row" gap={4} sx={{ typography: "body2", flexWrap: "wrap" }}>
         <Box>{t.results.gwp}: <strong>{format(gwpEmbTotal * 1000, UNITS.gwp)}</strong></Box>
         <Box>{t.results.perYear}: <strong>{format(gwpEmbPerYear * 1000, UNITS.gwp)}</strong></Box>
       </Stack>
 
       <Box sx={{ typography: "body2", fontWeight: "bold" }}>{t.results.breakdown}</Box>
-      <Bar values={components} colors={COLORS} units={UNITS.gwp} />
+      <Bar lang={lang} values={components.map(c => ({ ...c, value: c.value * 1000 }))} colors={COLORS} units={UNITS.gwp} />
       <Stack direction="row" gap={2} sx={{ flexWrap: "wrap", typography: "caption" }}>
         {components.map((c, i) => (
           <Box key={c.label} sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -308,27 +256,32 @@ export const TerminalPlayGround = ({ lang: langProp }: { lang?: string }) => {
       </Stack>
 
       <Box sx={{ typography: "h6" }}>{t.results.operational}</Box>
-      <Stack direction="row" gap={4} sx={{ typography: "body2" }}>
+      <Stack direction="row" gap={4} sx={{ typography: "body2", flexWrap: "wrap" }}>
         <Box>{t.results.energy}: <strong>{format(energyKwh * 1000, UNITS.wh)}</strong></Box>
         <Box>GWP: <strong>{format(gwpOpePerYear * 1000, UNITS.gwp)}</strong></Box>
       </Stack>
 
       <Box sx={{ typography: "h6" }}>{t.results.total}</Box>
       <Stack gap={0.5}>
-        <Bar
+        <Bar lang={lang}
           values={[
-            { label: "Embodied", value: gwpEmbPerYear },
-            { label: "Operational", value: gwpOpePerYear },
+            { label: lang === "fr" ? "Fabrication allouée" : "Embodied", value: gwpEmbPerYear * 1000 },
+            { label: lang === "fr" ? "Usage" : "Operational", value: gwpOpePerYear * 1000 },
           ]}
-          colors={[{ bgcolor: "#023047", color: "white" }, { bgcolor: "#219ebc", color: "white" }]}
+          colors={PHASE_COLORS}
           units={UNITS.gwp}
         />
         <Box sx={{ typography: "body1", fontWeight: "bold" }}>
-          {format(gwpTotalPerYear * 1000, UNITS.gwp)} / an
+          {format(gwpTotalPerYear * 1000, UNITS.gwp)} / {lang === "fr" ? "an" : "year"}
         </Box>
       </Stack>
 
-      <Box sx={{ typography: "caption", color: "text.secondary" }}>{t.note}</Box>
     </Stack>
+    <aside className="simulator-context">
+      <p>{t.note}</p>
+      <ModelNotice lang={lang} />
+
+    </aside>
+    </>
   );
 };

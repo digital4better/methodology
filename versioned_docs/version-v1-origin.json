@@ -1,0 +1,7 @@
+{
+  "ref": "4e40ae8e5e792b676c55d5586f59e6fb3c7181b4",
+  "source": "origin/main",
+  "productionWorkflow": "Documentation generation",
+  "verifiedSuccessfulRun": "2026-10-16",
+  "note": "Content and calculation components frozen from the successfully deployed main. Shared navigation gains a version selector."
+}

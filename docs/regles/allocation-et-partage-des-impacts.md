@@ -1,16 +1,22 @@
 # Allocation et partage des impacts
 
-## En bref
-
 Un équipement, une infrastructure ou un service supporte souvent plusieurs usages, utilisateurs ou services en même temps. L'allocation sert à définir quelle part d'impact peut être attribuée à l'objet évalué. C'est un choix méthodologique structurant : il influe directement sur le résultat et doit donc être explicite, justifié et stable au sein d'une même famille d'évaluations.
+
+import { InlineAllocationExample } from '@site/src/components/inline-allocation-example';
+
+## Conventions D4B et règles RCP
+
+Les conventions décrites ici restent celles des calculs D4B. Le RCP parent privilégie les relations physiques, puis le temps et les autres critères lorsque nécessaire ; les RCP enfants précisent ces choix selon le service.[^rcp-parent]
+
+Pour le réseau, notre exemple par volume diffère de la séparation fixe/variable décrite dans [Réseau](../materiel/reseau-et-infrastructure/reseau). Pour le cloud, une allocation par ressources réservées ne suffit pas à reproduire toutes les allocations d’un facteur RCP. Le dénominateur d’un facteur terminal détermine aussi son usage : temps calendaire, temps d’utilisation et facteur déjà alloué par seconde ne sont pas interchangeables. La convention retenue reste explicite ; deux allocations du même poste ne se cumulent pas.
 
 ## Pourquoi l'allocation est structurante
 
-L'allocation n'est pas un paramètre secondaire. Un même serveur physique partagé entre trois services peut voir son impact attribué à parts égales, au prorata du temps d'usage ou au prorata des ressources réservées -- et le résultat par service peut varier d'un facteur 2 à 5 selon la règle choisie. Ce choix doit donc être :
+L'allocation n'est pas un paramètre secondaire. Un même serveur physique partagé entre trois services peut voir son impact attribué à parts égales, au prorata du temps d'usage ou au prorata des ressources réservées -- et le résultat par service dépend de la règle choisie. Ce choix doit donc être :
 
-- **explicite** : la règle d'allocation est documentée dans chaque évaluation ;
-- **justifié** : le critère retenu est relié à la fonction rendue ou à la ressource sollicitée ;
-- **stable** : au sein d'une même campagne d'évaluation, la même règle est appliquée à des objets comparables ;
+- **explicite** : la règle d'allocation est documentée dans chaque évaluation.
+- **justifié** : le critère retenu est relié à la fonction rendue ou à la ressource sollicitée.
+- **stable** : au sein d'une même campagne d'évaluation, la même règle est appliquée à des objets comparables.
 - **calculable** : les données nécessaires sont disponibles ou estimables de manière traçable.
 
 :::note[Posture méthodologique]
@@ -19,7 +25,7 @@ La méthodologie privilégie des allocations simples et traçables plutôt qu'un
 
 ## Principales familles d'allocation
 
-Le tableau ci-dessous résume les familles d'allocation mobilisées dans la méthode, le contexte où elles s'appliquent et leur base physique :
+Le tableau ci-dessous résume les familles d'allocation mobilisées dans la méthode, le contexte où elles s'appliquent et leur base physique[^donnees-modele][^source-5] :
 
 | Famille | Base d'allocation | Contexte d'usage principal | Variable clé |
 |---|---|---|---|
@@ -29,7 +35,7 @@ Le tableau ci-dessous résume les familles d'allocation mobilisées dans la mét
 | **Par nombre d'utilisateurs** | Utilisateurs actifs ou déclarés | Services partagés, SaaS | $N_{users}$ |
 | **Forfaitaire documentée** | Part fixe conventionnelle | Cas où aucune donnée d'usage n'est disponible | Part documentée |
 
-## Mécanismes d'allocation
+## Mécanismes d'allocation {#mécanismes-dallocation}
 
 ### Allocation temporelle
 
@@ -47,7 +53,7 @@ $$
 \end{aligned}
 $$
 
-Lorsque le facteur d'impact est fourni pour une durée de vie théorique $TL$ qui diffère de la durée de vie réelle $RL$ de l'équipement, une correction proportionnelle est appliquée :
+Lorsque le facteur d'impact est fourni pour une durée de vie théorique $TL$ qui diffère de la durée de vie réelle $RL$ de l'équipement, une correction proportionnelle est appliquée au facteur déjà normalisé par unité de temps, et non à un inventaire de fabrication total :
 
 $$
 \begin{aligned}
@@ -75,9 +81,13 @@ $$
 \end{aligned}
 $$
 
+Pour une fabrication totale connue, l’allocation annuelle correspond à cette fabrication divisée par la durée de vie retenue. L’exemple suivant illustre cette relation, hors impacts d’usage.
+
+<InlineAllocationExample lang="fr" />
+
 ### Allocation volumétrique
 
-L'allocation volumétrique est la règle de référence pour les réseaux, où la ressource consommée est proportionnelle au volume de données transférées.
+L'allocation volumétrique est la règle de référence pour les réseaux, en tant que convention d'attribution moyenne au trafic.
 
 L'impact d'un segment réseau est calculé par :
 
@@ -91,7 +101,7 @@ $$
 \end{aligned}
 $$
 
-Cette approche suppose que l'impact d'un réseau est proportionnel à la quantité de données transportées et à la distance parcourue, ce qui est cohérent avec une infrastructure partagée dont la capacité est dimensionnée pour un trafic agrégé.
+Cette approche attribue une part moyenne d'une infrastructure partagée au trafic. Elle ne démontre pas que l'énergie marginale varie linéairement avec les octets ou la distance : les équipements ont une consommation fixe et des capacités par paliers. N'introduire $L$ que si le facteur est effectivement exprimé par octet et par kilomètre ; un facteur par Go ne doit pas être multiplié à nouveau par une distance.
 
 ### Allocation par capacité réservée
 
@@ -111,7 +121,7 @@ $$
 $$
 
 :::note[vCPU et hyperthreading]
-On considère un vCPU comme un thread d'un processeur physique. Par exemple, 8 vCPU correspondent à un processeur 4 cœurs hyperthreadés.
+Un vCPU peut représenter un thread matériel, mais la correspondance dépend de l'offre et de l'architecture. Huit vCPU ne correspondent à quatre cœurs que si le fournisseur documente deux threads par cœur. Les puissances CPU doivent être exprimées par vCPU pour cette formule ; $N_{ram}$ est en Go et $V_{storage}$ en To décimaux. Les coefficients sont des modèles historiques de Cloud Carbon Footprint, à remplacer par des mesures compatibles quand elles existent. Le point médian CPU suppose une charge de 50 %, pas une charge observée.[^source-3]
 :::
 
 Pour l'impact intrinsèque, les ressources provisionnées sont rapprochées de configurations de référence (machines virtuelles petite, moyenne, grande de la Base Empreinte ou base Cloud Carbon Footprint).
@@ -126,7 +136,7 @@ flowchart TD
     A --> C{Réseau<br>WAN / LAN ?}
     A --> D{Centre de données<br>ou Cloud ?}
     B -- oui --> E[Allocation temporelle<br>D_usage / durée de vie]
-    C -- oui --> F[Allocation volumétrique<br>octets × distance]
+    C -- oui --> F[Allocation volumétrique<br>volume × facteur compatible]
     D -- oui --> G{Inventaire physique<br>disponible ?}
     G -- oui --> H[Approche équipement<br>allocation temporelle<br>par serveur]
     G -- non --> I{Composants connus<br>vCPU, RAM, stockage ?}
@@ -156,38 +166,44 @@ Avec une **allocation temporelle au prorata du temps actif** :
 | Impact intrinsèque annuel (GWP) | 240 × 0,667 = **160 kg CO₂ eq.** | 240 × 0,333 = **80 kg CO₂ eq.** |
 
 :::note[Temps inactif]
-Dans cet exemple, les 25 % de temps inactif du serveur ne sont attribués à aucun des deux services. C'est un choix cohérent avec une posture attributionnelle : on alloue l'impact proportionnellement à l'usage effectif. Si l'on souhaitait répartir la totalité de l'impact, y compris le temps d'inactivité, il faudrait le documenter explicitement.
+La normalisation sur le temps actif répartit ici **la totalité des 240 kg annuels**, y compris la part d'inactivité, entre A et B. Une allocation sur le temps calendaire donnerait au contraire 120 kg à A, 60 kg à B et 60 kg à une catégorie « capacité non allouée ». Les deux conventions répondent à des questions différentes ; ne pas présenter la première comme excluant l'inactivité. L'exemple suppose des créneaux exclusifs ; des services simultanés nécessitent également une part de ressources.
 :::
 
 ## Principes de choix
 
 Une bonne règle d'allocation doit :
 
-1. être **reliée à la fonction rendue** par l'équipement ou le service ;
-2. rester **compréhensible** pour un relecteur non spécialiste ;
-3. être **calculable** avec les données effectivement disponibles ;
-4. **limiter les effets arbitraires** -- une allocation simple est souvent préférable à une pseudo-précision non traçable ;
+1. être **reliée à la fonction rendue** par l'équipement ou le service.
+2. rester **compréhensible** pour un relecteur non spécialiste.
+3. être **calculable** avec les données effectivement disponibles.
+4. **limiter les effets arbitraires** -- une allocation simple est souvent préférable à une pseudo-précision non traçable.
 5. être **cohérente** avec les allocations utilisées dans les autres couches de la même évaluation.
+
+### Effet du dénominateur sur l’allocation {#denominateurs-allocation}
+
+Pour un équipement fictif de 1 000 kg CO₂e sur cinq ans, un service de 100 heures reçoit :
+
+| Convention du scénario | Calcul | Fabrication allouée |
+|---|---|---:|
+| Temps calendaire | 1 000 × 100 / (5 × 8 760) | 2,28 kg CO₂e |
+| Temps utile de 2 000 h/an | 1 000 × 100 / (5 × 2 000) | 10 kg CO₂e |
+| Capacité réservée à 10 % pendant un an | 1 000 × 1/5 × 10 % | 20 kg CO₂e |
+
+Ces valeurs répondent à des questions différentes. La première ne réattribue pas les périodes inactives au service ; la deuxième répartit toute la fabrication entre les heures utiles ; la troisième inclut la part réservée, même inutilisée. Elles ne s’additionnent pas. La convention et le traitement des capacités restantes accompagnent le résultat.
 
 ## Hypothèses et limites
 
 - Les allocations mixtes sont parfois nécessaires, notamment pour les services qui combinent temps d'usage, stockage et flux réseau. Dans ce cas, chaque couche peut avoir sa propre règle d'allocation, à condition que l'ensemble reste documenté.
-- L'allocation par capacité réservée suppose que les ressources provisionnées reflètent l'usage réel. En cas de surprovisionnement important, le résultat peut surestimer l'impact d'un service sous-utilisé.
-- Les facteurs génériques de la Base Empreinte (3 tailles de VM) offrent une granularité limitée. Des travaux sont en cours pour enrichir ce référentiel.
+- L'allocation par capacité réservée attribue la capacité rendue indisponible aux autres usages, même lorsqu'elle est peu utilisée. Elle n'est pas une mesure de consommation réelle. Une allocation à la consommation répond à une autre question et doit répartir explicitement le socle à vide et les ressources de support.
+- Les anciens forfaits VM sont obsolètes pour la méthode cible. Une configuration intermédiaire est calculée par composants, puis allouée ; elle n’est pas obtenue par interpolation de ces forfaits.
 - L'allocation forfaitaire ne doit être utilisée qu'en dernier recours, lorsque aucune donnée d'usage n'est disponible.
 
-## Données mobilisées
+Les durées de vie reposent sur les inventaires historisés et les hypothèses du registre ; aucun catalogue public `data/hardware` n’est présent dans l’instantané vérifié.
 
-- Facteurs d'impact intrinsèques : `digital4better/data` → `data/equipment/*`, `data/factor/*`
-- Facteurs réseau : Base Empreinte ADEME (services numériques, lignes réseau fixe et mobile)
-- Coefficients de puissance composants : Cloud Jewels, Cloud Carbon Footprint
-- Durées de vie : `digital4better/data` → `data/hardware/*`
-- Données d'usage mesurées quand elles existent ; à défaut, hypothèses documentées dans le [Registre des hypothèses et valeurs par défaut](../references/registre-des-hypotheses-et-valeurs-par-defaut)
+[^rcp-parent]: ADEME, [RCP services numériques, version 2, juin 2026](https://librairie.ademe.fr/societe-et-politiques-publiques/9418-methodologie-d-evaluation-environnementale-basee-sur-l-analyse-du-cycle-de-vie-acv-pour-un-service-numerique.html), p. 16–19.
 
-## Sources
+[^source-3]: [Cloud Carbon Footprint -- Methodology](https://www.cloudcarbonfootprint.org/docs/methodology/) Documentation en ligne, version non figée.
 
-- ISO 14040 / ISO 14044
-- Référentiel ADEME / ARCEP sur les services numériques (RCP mère)
-- [Cloud Carbon Footprint -- Methodology](https://www.cloudcarbonfootprint.org/docs/methodology/)
-- Corpus `inputs/md` : Pathfinder Framework, BASF Product Carbon Footprint Methodology
-- [digital4better/data](https://github.com/digital4better/data)
+[^source-5]: Digital4Better, [digital4better/data](https://github.com/digital4better/data) Catalogue évolutif ; utiliser un commit pour figer les facteurs.
+
+[^donnees-modele]: Facteurs d'impact intrinsèques : `digital4better/data` → `data/equipment/*`, `data/factor/*`. Facteurs réseau : Base Empreinte ADEME (services numériques, lignes réseau fixe et mobile). Coefficients de puissance composants : Cloud Jewels, Cloud Carbon Footprint. Durées de vie : inventaires historisés et hypothèses du registre. Données d'usage mesurées quand elles existent ; à défaut, hypothèses documentées dans le [Registre des hypothèses et valeurs par défaut](../references/registre-des-hypotheses-et-valeurs-par-defaut). [Digital4Better, catalogue de données, instantané 77cae4a](https://github.com/digital4better/data/tree/77cae4a58fadd5deb3b8d4e5577020da08f780d8). Références et portée : [Sources et corpus](../references/sources-et-corpus).

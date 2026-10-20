@@ -1,60 +1,53 @@
 # Datacenter
 
-## Résumé
+import { MethodIllustration } from '@site/src/components/method-illustrations';
 
-Le datacenter n'est pas qu'un lieu d'hébergement. C'est une couche système qui combine équipements informatiques, réseau interne, infrastructure technique, refroidissement, approvisionnement électrique et contraintes géographiques.
+Un datacenter combine équipements informatiques, réseau interne, infrastructure technique, refroidissement et approvisionnement électrique. Cette section couvre l'impact intrinsèque du site et de ses équipements, ainsi que l'énergie consommée par l'IT et ses auxiliaires.
 
-Cette section modélise :
-
-- l'impact intrinsèque du site et des équipements qu'il héberge ;
-- l'impact opérationnel lié à l'énergie consommée par les équipements et par les infrastructures support ;
-- les paramètres spécifiques comme `PUE`, `WUE`, `REF` et la localisation électrique.
-
-Selon le cas d'usage, l'évaluation peut porter sur tout ou partie du centre de données, avec une approche équipement, système ou composant.
+Le `PUE`, le `WUE`, le `REF` et la localisation électrique précisent le contexte du site.[^source-4] L'évaluation peut porter sur tout ou partie du centre de données, selon les informations disponibles.
 
 ## Caractéristiques
 
 | Caractéristique | Unité | Valeur par défaut | Plage ou cas typiques | Description |
 | --- | --- | --- | --- | --- |
 | Mode de modélisation | - | système si inventaire absent | équipement, système, composant | Détermine le type de calcul retenu |
-| `PUE` | - | valeur documentée ou valeur par défaut | proche de 1 à plus élevé | Mesure l'efficacité énergétique du site |
-| `REF` | % | `0` si inconnu | 0 à 100 % | Part d'énergie renouvelable prise en compte |
+| `PUE` | - | valeur documentée ou valeur par défaut | proche de 1 à plus élevé | Mesure l'efficacité énergétique du site [^source-2]|
+| `REF` | % | inconnu si non documenté | 0 à 100 % | Part d'énergie renouvelable prise en compte |
 | Localisation électrique | pays ou région | pays du site | nationale à régionale | Sert à rattacher les facteurs d'électricité |
 | Période étudiée | jour, mois, année | période observée | courte à longue | Sert à l'interprétation des consommations |
 | Composition du site | - | archétype si inconnue | serveurs, stockage, réseau, refroidissement | Sert à choisir l'approche adaptée |
 
 ## Principe de modélisation
 
-Un centre de données regroupe les équipements permettant d'organiser, stocker et traiter de grandes quantités de données : serveurs, baies de stockage, équipements réseau et de télécommunication, etc. Il inclut également les infrastructures de refroidissement, de sécurisation, de gestion et d'alimentation.
+Le périmètre comprend les serveurs, le stockage, les équipements réseau et de télécommunication, ainsi que le refroidissement, la sécurisation, la gestion et l'alimentation.[^donnees-modele]
 
-La méthode distingue trois approches :
-
-- `approche équipement`, lorsque le matériel qui compose le centre de données est connu, suivi et maîtrisé ;
-- `approche système`, lorsqu'on ne connaît pas les équipements et que l'on dispose seulement de facteurs agrégés ;
-- `approche composant`, si l'inventaire des équipements n'est pas connu mais que la quantité de composants unitaires utilisés l'est.
+| Données disponibles | Représentation retenue |
+| --- | --- |
+| Inventaire matériel fiable | Approche équipement : somme des équipements connus et suivis. |
+| Quantités de composants connues, équipements inconnus | Approche composant : agrégation des ressources unitaires. |
+| Facteur agrégé compatible seul disponible | Approche système : facteur du périmètre évalué. |
 
 ## Impact intrinsèque (fabrication)
 
 ### Méthode de calcul
 
-Dans l'approche équipement, l'impact intrinsèque du centre de données est évalué par somme des équipements qui le composent, chacun étant modélisé conformément à [Modélisation d’un équipement](../../modelisation/modelisation-d-un-equipement#impacts-equipement).
+L'approche équipement suit [Modélisation d’un équipement](../../modelisation/modelisation-d-un-equipement#impacts-equipement) pour chacun des actifs, puis additionne leurs impacts sans recouvrement.
 
-Dans l'approche système, le datacenter est assimilé à un système fermé au niveau duquel on dispose de facteurs d'impacts. Ces facteurs présentent toutefois plusieurs limites :
+L'approche système utilise un facteur agrégé. Sa géographie, sa durée et son unité fonctionnelle limitent sa réutilisation. Certains facteurs couvrent mieux le stockage que le traitement.
 
-- ils sont souvent localisés sur un pays donné ;
-- ils couvrent plus facilement le stockage que le traitement ;
-- ils sont disponibles pour des durées et unités fonctionnelles fixes.
+L'approche composant agrège les contributions connues des `CPU`, `GPU`, de la mémoire, du stockage, du réseau et des éléments structurels.
 
-Dans l'approche composant, l'impact intrinsèque repose sur l'agrégation des composants unitaires connus : `CPU`, `GPU`, mémoire, stockage, réseau et éléments structurels.
+### Quand une donnée manque {#complétion-automatique}
 
-### Complétion automatique
+La précision du calcul dépend de l’inventaire disponible. Des quantités de composants permettent un calcul partiel, même sans connaître les modèles de serveurs. Elles ne révèlent pas les autres équipements ni l’efficacité énergétique du site.
 
-Quand les données manquent, la méthode recommande :
+| Situation | Exemple fictif |
+| --- | --- |
+| **Au départ** | L’hébergeur déclare **8 CPU et 512 Go de RAM**. Le stockage, le réseau et le PUE ne sont pas renseignés. |
+| **Référence choisie** | Des facteurs compatibles sont disponibles **pour ces CPU et cette mémoire**. Aucune référence ne permet de compléter les autres postes. |
+| **Dans le calcul** | Le calcul porte sur les **composants connus**. Le stockage, le réseau et les structures restent non évalués ; le **PUE reste inconnu**. Le résultat est un sous-total, pas l’impact complet du site. |
 
-1. de privilégier l'approche équipement si l'inventaire est fiable ;
-2. de recourir à l'approche composant si les équipements sont inconnus mais que les quantités unitaires le sont ;
-3. de basculer vers une approche système si la reconstitution devient trop spéculative ;
-4. de documenter explicitement les paramètres de site manquants, notamment `PUE` et `REF`.
+Un inventaire fiable des équipements reste prioritaire. Si la reconstruction par composants devient trop incertaine, un facteur global de service peut être utilisé lorsque son périmètre et son unité correspondent au cas étudié. Il remplace le calcul du même périmètre, sans s’y ajouter.
 
 ### Fin de vie
 
@@ -62,17 +55,17 @@ La fin de vie est généralement intégrée dans les facteurs d'équipements ou 
 
 ## Impact opérationnel (usage)
 
-### Profil de consommation
+### Profil de consommation {#profil-de-consommation}
 
 L'efficacité énergétique d'un centre de données est définie par le ratio entre l'énergie totale consommée par le centre de données et l'énergie réellement consommée par les équipements délivrant le service informatique. Ce ratio est le [PUE](../../references/glossaire#pue-power-usage-effectiveness).
 
 $$
 \begin{align*}
-&PUE = \frac{E_{datacenter}}{E_{servers}}\\
+&PUE = \frac{E_{datacenter}}{E_{IT}}\\
 Avec \\
 &PUE = \text{Efficacité énergétique}\\
 &E_{datacenter} = \text{Énergie totale consommée par le centre de données}\htmlClass{unit}{[kWh]}\\
-&E_{servers} = \text{Énergie consommée par les serveurs}\htmlClass{unit}{[kWh]}\\
+&E_{IT} = \text{Énergie consommée par tous les équipements IT}\htmlClass{unit}{[kWh]}\\
 \end{align*}
 $$
 
@@ -88,13 +81,15 @@ Avec \\
 \end{align*}
 $$
 
+<MethodIllustration kind="pue" lang="fr" />
+
 Si le datacenter est modélisé par composants, la consommation électrique associée aux équipements de stockage et traitement est calculée en dissociant les types de composants :
 
 $$
 \begin{align*}
-&E_{datacenter} = E_{components} + E_{network}\htmlClass{unit}{[kWh]}\\
+&E_{IT} = E_{components} + E_{network}\htmlClass{unit}{[kWh]}\\
 Avec\\
-&E_{datacenter} = \text{Consommation d’électricité des équipements informatiques}\htmlClass{unit}{[kWh]}\\
+&E_{IT} = \text{Consommation d’électricité des équipements informatiques}\htmlClass{unit}{[kWh]}\\
 &E_{components} = \text{Consommation d’électricité des équipements de stockage et de traitement}\htmlClass{unit}{[kWh]}\\
 &E_{network} = \text{Consommation d’électricité des équipements réseaux}\htmlClass{unit}{[kWh]}\\
 \end{align*}
@@ -115,19 +110,17 @@ Avec\\
 \end{align*}
 $$
 
+La consommation des composants n’inclut pas nécessairement les alimentations, ventilateurs et cartes mères. Ces postes complètent un calcul partiel ; une mesure AC complète les couvre déjà.
+
+Dans ce modèle simplifié, `N_ram` est une capacité en Go et `V_storage` une capacité en To. Le CPU représente la part physique allouée à chaque vCPU. Les coefficients moyens ne sont pas des mesures de tous les matériels.[^source-1]
+
 La conversion de cette consommation en impacts environnementaux se fait ensuite via [Impacts de la consommation d’énergie](../../fondations/impacts-de-la-consommation-d-energie).
 
-### Facteurs d'ajustement
+### Facteurs d'ajustement {#facteurs-dajustement}
 
-Les principaux facteurs d'ajustement sont :
+Le `PUE` et la localisation électrique déterminent le traitement de l'énergie. Le `WUE` décrit l'eau directe, tandis que le `REF` renseigne l'approvisionnement renouvelable. La charge, la mutualisation et la période de validité des déclarations fournisseur précisent l'interprétation.
 
-- le `PUE` ;
-- le `REF` et, selon les critères retenus, `WUE` ;
-- la localisation électrique du site ;
-- le niveau de charge et de mutualisation ;
-- la période de validité des déclarations fournisseur.
-
-Quand un ratio d'énergie renouvelable est documenté, la conversion de la consommation électrique en impact opérationnel peut intégrer un ajustement du facteur utilisé :
+Le résultat de référence utilise le mix électrique moyen de consommation du site. Le REF décrit un approvisionnement ; il ne réduit pas automatiquement ce résultat. La formule historique ci-dessous peut servir à une **analyse de sensibilité distincte**, uniquement si les deux facteurs représentent des parts complémentaires sans double comptage. Le mix national inclut déjà des renouvelables : l'interpoler avec un mix renouvelable ne reconstitue pas un approvisionnement physique vérifié. Cette variante n'est pas un calcul SCI.[^source-5]
 
 $$
 \begin{align*}
@@ -140,61 +133,62 @@ Avec\\
 \end{align*}
 $$
 
+Dans cette formule, `REF` est une fraction entre 0 et 1 (80 % → 0,8). Une donnée inconnue reste inconnue. Un certificat d'achat ne justifie ni un facteur nul ni une baisse automatique des neuf indicateurs.
+
+### Eau directe et eau liée à l'électricité
+
+Pour un WUE de site en litres par kWh IT, le volume direct vaut :
+
+$$
+V_{direct}\,[L] = WUE\,[L/kWh_{IT}] \times E_{IT}\,[kWh]
+$$
+
+L’eau directe utilise l’énergie IT sans nouveau multiplicateur PUE. L’eau liée à l’électricité dépend de l’énergie totale du site. L’agrégation en WU demande une caractérisation compatible avec la méthode et la géographie.
+
+<MethodIllustration kind="water" lang="fr" />
+
 ## Allocation et annualisation
 
-Les impacts du datacenter sont presque toujours partagés entre plusieurs services. L'allocation peut se faire :
+Les impacts partagés sont répartis selon les ressources consommées, la capacité réservée ou une unité pivot cohérente avec le service. L'annualisation dépend de la durée de vie des équipements et de la période étudiée.
 
-- au prorata des ressources consommées ;
-- au prorata de la capacité réservée ;
-- ou à partir d'unités pivot cohérentes avec le service étudié.
-
-L'annualisation s'appuie sur la durée de vie des équipements et sur la période d'exploitation étudiée. Les règles générales sont rappelées dans [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts).
+Les conventions sont décrites dans [Allocation et partage des impacts](../../regles/allocation-et-partage-des-impacts).
 
 ## Hypothèses & limites
 
 ### Hypothèses retenues
 
-- un `PUE` observé vaut mieux qu'une valeur moyenne générique ;
-- l'approche composant n'est pertinente que si les hypothèses de reconstitution sont suffisamment solides ;
-- le datacenter doit être distingué du seul serveur ou du seul service applicatif.
+Un `PUE` observé et représentatif est préférable à une moyenne générique. La reconstruction par composants n'est pertinente qu'avec des hypothèses suffisamment solides. Le datacenter reste un périmètre plus large qu'un serveur ou un service applicatif.
 
 ### Limitations connues
 
-- les valeurs de `PUE`, `WUE` ou `REF` ne sont pas toujours observables au même niveau de précision ;
-- les déclarations fournisseurs doivent être relues avec attention et comparées au référentiel canonique de données ;
-- une approche composant ne vaut que si la qualité des hypothèses de reconstitution est suffisante.
+Les valeurs de `PUE`, `WUE` et `REF` ne sont pas toujours disponibles à la même précision. Les déclarations fournisseurs nécessitent une confrontation au référentiel canonique de données. Le détail d'un modèle par composants ne compense pas la fragilité de ses hypothèses de reconstruction.
 
 ### Perspectives
 
-- enrichir les données D4B sur les paramètres de site et archétypes de datacenter ;
-- mieux relier les approches système, équipement et composant.
+Les améliorations portent sur les paramètres de site et les archétypes D4B, ainsi que sur la cohérence des périmètres entre les approches système, équipement et composant.
 
-## Simulateur
+## Exemple interactif {#simulateur}
 
-Le simulateur ci-dessous permet d'évaluer l'impact d'une ressource serveur virtualisée dans un datacenter, en faisant varier le PUE et le mix électrique du pays d'hébergement.
+Le simulateur exploratoire ci-dessous évalue une **configuration de serveur physique** et ses auxiliaires électriques via le PUE. Il ne calcule ni l'ACV complète du datacenter ni une allocation automatique à une VM. Les bâtiments, équipements de refroidissement et infrastructures électriques nécessitent des inventaires séparés lorsqu'ils ne sont pas déjà inclus ; le PUE ne couvre pas leur fabrication.
 
-import { ServerPlayGround } from '@site/src/components/server-playground';
+import { ScenarioPlayground } from '@site/src/components/scenario-playground';
 
-<ServerPlayGround lang="fr" />
+<div className="inline-example">
+
+<ScenarioPlayground kind="hosting" lang="fr" />
+
+</div>
 
 ## Application
 
-Cette section est mobilisée directement dans :
+[Infrastructure d’hébergement](../../cas-d-usage/environnements/infrastructure-d-hebergement) couvre les environnements maîtrisés. [Cloud](../../cas-d-usage/environnements/cloud) relie les ressources facturées à un site d'exécution. [IA générative](../../cas-d-usage/services/ia-generative) replace la consommation des accélérateurs dans ce contexte.
 
-- [Infrastructure d’hébergement](../../cas-d-usage/environnements/infrastructure-d-hebergement), pour les environnements maîtrisés ;
-- [Cloud](../../cas-d-usage/environnements/cloud), quand les ressources facturées sont reliées à un site d'exécution ;
-- [IA générative](../../cas-d-usage/services/ia-generative), quand la consommation des accélérateurs doit être replacée dans un contexte de site.
+[^source-1]: UBA, [Green Cloud Computing](https://www.umweltbundesamt.de/publikationen/green-cloud-computing), 2021. Voir le [corpus documentaire](../../references/sources-et-corpus).
 
-## Références
+[^source-2]: OVHcloud, [Méthodologie du Tracker d’impact environnemental](https://www.ovhcloud.com/fr/about-us/environmental-impact-tracker/), version 2.0 du 4 juin 2025.
 
-### Données mobilisées
+[^source-4]: [The Green Grid ; PUE](https://www.thegreengrid.org/node/372) et [WUE](https://www.thegreengrid.org/system/files/store/WUE_v1.pdf).
 
-- `digital4better/data/data/cloud/*`
-- `digital4better/data/data/factor/*`
-- `digital4better/data/data/energy/*`
+[^source-5]: [Software Carbon Intensity ; facteurs électriques et exclusions](https://sci.greensoftware.foundation/). Documentation en ligne, version non figée.
 
-### Sources
-
-- `inputs/md/green-cloud-computing-uba-2021.md`
-- `inputs/md/méthodologie-du-tracker-d-impact-environnemental-d-ovhcloud.md`
-- corpus `inputs/md`
+[^donnees-modele]: `data/cloud/*`. `data/factor/*`. `data/energy/*`. [Digital4Better, catalogue de données, instantané 77cae4a](https://github.com/digital4better/data/tree/77cae4a58fadd5deb3b8d4e5577020da08f780d8).
